@@ -1,0 +1,86 @@
+{% extends 'welcome.html' %}
+
+{% block content %}
+
+
+    <div class="card_view">
+    
+        <div class="card-single">
+    
+            <div>
+                <h4 class="text-light">Instância1</h4>
+                <span class="text-light">{{request.session.instancia1}}</span>
+            </div>
+            <div> 
+                <span class="las la-clipboard-lis"></span>
+            </div>
+    
+        </div>
+
+
+        <div class="card-single">
+    
+            <div>
+                <h4 class="text-light">Instância2</h4>
+                <span class="text-light">{{ request.session.instancia2 }}</span>
+            </div>
+            <div> 
+                <span class="las la-clipboard-lis"></span>
+            </div>
+    
+        </div>
+
+        <div class="card-single">
+    
+            <div>
+                <h4 class="text-light">Relação</h4>
+                <span class="text-light">{{ request.session.relacionamento }}</span>
+            </div>
+            <div> 
+                <span class="las la-clipboard-lis"></span>
+            </div>
+    
+        </div>
+    
+        <div class="card-single"> 
+    
+            <div>
+    
+                <h4 class="text-light">Status da Ontologia</h4>
+                {% if request.session.status == "OK!" %}
+                <span class="text-success">{{ request.session.status }}</span>
+                {% endif %}
+    
+                {% if request.session.status == "Erro!" %}
+                <span class="text-warning">{{ request.session.status }}</span>
+                {% endif %}
+    
+            </div>
+            <div> 
+                <span class="las la-clipboard-lis"></span>
+            </div>
+    
+        </div>
+    
+    </div>
+    
+
+    <h4>Instância1</h4>
+    <p>{{request.session.instancia1}}</p>
+
+    <h4>Instância2</h4>
+    <p>{{request.session.instancia2}}</p>
+
+    <h4>Relação</h4>
+    <p>{{ request.session.relacionamento }}</p>
+
+</br>
+</br>
+
+<a class="btn btn-primary" href="/kipo_playground/welcome">Voltar</a>
+
+
+</br>
+</br>
+
+{% endblock %}

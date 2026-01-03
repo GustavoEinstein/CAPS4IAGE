@@ -1,0 +1,30 @@
+{% extends 'welcome.html' %}
+
+{% block content %}
+
+{% load crispy_forms_tags %} 
+
+    
+    </br>
+
+    <form action="" method="POST">
+
+        {% csrf_token %}
+        {{ form.media }}
+        {{ form.as_p }}
+        
+
+        </br>
+
+        <input class="btn btn-primary" type="submit"></input>
+
+        </br>
+
+    </form>
+
+
+</br>
+</br>
+
+<a class="btn btn-primary" href="/kipo_playground/welcome">Voltar</a>
+{% endblock %}

@@ -1,0 +1,275 @@
+{% extends 'welcome.html' %}
+
+{% block content %} 
+
+
+<div class="card_view">
+    
+    <div class="card-single">
+
+        <div>
+            <h4 class="text-light">Número de Agentes</h4>
+            <span class="text-light">{{request.session.num_inst}}</span>
+        </div>
+        <div> 
+            <span class="las la-clipboard-lis"></span>
+        </div>
+
+
+    </div>
+
+    <div class="card-single"> 
+
+        <div>
+
+            <h4 class="text-light">Status da Ontologia</h4>
+            {% if request.session.status == "OK!" %}
+            <span class="text-success">{{ request.session.status }}</span>
+            {% endif %}
+
+            {% if request.session.status == "Erro!" %}
+            <span class="text-warning">{{ request.session.status }}</span>
+            {% endif %}
+
+        </div>
+        <div> 
+            <span class="las la-clipboard-lis"></span> 
+        </div>
+
+
+    </div>
+
+</div>
+
+
+<div class="recent-grid">
+    <div class="projects">
+        <div class="card">
+            <div class="card-header">
+                <h2 class="text-light">Agentes</h2>
+            </div>
+
+            <div class="card-body">
+                <table width="100%">
+                    <thead>
+                        <tr>
+                            <td>Classe</td>
+                            <td>Instâncias de Agentes</td>
+                            <td>Nomes das Agentes</td>
+                            <td>Observações</td>
+                            <td>Deletar</td>
+                            <td>Alocar para Trabalho</td>
+                        </tr>
+                    </thead>
+                    <tbody> 
+                        {% for obj in objeto_agentes %}
+                        <tr>
+                            <td>{{ obj.classe_inst }}</td>
+                            <td>{{ obj.instancia }}</td>
+                            <td>{{ obj.nome }}</td>
+                            <td>{{ obj.obs }}</td>
+
+                            {% if obj.classe_inst == "Sem Classe!" %}
+                            <td>  -------  </td>
+                            {% endif %}
+                            {% if obj.classe_inst != "Sem Classe!" %}
+                            <td>  <a class="btn-warning" href="/kipo_playground/retirar_instancia/{{obj.instancia}}/KIPCO__Agent">Deletar!</a>  </td>
+                            {% endif %}
+                            
+                            {% if obj.classe_inst == "Sem Classe!" %}
+                            <td>  -------  </td>
+                            {% endif %}
+                            {% if obj.classe_inst != "Sem Classe!" %}
+                            <td>  <a class="btn-warning" href="/kipo_playground/alocar_pessoa/{{obj.instancia}}">Trabalhar!</a>  </td>
+                            {% endif %}
+                            
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="recent-grid-add">
+    <a class="btn btn-primary" href="/kipo_playground/add_classe/KIPCO__Agent">Adicionar Agente</a>
+</div>
+
+</br>
+
+<div class="recent-grid">
+    <div class="projects">
+        <div class="card">
+            <div class="card-header">
+                <h2 class="text-light">Agentes Externos</h2>
+            </div>
+
+            <div class="card-body">
+                <table width="100%">
+                    <thead>
+                        <tr>
+                            <td>Classe</td>
+                            <td>Instâncias de Agentes</td>
+                            <td>Nomes das Agentes</td>
+                            <td>Observações</td>
+                            <td>Deletar</td>
+                            <td>Alocar para Trabalho</td>
+                        </tr>
+                    </thead>
+                    <tbody> 
+                        {% for obj in objeto_agentes_externo %}
+                        <tr>
+                            <td>{{ obj.classe_inst }}</td>
+                            <td>{{ obj.instancia }}</td>
+                            <td>{{ obj.nome }}</td>
+                            <td>{{ obj.obs }}</td>
+                            
+                            {% if obj.classe_inst == "Sem Classe!" %}
+                            <td>  -------  </td>
+                            {% endif %}
+                            {% if obj.classe_inst != "Sem Classe!" %}
+                            <td>  <a class="btn-warning" href="/kipo_playground/retirar_instancia/{{obj.instancia}}/KIPCO__External_Agent">Deletar!</a>  </td>
+                            {% endif %}
+                            
+                            {% if obj.classe_inst == "Sem Classe!" %}
+                            <td>  -------  </td>
+                            {% endif %}
+                            {% if obj.classe_inst != "Sem Classe!" %}
+                            <td>  <a class="btn-warning" href="/kipo_playground/alocar_pessoa/{{obj.instancia}}">Trabalhar!</a>  </td>
+                            {% endif %}
+
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="recent-grid-add">
+    <a class="btn btn-primary" href="/kipo_playground/add_classe/KIPCO__External_Agent">Adicionar Agente Externo</a>
+</div>
+
+</br>
+
+<div class="recent-grid">
+    <div class="projects">
+        <div class="card">
+            <div class="card-header">
+                <h2 class="text-light">Agentes de Impacto</h2>
+            </div>
+
+            <div class="card-body">
+                <table width="100%">
+                    <thead>
+                        <tr>
+                            <td>Classe</td>
+                            <td>Instâncias de Agentes</td>
+                            <td>Nomes das Agentes</td>
+                            <td>Observações</td>
+                            <td>Deletar</td>
+                            <td>Alocar para Trabalho</td>
+                        </tr>
+                    </thead>
+                    <tbody> 
+                        {% for obj in objeto_agentes_impacto %}
+                        <tr>
+                            <td>{{ obj.classe_inst }}</td>
+                            <td>{{ obj.instancia }}</td>
+                            <td>{{ obj.nome }}</td>
+                            <td>{{ obj.obs }}</td>
+                            
+                            {% if obj.classe_inst == "Sem Classe!" %}
+                            <td>  -------  </td>
+                            {% endif %}
+                            {% if obj.classe_inst != "Sem Classe!" %}
+                            <td>  <a class="btn-warning" href="/kipo_playground/retirar_instancia/{{obj.instancia}}/KIPCO__Impact_Agent">Deletar!</a>  </td>
+                            {% endif %}
+                            
+                            {% if obj.classe_inst == "Sem Classe!" %}
+                            <td>  -------  </td>
+                            {% endif %}
+                            {% if obj.classe_inst != "Sem Classe!" %}
+                            <td>  <a class="btn-warning" href="/kipo_playground/alocar_pessoa/{{obj.instancia}}">Trabalhar!</a>  </td>
+                            {% endif %}
+                            
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="recent-grid-add">
+    <a class="btn btn-primary" href="/kipo_playground/add_classe/KIPCO__Impact_Agent">Adicionar Agente</a>
+</div>
+
+</br>
+
+<div class="recent-grid">
+    <div class="projects">
+        <div class="card">
+            <div class="card-header">
+                <h2 class="text-light">Agentes de Inovação</h2>
+            </div>
+
+            <div class="card-body">
+                <table width="100%">
+                    <thead>
+                        <tr>
+                            <td>Classe</td>
+                            <td>Instâncias de Agentes</td>
+                            <td>Nomes das Agentes</td>
+                            <td>Observações</td>
+                            <td>Deletar</td>
+                            <td>Alocar para Trabalho</td>
+                        </tr>
+                    </thead>
+                    <tbody> 
+                        {% for obj in objeto_agentes_inovacao %}
+                        <tr>
+                            <td>{{ obj.classe_inst }}</td>
+                            <td>{{ obj.instancia }}</td>
+                            <td>{{ obj.nome }}</td>
+                            <td>{{ obj.obs }}</td>
+
+                            {% if obj.classe_inst == "Sem Classe!" %}
+                            <td>  -------  </td>
+                            {% endif %}
+                            {% if obj.classe_inst != "Sem Classe!" %}
+                            <td>  <a class="btn-warning" href="/kipo_playground/retirar_instancia/{{obj.instancia}}/KIPCO__Innovation_Agent">Deletar!</a>  </td>
+                            {% endif %}
+                            
+                            {% if obj.classe_inst == "Sem Classe!" %}
+                            <td>  -------  </td>
+                            {% endif %}
+                            {% if obj.classe_inst != "Sem Classe!" %}
+                            <td>  <a class="btn-warning" href="/kipo_playground/alocar_pessoa/{{obj.instancia}}">Trabalhar!</a>  </td>
+                            {% endif %}
+                        
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="recent-grid-add">
+    <a class="btn btn-primary" href="/kipo_playground/add_classe/KIPCO__Innovation_Agent">Adicionar Agente</a>
+</div>
+
+</br>
+
+<a class="btn btn-primary" href="/kipo_playground/welcome">Voltar</a>
+
+</br>
+</br>
+
+
+{% endblock %}

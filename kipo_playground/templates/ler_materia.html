@@ -1,0 +1,64 @@
+{% extends 'welcome.html' %}
+
+{% block content %}
+
+<div class="card_view">
+
+    <div class="card-single">
+
+        <h6 class="mt-4 text-light"> Editores: {{ objeto_recuperado.editores|safe }} </h6>
+
+        </br>
+    </div>
+    
+    <div class="card-single">
+
+        <h6 class="mt-4 text-light"> Autores: {{ objeto_recuperado.autores|safe }} </h6>
+
+        </br>
+    </div>
+
+    <div class="card-single">
+    
+        <h6 class="mt-4 text-light"> Status: {{ objeto_recuperado.status|safe }} </h6>
+
+        </br>
+    </div>
+    
+    <div class="card-single">
+
+        <h6 class="mt-4 text-light"> Data: {{ objeto_recuperado.data_atualizacao|safe }} </h6>
+
+        </br>
+    </div>
+
+</div>
+
+<div class="card_view">
+
+    </br>
+
+    <h3 class="mt-4 text-light">{{ objeto_recuperado.titulo|safe }}</h3>
+
+
+</div>
+
+<div class="card_view">
+
+    <h6 style="font-style: italic;" class="mt-4 text-light">{{ objeto_recuperado.sutien|safe }}</h6>
+
+    </br>
+
+</div>
+
+<div class="card_view">
+
+    <h6 class="mt-4 text-light">{{ objeto_recuperado.texto|safe }}</h6>
+
+    </br>
+
+</div>
+
+
+<a class="btn btn-primary" href="/kipo_playground/ver_materia/">Voltar</a>
+{% endblock %}

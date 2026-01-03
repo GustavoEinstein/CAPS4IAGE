@@ -1,0 +1,24 @@
+{% extends 'welcome.html' %} 
+
+{% block content %}
+
+<form action="" method="POST">
+
+    {% csrf_token %}
+    {{ form.as_p }}
+
+    <input class="btn btn-primary" type="submit" name="Submit">
+
+    </br>
+    </br>
+
+</form>
+
+</br>
+</br>
+
+<a class="btn btn-primary" href="/kipo_playground/welcome">Voltar</a>
+
+
+
+{% endblock %}

@@ -1,0 +1,35 @@
+{% extends 'welcome.html' %}
+
+{% block content %} 
+
+{% load static %}
+
+<h2>Caso de estudo detalhado</h2>
+
+<p>O caso de estudo usa como contexto uma Sprint de trabalho comum em determinada Redação Jornalística. A Sprint tem seu backlog de produto e seu backlog de sprint. No caso, o backlog de produto descreve itens a serem feitos pelos participantes da Redação Jornalística como um todo, e o backlog de sprint define esforços pontuais para que essas tarefas sejam realizadas. Um item de backlog de produto apresenta alguns dados que o descreve, como esforço previsto, se o item foi satisfeito ou não, quando se deseja satisfazer o item e qual vai ser a feature resultante do esforço.</p>
+
+<p>Foi definido que em alto nível, o trabalho como um todo na Redação Jornalística é um Processo Intensivo em Conhecimento, e alguns itens de Backlog de Produto acabam necessitando que decisões sejam realizadas, fazendo com que algumas Sprints sejam Atividades Intensivas em Conhecimento.</p> 
+
+<p>A interação entre agentes ocorre entre reuniões periódicas e reuniões de planejamento, que apresentam os seus respectivos backlogs como inputs e outputs. Alguns dos agentes instanciados no caso de estudo são Jornalistas, Fotógrafos, Gerentes e Investidores.</p>
+
+<p>Os agentes registram seu trabalho na estrutura de esforços diários, chamados Scrum Daily, pertencente a Sprints. O foco da interação está na decisão a ser tomada relacionado ao arquivamento ou publicação de matéria jornalística. Neste momento, a figura de um agente "Gerente" deve tomar a decisão, sob a influência de outros participantes do trabalho que discordam entre si sobre como se deve atingir o objetivo comum entre eles, o de se fazer com que a sua organização prospere.</p>
+
+<p>Um agente tem uma crença baseada em suas experiências prévias. Quando colocada em uso, a experiência vira uma intenção. O impasse na decisão faz com que necessáriamente um viés seja adotado, potencialmente desagradando um agente de crença distinta. No caso instanciado, o papel de Investidor (Stakeholder) relata que nenhuma matéria que apresenta risco de desagradar um grupo relevante deve ser divulgada. Já o jornalista que escreveu a matéria no foco da decisão relata que seu trabalho pode gerar muito engajamento, o que é bom para o sucesso da Redação Jornalística. Essa decisão também é pautada em regras de negócio, geradas a partir do planejamento da visão do produto e de reuniões de alinhamento. Foram definidas regras relacionadas a esclarecimento de fontes e qualidade do conteúdo proposto. </p>
+
+</br>
+
+<h2>Usabilidade do sistema</h2>
+
+<p>Funcionalidades do sistema pode ser usado por meio do menu lateral à esquerda, que fica visível o tempo todo. No botão "Inserir Instância", é possível inserir uma instância de qualquer classe catalogada no contexto do caso de estudo, onde se mapeou a KIPO e a ontologia do Scrum. Em baixo, existe a seleção de Sprints e de Decisões. Um trabalho diário (Daily) ocorre dentro de uma Sprint e uma Decisão ocorre diante de uma Sprint ou um Daily. Para se ter progresso no trabalho listado com o sistema, deve-se resolver todas as Decisões pendentes no menu. Botão de "Backlog do Produto" faz a gestão de requisitos do sistema, listando itens.</p>
+
+<p>Também é possível gerir pessoas e artefatos, alocando responsabilidades e dependências entre itens. Diante do caso de estudo de Jornalismo, o sistema também faz a gestão de matérias, paralelamente com a gestão de itens relacionados a metodologias ágeis em processos não estruturados.</p>
+
+</br>
+
+<a class="btn btn-primary" href="/kipo_playground/welcome">Voltar</a>
+
+</br>
+</br>
+
+
+{% endblock %} 

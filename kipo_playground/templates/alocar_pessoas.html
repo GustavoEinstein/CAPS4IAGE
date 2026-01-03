@@ -1,0 +1,169 @@
+{% extends 'welcome.html' %} 
+
+{% block content %}
+
+<h2>{{ instancia }}</h2> 
+
+<div class="card_view"> 
+    
+    <div class="card-single">
+
+        <div>
+            <h4 class="text-light">Número de instâncias</h4>
+            <span class="text-light">{{request.session.num_inst}}</span>
+        </div>
+        <div> 
+            <span class="las la-clipboard-lis"></span>
+        </div>
+
+
+    </div>
+
+    <div class="card-single">  
+
+        <div>
+
+            <h4 class="text-light">Status da Ontologia</h4>
+            {% if request.session.status == "OK!" %}
+            <span class="text-success">{{ request.session.status }}</span>
+            {% endif %}
+
+            {% if request.session.status == "Erro!" %}
+            <span class="text-warning">{{ request.session.status }}</span>
+            {% endif %}
+
+        </div>
+        <div> 
+            <span class="las la-clipboard-lis"></span>
+        </div>
+
+
+    </div>
+
+</div>
+
+</br>
+
+<div class="recent-grid">
+    <div class="projects">
+        <div class="card">
+            <div class="card-header">
+                <h2 class="text-light">Atividades Intensivas em Conhecimento</h2>
+            </div>
+
+            <div class="card-body">
+                <table width="100%">
+                    <thead>
+                        <tr>
+                            <td>Classes</td>
+                            <td>Instâncias</td>
+                            <td>Nomes</td>
+                            <td>Observações</td>
+                            <td>Deletar</td>
+                            <td>Alocar Responsabilidade</td>
+                        </tr>
+                    </thead>
+                    <tbody> 
+                        {% for obj in objetos_atividades %}
+                        <tr>
+                            <td>{{ obj.classe_inst }}</td>
+                            <td>{{ obj.instancia }}</td>
+                            <td>{{ obj.nome }}</td>
+                            <td>{{ obj.obs }}</td>
+                            <td>  <a class="btn-warning" href="/kipo_playground/retirar_instancia/{{obj.instancia}}/{{obj.classe_inst}}">Deletar!</a>  </td>
+                            <td>  <a class="btn-warning" href="/kipo_playground/add_relacionamento/{{obj.instancia}}/ontoscrum__is_executed_by/{{ instancia }}">Trabalhar!</a>  </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+</br>
+
+<div class="recent-grid">
+    <div class="projects">
+        <div class="card">
+            <div class="card-header">
+                <h2 class="text-light">Processos Intensivos em Conhecimento</h2>
+            </div>
+
+            <div class="card-body">
+                <table width="100%">
+                    <thead>
+                        <tr>
+                            <td>Classes</td>
+                            <td>Instâncias</td>
+                            <td>Nomes</td>
+                            <td>Observações</td>
+                            <td>Deletar</td>
+                            <td>Alocar Responsabilidade</td>
+                        </tr>
+                    </thead>
+                    <tbody> 
+                        {% for obj in objetos_processos %}
+                        <tr>
+                            <td>{{ obj.classe_inst }}</td>
+                            <td>{{ obj.instancia }}</td>
+                            <td>{{ obj.nome }}</td>
+                            <td>{{ obj.obs }}</td>
+                            <td>  <a class="btn-warning" href="/kipo_playground/retirar_instancia/{{obj.instancia}}/{{obj.classe_inst}}">Deletar!</a>  </td>
+                            <td>  <a class="btn-warning" href="/kipo_playground/add_relacionamento/{{obj.instancia}}/ontoscrum__is_executed_by/{{ instancia }}">Trabalhar!</a>  </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+</br>
+
+<div class="recent-grid">
+    <div class="projects">
+        <div class="card">
+            <div class="card-header">
+                <h2 class="text-light">Sprint Backlogs</h2>
+            </div>
+
+            <div class="card-body">
+                <table width="100%">
+                    <thead>
+                        <tr>
+                            <td>Classes</td>
+                            <td>Instâncias</td>
+                            <td>Nomes</td>
+                            <td>Observações</td>
+                            <td>Deletar</td>
+                            <td>Alocar Responsabilidade</td>
+                        </tr>
+                    </thead>
+                    <tbody> 
+                        {% for obj in objetos_sprint_backlogs %}
+                        <tr>
+                            <td>{{ obj.classe_inst }}</td>
+                            <td>{{ obj.instancia }}</td>
+                            <td>{{ obj.nome }}</td>
+                            <td>{{ obj.obs }}</td>
+                            <td>  <a class="btn-warning" href="/kipo_playground/retirar_instancia/{{obj.instancia}}/{{obj.classe_inst}}">Deletar!</a>  </td>
+                            <td>  <a class="btn-warning" href="/kipo_playground/add_relacionamento/{{obj.instancia}}/ontoscrum__is_executed_by/{{ instancia }}">Trabalhar!</a>  </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+</br>
+</br>
+
+<a class="btn btn-primary" href="/kipo_playground/welcome">Voltar</a>
+
+</br>
+
+{% endblock %}

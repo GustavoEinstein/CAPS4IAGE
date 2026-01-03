@@ -1,0 +1,326 @@
+{% extends 'welcome.html' %}  
+
+{% block content %}
+
+<h2>{{ instancia_sprint }}</h2> 
+
+<div class="card_view">
+    
+    <div class="card-single">
+
+        <div>
+            <h4 class="text-light">Número de instâncias</h4>
+            <span class="text-light">{{request.session.num_inst}}</span>
+        </div>
+        <div> 
+            <span class="las la-clipboard-lis"></span>
+        </div>
+
+
+    </div>
+
+    <div class="card-single">  
+
+        <div>
+
+            <h4 class="text-light">Status da Ontologia</h4>
+            {% if request.session.status == "OK!" %}
+            <span class="text-success">{{ request.session.status }}</span>
+            {% endif %}
+
+            {% if request.session.status == "Erro!" %}
+            <span class="text-warning">{{ request.session.status }}</span>
+            {% endif %}
+
+        </div>
+        <div> 
+            <span class="las la-clipboard-lis"></span>
+        </div>
+
+
+    </div>
+
+    <div class="card-single">
+
+        <div>
+            <h4 class="text-light">Propriedades relacionadas</h4>
+            <span class="text-light">{{request.session.num_prop_correlatas}}</span>
+        </div>
+        <div> 
+            <span class="las la-clipboard-lis"></span>
+        </div>
+
+    </div>
+
+    <div class="card-single">
+
+        <div>
+            <h4 class="text-light">Instâncias correlatas</h4>
+            <span class="text-light">{{request.session.num_inst}}</span>
+        </div>
+        <div> 
+            <span class="las la-clipboard-lis"></span>
+        </div>
+
+    </div>
+
+</div>
+
+</br>
+
+<div class="recent-grid">
+    <div class="projects">
+        <div class="card">
+            <div class="card-header">
+                <h2 class="text-light">O que ocorre durante</h2>
+            </div>
+
+            <div class="card-body">
+                <table width="100%">
+                    <thead>
+                        <tr>
+                            <td>Classes</td>
+                            <td>Instâncias</td>
+                            <td>Nomes</td>
+                            <td>Observações</td>
+                            <td>Deletar</td>
+                        </tr>
+                    </thead>
+                    <tbody> 
+                        {% for obj in objetos_during %}
+                        <tr>
+                            <td>{{ obj.classe_inst }}</td>
+                            <td>{{ obj.instancia }}</td>
+                            <td>{{ obj.nome }}</td>
+                            <td>{{ obj.obs }}</td>
+                            <td>  <a class="btn-warning" href="/kipo_playground/retirar_instancia/{{obj.instancia}}/{{obj.classe_inst}}">Deletar!</a>  </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+</br>
+
+<div class="recent-grid">
+    <div class="projects">
+        <div class="card">
+            <div class="card-header">
+                <h2 class="text-light">O que termina o TCC</h2>
+            </div>
+
+            <div class="card-body">
+                <table width="100%">
+                    <thead>
+                        <tr>
+                            <td>Classes</td>
+                            <td>Instâncias</td>
+                            <td>Nomes</td>
+                            <td>Observações</td>
+                            <td>Deletar</td>
+                        </tr>
+                    </thead>
+                    <tbody> 
+                        {% for obj in objeto_finishes %}
+                        <tr>
+                            <td>{{ obj.classe_inst }}</td>
+                            <td>{{ obj.instancia }}</td>
+                            <td>{{ obj.nome }}</td>
+                            <td>{{ obj.obs }}</td>
+                            <td>  <a class="btn-warning" href="/kipo_playground/retirar_instancia/{{obj.instancia}}/{{obj.classe_inst}}">Deletar!</a>  </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+</br>
+
+<div class="recent-grid">
+    <div class="projects">
+        <div class="card">
+            <div class="card-header">
+                <h2 class="text-light">Inputs</h2>
+            </div>
+
+            <div class="card-body">
+                <table width="100%">
+                    <thead>
+                        <tr>
+                            <td>Classes</td>
+                            <td>Instâncias</td>
+                            <td>Nomes</td>
+                            <td>Observações</td>
+                            <td>Deletar</td>
+                        </tr>
+                    </thead>
+                    <tbody> 
+                        {% for obj in objetos_has_input %}
+                        <tr>
+                            <td>{{ obj.classe_inst }}</td>
+                            <td>{{ obj.instancia }}</td>
+                            <td>{{ obj.nome }}</td>
+                            <td>{{ obj.obs }}</td>
+                            <td>  <a class="btn-warning" href="/kipo_playground/retirar_instancia/{{obj.instancia}}/{{obj.classe_inst}}">Deletar!</a>  </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+</br>
+
+<div class="recent-grid">
+    <div class="projects">
+        <div class="card">
+            <div class="card-header">
+                <h2 class="text-light">Outputs</h2>
+            </div>
+
+            <div class="card-body">
+                <table width="100%">
+                    <thead>
+                        <tr>
+                            <td>Classes</td>
+                            <td>Instâncias</td>
+                            <td>Nomes</td>
+                            <td>Observações</td>
+                            <td>Deletar</td>
+                        </tr>
+                    </thead>
+                    <tbody> 
+                        {% for obj in objetos_has_output %}
+                        <tr>
+                            <td>{{ obj.classe_inst }}</td>
+                            <td>{{ obj.instancia }}</td>
+                            <td>{{ obj.nome }}</td>
+                            <td>{{ obj.obs }}</td>
+                            <td>  <a class="btn-warning" href="/kipo_playground/retirar_instancia/{{obj.instancia}}/{{obj.classe_inst}}">Deletar!</a>  </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+</br>
+
+<div class="recent-grid">
+    <div class="projects">
+        <div class="card">
+            <div class="card-header">
+                <h2 class="text-light">Quem executa Sprint</h2>
+            </div>
+
+            <div class="card-body">
+                <table width="100%">
+                    <thead>
+                        <tr>
+                            <td>Classes</td>
+                            <td>Instâncias</td>
+                            <td>Nomes</td>
+                            <td>Observações</td>
+                            <td>Deletar</td>
+                        </tr>
+                    </thead>
+                    <tbody> 
+                        {% for obj in objetos_has_isexecutedby %}
+                        <tr>
+                            <td>{{ obj.classe_inst }}</td>
+                            <td>{{ obj.instancia }}</td>
+                            <td>{{ obj.nome }}</td>
+                            <td>{{ obj.obs }}</td>
+                            <td>  <a class="btn-warning" href="/kipo_playground/retirar_instancia/{{obj.instancia}}/{{obj.classe_inst}}">Deletar!</a>  </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="recent-grid-add">
+    <a class="btn btn-primary" href="/kipo_playground/add_classe_com_relacionamento/KIPCO__Agent/ontoscrum__is_executed_by/{{ instancia_sprint }}">Adicionar Nova Instância de Agente Envolvido!</a>
+</div>
+
+</br>
+
+<div class="recent-grid">
+    <div class="projects">
+        <div class="card">
+            <div class="card-header">
+                <h2 class="text-light">Trabalho diário</h2>
+            </div>
+
+            <div class="card-body">
+                <table width="100%">
+                    <thead>
+                        <tr>
+                            <td>Classes</td>
+                            <td>Instâncias</td>
+                            <td>Nomes</td>
+                            <td>Observações</td>
+                            <td>Ver Dashboard</td>
+                            <td>Deletar</td>
+                        </tr>
+                    </thead>
+                    <tbody> 
+                        {% for obj in objetos_INV_simultaneo %}
+                        <tr>
+                            <td>{{ obj.classe_inst }}</td>
+                            <td>{{ obj.instancia }}</td>
+                            <td>{{ obj.nome }}</td>
+                            <td>{{ obj.obs }}</td>
+                            <td>  <a class="btn-warning" href="/kipo_playground/daily_dashboard/{{obj.instancia}}">Ver Dashboard do Trabalho!</a>  </td>
+                            <td>  <a class="btn-warning" href="/kipo_playground/retirar_instancia/{{obj.instancia}}/{{obj.classe_inst}}">Deletar!</a>  </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="recent-grid-add">
+    <a class="btn btn-primary" href="/kipo_playground/add_classe_com_relacionamento/KIPCO__Knowledge_Intesive_Activity/ontoscrum__simultaneously/{{ instancia_sprint }}">Adicionar Novo dia de Trabalho</a>
+</div>
+
+</br>
+</br>
+<a class="btn btn-primary" href="/kipo_playground/adicionar_relacionamento_insts_antigas/{{ instancia_sprint }}/ontoscrum__during/scrum_Continuous">Alocar Trabalho Contínuo existente</a>    
+</br>
+</br>
+<a class="btn btn-primary" href="/kipo_playground/adicionar_relacionamento_insts_antigas/{{ instancia_sprint }}/ontoscrum__has_input/scrum_Artifact">Alocar Input existente</a>
+</br>
+</br>
+<a class="btn btn-primary" href="/kipo_playground/adicionar_relacionamento_insts_antigas/{{ instancia_sprint }}/ontoscrum__has_output/scrum_Artifact">Alocar Output existente</a>
+</br>
+</br>
+<a class="btn btn-primary" href="/kipo_playground/adicionar_relacionamento_insts_antigas/{{ instancia_sprint }}/ontoscrum__is_executed_by/KIPCO__Agent">Alocar Agente existente</a>
+</br>
+</br>
+<a class="btn btn-primary" href="/kipo_playground/adicionar_relacionamento_insts_antigas/{{ instancia_sprint }}/ontoscrum__simultaneously/scrum_Daily">Alocar Trabalho Diário existente</a>
+</br>
+</br>
+<a class="btn btn-primary" href="/kipo_playground/adicionar_relacionamento_insts_antigas/{{ instancia_sprint }}/INV_ontoscrum__finishes/scrum_Sprint_Review_Meeting">Alocar Sprint Review existente</a>
+
+</br>
+</br>
+
+<a class="btn btn-primary" href="/kipo_playground/welcome">Voltar</a>
+</br>
+
+{% endblock %}

@@ -1,0 +1,62 @@
+{% extends 'welcome.html' %}
+
+{% block content %} 
+
+{% load static %}
+
+<style>
+.flex-container {
+    display: flex;
+}
+
+.flex-child {
+    flex: 1;
+}  
+
+.flex-child:first-child {
+    margin-right: 20px;
+} 
+
+</style>
+
+<h2>O cerrado é a savana mais biodiversa do mundo!</h2>
+
+<div class="flex-container">
+
+    <div class="flex-child">
+
+        <img alt="calliandra1" src={% static "assets/!IMG_0132.jpg" %} width="550" height="309">
+        </br>
+        </br>
+        <img alt="calliandra2" src={% static "assets/IMG_0140.jpg" %} width="550" height="309">
+    </div>
+    
+    <div class="flex-child">
+    
+        </br>
+        Acredita-se que o bioma cerrado apresenta cerca de 6 mil espécies de árvores e 800 espécies de aves, cobrindo 25% do território nacional, combrindo os Estados de Goiás, Tocantins, Mato Grosso do Sul, Mato Grosso, Minas Gerais, Distrito Federal além de um pouco da , Maranhão, Piauí e São Paulo.
+        </br>
+        </br>
+        Trata-se de um dos biomais mais biodiversos do planeta, tendo sido considerada uma das 27 regiões críticas do planeta, especialmente por conta da flora.
+        </br>
+        </br>
+        A Calliandra dysantha é uma espécie de planta do gênero Calliandra da família das Fabaceae, popularmente conhecida como "Flor-do-cerrado". É por muitos considerada a planta símbolo deste bioma, junto de plantas como o "Chuveirinho" (Paepalanthus chiquitensis Herzog) e a "Mimosa" (Mimosa regina Barneby).
+        </br>
+        </br>
+        <p><a href="https://www.icmbio.gov.br/cbc/conservacao-da-biodiversidade/biodiversidade.html">Fonte: ICMBio, acessado dia 08/08/2022.</a></p>
+        Fotos de Guilherme Braga Pinto, de 31/07/2022. Jardim Botânico de Brasília. Uso Autorizado. 
+    
+    </div>
+    
+</div>
+
+</br>
+</br>
+
+<a class="btn btn-primary" href="/kipo_playground/welcome">Voltar</a>
+
+</br>
+</br>
+
+
+{% endblock %} 

@@ -1,0 +1,172 @@
+{% extends 'welcome.html' %} 
+
+{% load static %}
+
+{% block content %}
+
+                <h2>{{ instancia_backlog }}</h2>  
+
+
+                <div class="card_view">
+                    
+                    <div class="card-single">
+
+                        <div>
+                            <h4 class="text-light">Número de instâncias</h4>
+                            <span class="text-light">{{request.session.num_inst}}</span>
+                        </div>
+                        <div> 
+                            <span class="las la-clipboard-lis"></span>
+                        </div>
+
+
+                    </div>
+
+                    <div class="card-single">  
+
+                        <div>
+
+                            <h4 class="text-light">Status da Ontologia</h4>
+                            {% if request.session.status == "OK!" %}
+                            <span class="text-success">{{ request.session.status }}</span>
+                            {% endif %}
+
+                            {% if request.session.status == "Erro!" %}
+                            <span class="text-warning">{{ request.session.status }}</span>
+                            {% endif %}
+
+                        </div>
+                        <div> 
+                            <span class="las la-clipboard-lis"></span>
+                        </div>
+
+
+                    </div>
+
+                    <div class="card-single">
+
+                        <div>
+                            <h4 class="text-light">Propriedades relacionadas</h4>
+                            <span class="text-light">{{request.session.num_prop_correlatas}}</span>
+                        </div>
+                        <div> 
+                            <span class="las la-clipboard-lis"></span>
+                        </div>
+
+                    </div>
+
+                    <div class="card-single">
+
+                        <div>
+                            <h4 class="text-light">Instâncias correlatas</h4>
+                            <span class="text-light">{{request.session.num_inst}}</span>
+                        </div>
+                        <div> 
+                            <span class="las la-clipboard-lis"></span>
+                        </div>
+
+                    </div>
+
+                </div>
+
+                </br>
+                </br>
+
+                <div class="card_view">
+
+                    <img alt="scrum_img" src={% static "assets/scrum_img.png" %} width="951" height="251">
+                
+                </div>
+                
+                </br>
+                </br>
+
+                <div class="recent-grid">
+                    <div class="projects">
+                        <div class="card">
+                            <div class="card-header">
+                                <h2 class="text-light">Quem gerencia o Backlog</h2>
+                            </div>
+
+                            <div class="card-body">
+                                <table width="100%">
+                                    <thead>
+                                        <tr>
+                                            <td>Classes</td>
+                                            <td>Instâncias</td>
+                                            <td>Nomes</td>
+                                            <td>Observações</td>
+                                            <td>Deletar</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody> 
+                                        {% for obj in objeto_ismanagedby %}
+                                        <tr>
+                                            <td>{{ obj.classe_inst }}</td>
+                                            <td>{{ obj.instancia }}</td>
+                                            <td>{{ obj.nome }}</td>
+                                            <td>{{ obj.obs }}</td>
+                                            <td>  <a class="btn-warning" href="/kipo_playground/retirar_instancia/{{obj.instancia}}/{{obj.classe_inst}}">Deletar!</a>  </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="recent-grid">
+                    <div class="projects">
+                        <div class="card">
+                            <div class="card-header">
+                                <h2 class="text-light">Tarefas da Sprint</h2>
+                            </div>
+
+                            <div class="card-body">
+                                <table width="100%">
+                                    <thead>
+                                        <tr>
+                                            <td>Classes</td>
+                                            <td>Instâncias</td>
+                                            <td>Nomes</td>
+                                            <td>Ver tarefa</td>
+                                            <td>Deletar</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody> 
+                                        {% for obj in objeto_contains %}
+                                        <tr>
+                                            <td>{{ obj.classe_inst }}</td>
+                                            <td>{{ obj.instancia }}</td>
+                                            <td>{{ obj.nome }}</td>
+                                            <td>  <a class="btn-warning" href="/kipo_playground/ver_item_backlog/{{obj.instancia}}">Ver!</a>  </td>
+                                            <td>  <a class="btn-warning" href="/kipo_playground/retirar_instancia/{{obj.instancia}}/{{obj.classe_inst}}">Deletar!</a>  </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            
+                </br>
+                </br>
+                <a class="btn btn-primary" href="/kipo_playground/adicionar_relacionamento_insts_antigas/{{ instancia_backlog }}/ontoscrum__is_managed_by/KIPCO__Agent">Alocar Agente existente</a>    
+                </br>
+                </br>
+                <a class="btn btn-primary" href="/kipo_playground/welcome">Adicionar Tarefa do Backlog</a>
+                </br>
+                </br>
+                <a class="btn btn-primary" href="/kipo_playground/welcome">Voltar</a>
+            </br>
+            </br>
+
+            </div>
+
+            </div>
+        </div>
+
+        {% endblock %}
+

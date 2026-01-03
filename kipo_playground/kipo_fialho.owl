@@ -1,0 +1,3037 @@
+<?xml version="1.0"?>
+<Ontology xmlns="http://www.w3.org/2002/07/owl#"
+     xml:base="http://www.semanticweb.org/fialho/kipo"
+     xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+     xmlns:xml="http://www.w3.org/XML/1998/namespace"
+     xmlns:xsd="http://www.w3.org/2001/XMLSchema#"
+     xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+     ontologyIRI="http://www.semanticweb.org/fialho/kipo">
+    <Prefix name="" IRI="http://www.semanticweb.org/fialho/kipo"/>
+    <Prefix name="owl" IRI="http://www.w3.org/2002/07/owl#"/>
+    <Prefix name="rdf" IRI="http://www.w3.org/1999/02/22-rdf-syntax-ns#"/>
+    <Prefix name="xml" IRI="http://www.w3.org/XML/1998/namespace"/>
+    <Prefix name="xsd" IRI="http://www.w3.org/2001/XMLSchema#"/>
+    <Prefix name="rdfs" IRI="http://www.w3.org/2000/01/rdf-schema#"/>
+    <Declaration>
+        <Class IRI="#Artifact_Item"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#BPO"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#BPO__Activity"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#BPO__Association"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#BPO__Data_Object"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#BPO__Flow"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#BPO__Message_Flow"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#BRO"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#BRO__Derivation_Foundational_Rule"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#BRO__Foundational_Conclusion"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#BRO__Foundational_Condition"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#BRO__Foundational_Event"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#BRO__Foundational_Integrity_Rule"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#BRO__Foundational_Post_Condition"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#BRO__Fundational_Business_Rule"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#BRO__Reaction_Foundational_Rule"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Backlog_Updating"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#CO"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#COM"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#CO__COM__Communicative_Interaction"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#CO__COM__Message"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#CO__COM__Perception"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#CO__COM__Receiver"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#CO__COM__Sender"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#CO__COOP__Collaborative_Session"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Commited_Team_Member"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#DO"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#DO_Fact"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#DO__Advantage"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#DO__Alternative"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#DO__Chosen_Alternative"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#DO__Criterion"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#DO__Decision"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#DO__Disadvantage"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#DO__Discarded_Alternative"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#DO__Evidence"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#DO__Fact"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#DO__Feeling"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#DO__Question"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#DO__Resource"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#DO__Restriction"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#DO__Risk"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Feature_Development"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Impedments_Reporting"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Initial_Backlog_Creation"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Initial_Sprint_Planning"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Involved_Team_Member"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#KIPCO"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#KIPCO__Activity_Goal"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#KIPCO__Agent"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#KIPCO__Assertion"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#KIPCO__Belief"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#KIPCO__Business_Rule"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#KIPCO__Communication"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#KIPCO__Contigency"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#KIPCO__Derivation_Rule"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#KIPCO__Desire"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#KIPCO__Experience"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#KIPCO__External_Agent"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#KIPCO__Impact_Agent"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#KIPCO__Informal_Exchange"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#KIPCO__Innovation"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#KIPCO__Innovation_Agent"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#KIPCO__Integrity_Rule"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#KIPCO__Intention"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#KIPCO__Knowledge_Intensive_Process"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#KIPCO__Knowledge_Intesive_Activity"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#KIPCO__Knowledge_Structure"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#KIPCO__Makes_to_Solve"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#KIPCO__Mental_Image"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#KIPCO__Message_Flow"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#KIPCO__Process_Goal"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#KIPCO__Reaction_Rule"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#KIPCO__Socialization"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#KIPCO__Specialty"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Process_Task"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Product_Backlog"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Product_Backlog_Item"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Product_Feature"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Product_Owner"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Product_Roadmap_Creation"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Release_Plan"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Release_Planning"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Scrum_Master"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Sprint_Backlog"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Sprint_Retrospective"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Sprint_Review"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Sprint_Tasks_Control"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Sprint_Tasks_Updating"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Stakeholder"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Task_Description"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#Vision_Creation"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#ontoscrum__Artifacts"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#ontoscrum__Events"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#ontoscrum__Processes"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#ontoscrum__Roles"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#scrum_Continuous"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#scrum_Daily"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#scrum_Daily_Scrum_Meeting"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#scrum_Meeting"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#scrum_PlanningHorizon"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#scrum_Release_Planning_Horizon"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#scrum_Sprint"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#scrum_Sprint_Planning_Meeting"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#scrum_Sprint_Retrospective_Meeting"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#scrum_Sprint_Review_Meeting"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#scrum_Strategy_Planning_Horizon"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#scrum_Team_Member"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#DIR"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#INV"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#INV_according_to"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#INV_associated_with"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#INV_becomes"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#INV_belongs_to"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#INV_can_solve"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#INV_caused_by"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#INV_composed_by"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#INV_composes"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#INV_connects"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#INV_considers"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#INV_consist_of"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#INV_contains"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#INV_contributes_to_create"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#INV_creates"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#INV_delivers"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#INV_demanded_by"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#INV_determines"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#INV_generates"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#INV_get"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#INV_has"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#INV_has_a"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#INV_help_to_innovate"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#INV_identifies"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#INV_influences"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#INV_innovation_contribution"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#INV_input"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#INV_instance_of"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#INV_involves"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#INV_is_a"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#INV_is_caused_by"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#INV_is_connected_with"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#INV_is_discussed_in"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#INV_is_motivated_by"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#INV_may_be_helped_by"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#INV_motivates"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#INV_occurs"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#INV_ontoscrum__affects"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#INV_ontoscrum__after"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#INV_ontoscrum__before"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#INV_ontoscrum__contains"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#INV_ontoscrum__creator"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#INV_ontoscrum__during"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#INV_ontoscrum__finishes"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#INV_ontoscrum__has_input"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#INV_ontoscrum__has_output"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#INV_ontoscrum__is_executed_by"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#INV_ontoscrum__is_managed_by"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#INV_ontoscrum__originator"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#INV_ontoscrum__overlaps"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#INV_ontoscrum__performs"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#INV_ontoscrum__regarding"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#INV_ontoscrum__simultaneously"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#INV_output"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#INV_participates"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#INV_performs"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#INV_precedes"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#INV_produces"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#INV_proposes"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#INV_propositional_content_of"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#INV_provides"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#INV_required_by"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#INV_resulting_event_expr"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#INV_set_goal"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#INV_stimulates"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#INV_threatens"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#INV_triggering_event_expr"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#INV_undertakes_to_carry_out"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#INV_uses"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#according_to"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#associated_with"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#becomes"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#belongs_to"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#can_solve"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#caused_by"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#composed_by"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#composes"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#connects"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#considers"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#consist_of"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#contains"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#contributes_to_create"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#creates"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#delivers"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#demanded_by"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#determines"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#encerrar_atividades"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#generates"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#get"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#has"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#has_a"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#has_action"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#help_to_innovate"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#identifies"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#influences"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#innovation_contribution"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#input"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#instance_of"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#involves"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#isEventProperPartOf"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#is_a"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#is_caused_by"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#is_connected_with"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#is_discussed_in"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#is_motivated_by"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#may_be_helped_by"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#motivates"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#occurs"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#ontoscrum__affects"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#ontoscrum__after"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#ontoscrum__before"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#ontoscrum__contains"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#ontoscrum__creator"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#ontoscrum__during"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#ontoscrum__finishes"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#ontoscrum__has_input"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#ontoscrum__has_output"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#ontoscrum__is_executed_by"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#ontoscrum__is_managed_by"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#ontoscrum__originator"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#ontoscrum__overlaps"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#ontoscrum__performs"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#ontoscrum__regarding"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#ontoscrum__simultaneously"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#output"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#participates"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#performs"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#pos_state"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#precedes"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#produces"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#proposes"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#propositional_content_of"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#provides"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#required_by"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#resulting_event_expr"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#set_goal"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#stimulates"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#threatens"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#triggering_event_expr"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#undertakes_to_carry_out"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#used_intention"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#uses"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#uses_action"/>
+    </Declaration>
+    <Declaration>
+        <DataProperty IRI="#EstimatedBusinessValue"/>
+    </Declaration>
+    <Declaration>
+        <DataProperty IRI="#Nome"/>
+    </Declaration>
+    <Declaration>
+        <DataProperty IRI="#Observacao"/>
+    </Declaration>
+    <Declaration>
+        <DataProperty IRI="#StatusItemResolvido"/>
+    </Declaration>
+    <Declaration>
+        <DataProperty IRI="#StatusProblemaResolvido"/>
+    </Declaration>
+    <Declaration>
+        <DataProperty IRI="#TaskDescription"/>
+    </Declaration>
+    <EquivalentClasses>
+        <Class IRI="#BPO__Association"/>
+        <ObjectIntersectionOf>
+            <ObjectExactCardinality cardinality="1">
+                <ObjectProperty IRI="#INV_associated_with"/>
+                <Class IRI="#BPO__Flow"/>
+            </ObjectExactCardinality>
+            <ObjectExactCardinality cardinality="1">
+                <ObjectProperty IRI="#INV_is_connected_with"/>
+                <Class IRI="#BPO__Data_Object"/>
+            </ObjectExactCardinality>
+            <ObjectExactCardinality cardinality="1">
+                <ObjectProperty IRI="#connects"/>
+                <Class IRI="#BPO__Activity"/>
+            </ObjectExactCardinality>
+        </ObjectIntersectionOf>
+    </EquivalentClasses>
+    <EquivalentClasses>
+        <Class IRI="#BPO__Data_Object"/>
+        <Class IRI="#Product_Backlog"/>
+    </EquivalentClasses>
+    <EquivalentClasses>
+        <Class IRI="#BPO__Data_Object"/>
+        <Class IRI="#Product_Roadmap_Creation"/>
+    </EquivalentClasses>
+    <EquivalentClasses>
+        <Class IRI="#BPO__Data_Object"/>
+        <Class IRI="#Sprint_Backlog"/>
+    </EquivalentClasses>
+    <EquivalentClasses>
+        <Class IRI="#BPO__Data_Object"/>
+        <Class IRI="#Vision_Creation"/>
+    </EquivalentClasses>
+    <EquivalentClasses>
+        <Class IRI="#BPO__Data_Object"/>
+        <ObjectMinCardinality cardinality="1">
+            <ObjectProperty IRI="#is_connected_with"/>
+            <Class IRI="#BPO__Association"/>
+        </ObjectMinCardinality>
+    </EquivalentClasses>
+    <EquivalentClasses>
+        <Class IRI="#BPO__Flow"/>
+        <ObjectExactCardinality cardinality="1">
+            <ObjectProperty IRI="#associated_with"/>
+            <Class IRI="#BPO__Association"/>
+        </ObjectExactCardinality>
+    </EquivalentClasses>
+    <EquivalentClasses>
+        <Class IRI="#BPO__Message_Flow"/>
+        <ObjectMinCardinality cardinality="2">
+            <ObjectProperty IRI="#connects"/>
+            <Class IRI="#BPO__Activity"/>
+        </ObjectMinCardinality>
+    </EquivalentClasses>
+    <EquivalentClasses>
+        <Class IRI="#BRO__Derivation_Foundational_Rule"/>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#composed_by"/>
+            <Class IRI="#BRO__Foundational_Conclusion"/>
+        </ObjectSomeValuesFrom>
+    </EquivalentClasses>
+    <EquivalentClasses>
+        <Class IRI="#BRO__Fundational_Business_Rule"/>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#composed_by"/>
+            <Class IRI="#BRO__Foundational_Condition"/>
+        </ObjectSomeValuesFrom>
+    </EquivalentClasses>
+    <EquivalentClasses>
+        <Class IRI="#BRO__Reaction_Foundational_Rule"/>
+        <ObjectIntersectionOf>
+            <ObjectSomeValuesFrom>
+                <ObjectProperty IRI="#composed_by"/>
+                <Class IRI="#BRO__Foundational_Post_Condition"/>
+            </ObjectSomeValuesFrom>
+            <ObjectExactCardinality cardinality="1">
+                <ObjectProperty IRI="#resulting_event_expr"/>
+                <Class IRI="#BRO__Foundational_Event"/>
+            </ObjectExactCardinality>
+            <ObjectExactCardinality cardinality="1">
+                <ObjectProperty IRI="#triggering_event_expr"/>
+                <Class IRI="#BRO__Foundational_Event"/>
+            </ObjectExactCardinality>
+        </ObjectIntersectionOf>
+    </EquivalentClasses>
+    <EquivalentClasses>
+        <Class IRI="#CO__COM__Communicative_Interaction"/>
+        <ObjectIntersectionOf>
+            <ObjectMinCardinality cardinality="2">
+                <ObjectProperty IRI="#composed_by"/>
+                <Class IRI="#CO__COM__Perception"/>
+            </ObjectMinCardinality>
+            <ObjectExactCardinality cardinality="2">
+                <ObjectProperty IRI="#composed_by"/>
+                <Class IRI="#KIPCO__Communication"/>
+            </ObjectExactCardinality>
+        </ObjectIntersectionOf>
+    </EquivalentClasses>
+    <EquivalentClasses>
+        <Class IRI="#CO__COM__Perception"/>
+        <ObjectIntersectionOf>
+            <ObjectMinCardinality cardinality="1">
+                <ObjectProperty IRI="#caused_by"/>
+                <Class IRI="#KIPCO__Communication"/>
+            </ObjectMinCardinality>
+            <ObjectExactCardinality cardinality="1">
+                <ObjectProperty IRI="#propositional_content_of"/>
+                <Class IRI="#CO__COM__Message"/>
+            </ObjectExactCardinality>
+        </ObjectIntersectionOf>
+    </EquivalentClasses>
+    <EquivalentClasses>
+        <Class IRI="#CO__COM__Receiver"/>
+        <ObjectIntersectionOf>
+            <Class IRI="#KIPCO__Agent"/>
+            <ObjectSomeValuesFrom>
+                <ObjectProperty IRI="#performs"/>
+                <Class IRI="#CO__COM__Perception"/>
+            </ObjectSomeValuesFrom>
+        </ObjectIntersectionOf>
+    </EquivalentClasses>
+    <EquivalentClasses>
+        <Class IRI="#CO__COM__Sender"/>
+        <ObjectIntersectionOf>
+            <Class IRI="#KIPCO__Agent"/>
+            <ObjectSomeValuesFrom>
+                <ObjectProperty IRI="#performs"/>
+                <Class IRI="#KIPCO__Communication"/>
+            </ObjectSomeValuesFrom>
+        </ObjectIntersectionOf>
+    </EquivalentClasses>
+    <EquivalentClasses>
+        <Class IRI="#DO__Alternative"/>
+        <ObjectMinCardinality cardinality="1">
+            <ObjectProperty IRI="#uses"/>
+            <Class IRI="#DO__Resource"/>
+        </ObjectMinCardinality>
+    </EquivalentClasses>
+    <EquivalentClasses>
+        <Class IRI="#DO__Chosen_Alternative"/>
+        <ObjectMinCardinality cardinality="1">
+            <ObjectProperty IRI="#composes"/>
+            <Class IRI="#DO__Decision"/>
+        </ObjectMinCardinality>
+    </EquivalentClasses>
+    <EquivalentClasses>
+        <Class IRI="#DO__Criterion"/>
+        <ObjectExactCardinality cardinality="1">
+            <ObjectProperty IRI="#INV_according_to"/>
+            <ObjectUnionOf>
+                <Class IRI="#DO__Advantage"/>
+                <Class IRI="#DO__Disadvantage"/>
+            </ObjectUnionOf>
+        </ObjectExactCardinality>
+    </EquivalentClasses>
+    <EquivalentClasses>
+        <Class IRI="#DO__Decision"/>
+        <ObjectMinCardinality cardinality="1">
+            <ObjectProperty IRI="#can_solve"/>
+            <Class IRI="#DO__Question"/>
+        </ObjectMinCardinality>
+    </EquivalentClasses>
+    <EquivalentClasses>
+        <Class IRI="#DO__Decision"/>
+        <ObjectExactCardinality cardinality="1">
+            <ObjectProperty IRI="#considers"/>
+            <Class IRI="#DO__Alternative"/>
+        </ObjectExactCardinality>
+    </EquivalentClasses>
+    <EquivalentClasses>
+        <Class IRI="#DO__Feeling"/>
+        <ObjectExactCardinality cardinality="1">
+            <ObjectProperty IRI="#belongs_to"/>
+            <Class IRI="#KIPCO__Agent"/>
+        </ObjectExactCardinality>
+    </EquivalentClasses>
+    <EquivalentClasses>
+        <Class IRI="#DO__Question"/>
+        <ObjectMinCardinality cardinality="1">
+            <ObjectProperty IRI="#determines"/>
+            <Class IRI="#KIPCO__Specialty"/>
+        </ObjectMinCardinality>
+    </EquivalentClasses>
+    <EquivalentClasses>
+        <Class IRI="#DO__Question"/>
+        <ObjectExactCardinality cardinality="1">
+            <ObjectProperty IRI="#is_caused_by"/>
+            <Class IRI="#DO__Evidence"/>
+        </ObjectExactCardinality>
+    </EquivalentClasses>
+    <EquivalentClasses>
+        <Class IRI="#KIPCO__Agent"/>
+        <Class IRI="#Product_Owner"/>
+    </EquivalentClasses>
+    <EquivalentClasses>
+        <Class IRI="#KIPCO__Agent"/>
+        <Class IRI="#Scrum_Master"/>
+    </EquivalentClasses>
+    <EquivalentClasses>
+        <Class IRI="#KIPCO__Agent"/>
+        <Class IRI="#Stakeholder"/>
+    </EquivalentClasses>
+    <EquivalentClasses>
+        <Class IRI="#KIPCO__Agent"/>
+        <Class IRI="#scrum_Team_Member"/>
+    </EquivalentClasses>
+    <EquivalentClasses>
+        <Class IRI="#KIPCO__Belief"/>
+        <ObjectMinCardinality cardinality="1">
+            <ObjectProperty IRI="#belongs_to"/>
+            <Class IRI="#KIPCO__Agent"/>
+        </ObjectMinCardinality>
+    </EquivalentClasses>
+    <EquivalentClasses>
+        <Class IRI="#KIPCO__Belief"/>
+        <ObjectMinCardinality cardinality="1">
+            <ObjectProperty IRI="#influences"/>
+            <Class IRI="#DO__Decision"/>
+        </ObjectMinCardinality>
+    </EquivalentClasses>
+    <EquivalentClasses>
+        <Class IRI="#KIPCO__Communication"/>
+        <ObjectExactCardinality cardinality="1">
+            <ObjectProperty IRI="#propositional_content_of"/>
+            <Class IRI="#CO__COM__Message"/>
+        </ObjectExactCardinality>
+    </EquivalentClasses>
+    <EquivalentClasses>
+        <Class IRI="#KIPCO__Contigency"/>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#influences"/>
+            <Class IRI="#DO__Alternative"/>
+        </ObjectSomeValuesFrom>
+    </EquivalentClasses>
+    <EquivalentClasses>
+        <Class IRI="#KIPCO__Desire"/>
+        <ObjectMinCardinality cardinality="1">
+            <ObjectProperty IRI="#motivates"/>
+            <Class IRI="#KIPCO__Agent"/>
+        </ObjectMinCardinality>
+    </EquivalentClasses>
+    <EquivalentClasses>
+        <Class IRI="#KIPCO__Experience"/>
+        <ObjectExactCardinality cardinality="1">
+            <ObjectProperty IRI="#belongs_to"/>
+            <Class IRI="#KIPCO__Agent"/>
+        </ObjectExactCardinality>
+    </EquivalentClasses>
+    <EquivalentClasses>
+        <Class IRI="#KIPCO__Impact_Agent"/>
+        <ObjectMinCardinality cardinality="1">
+            <ObjectProperty IRI="#identifies"/>
+            <Class IRI="#DO__Question"/>
+        </ObjectMinCardinality>
+    </EquivalentClasses>
+    <EquivalentClasses>
+        <Class IRI="#KIPCO__Innovation_Agent"/>
+        <ObjectMinCardinality cardinality="1">
+            <ObjectProperty IRI="#has"/>
+            <Class IRI="#KIPCO__Specialty"/>
+        </ObjectMinCardinality>
+    </EquivalentClasses>
+    <EquivalentClasses>
+        <Class IRI="#KIPCO__Innovation_Agent"/>
+        <ObjectMinCardinality cardinality="1">
+            <ObjectProperty IRI="#proposes"/>
+            <Class IRI="#DO__Alternative"/>
+        </ObjectMinCardinality>
+    </EquivalentClasses>
+    <EquivalentClasses>
+        <Class IRI="#KIPCO__Intention"/>
+        <ObjectMinCardinality cardinality="1">
+            <ObjectProperty IRI="#propositional_content_of"/>
+            <Class IRI="#KIPCO__Activity_Goal"/>
+        </ObjectMinCardinality>
+    </EquivalentClasses>
+    <EquivalentClasses>
+        <Class IRI="#KIPCO__Knowledge_Intensive_Process"/>
+        <Class IRI="#scrum_Sprint"/>
+    </EquivalentClasses>
+    <EquivalentClasses>
+        <Class IRI="#KIPCO__Knowledge_Intensive_Process"/>
+        <ObjectMinCardinality cardinality="1">
+            <ObjectProperty IRI="#composed_by"/>
+            <Class IRI="#KIPCO__Knowledge_Intesive_Activity"/>
+        </ObjectMinCardinality>
+    </EquivalentClasses>
+    <EquivalentClasses>
+        <Class IRI="#KIPCO__Knowledge_Intensive_Process"/>
+        <ObjectMinCardinality cardinality="1">
+            <ObjectProperty IRI="#has"/>
+            <Class IRI="#KIPCO__Process_Goal"/>
+        </ObjectMinCardinality>
+    </EquivalentClasses>
+    <EquivalentClasses>
+        <Class IRI="#KIPCO__Knowledge_Intesive_Activity"/>
+        <Class IRI="#scrum_Daily"/>
+    </EquivalentClasses>
+    <EquivalentClasses>
+        <Class IRI="#KIPCO__Knowledge_Intesive_Activity"/>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#has"/>
+            <Class IRI="#KIPCO__Activity_Goal"/>
+        </ObjectSomeValuesFrom>
+    </EquivalentClasses>
+    <EquivalentClasses>
+        <Class IRI="#KIPCO__Knowledge_Intesive_Activity"/>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#involves"/>
+            <Class IRI="#DO__Decision"/>
+        </ObjectSomeValuesFrom>
+    </EquivalentClasses>
+    <EquivalentClasses>
+        <Class IRI="#KIPCO__Knowledge_Intesive_Activity"/>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#may_be_helped_by"/>
+            <Class IRI="#KIPCO__Innovation"/>
+        </ObjectSomeValuesFrom>
+    </EquivalentClasses>
+    <EquivalentClasses>
+        <Class IRI="#KIPCO__Message_Flow"/>
+        <ObjectIntersectionOf>
+            <ObjectMinCardinality cardinality="1">
+                <ObjectProperty IRI="#consist_of"/>
+                <Class IRI="#CO__COM__Message"/>
+            </ObjectMinCardinality>
+            <ObjectExactCardinality cardinality="1">
+                <ObjectProperty IRI="#connects"/>
+                <Class IRI="#KIPCO__Informal_Exchange"/>
+            </ObjectExactCardinality>
+        </ObjectIntersectionOf>
+    </EquivalentClasses>
+    <EquivalentClasses>
+        <Class IRI="#KIPCO__Socialization"/>
+        <ObjectMinCardinality cardinality="1">
+            <ObjectProperty IRI="#creates"/>
+            <Class IRI="#KIPCO__Mental_Image"/>
+        </ObjectMinCardinality>
+    </EquivalentClasses>
+    <EquivalentClasses>
+        <Class IRI="#Sprint_Backlog"/>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#ontoscrum__contains"/>
+            <Class IRI="#DO__Decision"/>
+        </ObjectSomeValuesFrom>
+    </EquivalentClasses>
+    <SubClassOf>
+        <Class IRI="#Artifact_Item"/>
+        <Class IRI="#ontoscrum__Artifacts"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#BPO__Activity"/>
+        <Class IRI="#BPO"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#BPO__Association"/>
+        <Class IRI="#BPO"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#BPO__Data_Object"/>
+        <Class IRI="#BPO"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#BPO__Data_Object"/>
+        <Class IRI="#DO__Resource"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#BPO__Data_Object"/>
+        <Class IRI="#KIPCO__Knowledge_Structure"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#BPO__Flow"/>
+        <Class IRI="#BPO"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#BPO__Message_Flow"/>
+        <Class IRI="#BPO__Flow"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#BRO__Derivation_Foundational_Rule"/>
+        <Class IRI="#BRO"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#BRO__Derivation_Foundational_Rule"/>
+        <Class IRI="#BRO__Fundational_Business_Rule"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#BRO__Foundational_Conclusion"/>
+        <Class IRI="#BRO"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#BRO__Foundational_Condition"/>
+        <Class IRI="#BRO"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#BRO__Foundational_Event"/>
+        <Class IRI="#BRO"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#BRO__Foundational_Integrity_Rule"/>
+        <Class IRI="#BRO"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#BRO__Foundational_Integrity_Rule"/>
+        <Class IRI="#BRO__Fundational_Business_Rule"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#BRO__Foundational_Post_Condition"/>
+        <Class IRI="#BRO"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#BRO__Fundational_Business_Rule"/>
+        <Class IRI="#BRO"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#BRO__Reaction_Foundational_Rule"/>
+        <Class IRI="#BRO"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#BRO__Reaction_Foundational_Rule"/>
+        <Class IRI="#BRO__Fundational_Business_Rule"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Backlog_Updating"/>
+        <Class IRI="#Process_Task"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#COM"/>
+        <Class IRI="#CO"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#CO__COM__Communicative_Interaction"/>
+        <Class IRI="#COM"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#CO__COM__Message"/>
+        <Class IRI="#COM"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#CO__COM__Perception"/>
+        <Class IRI="#COM"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#CO__COM__Receiver"/>
+        <Class IRI="#COM"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#CO__COM__Receiver"/>
+        <Class IRI="#KIPCO__Agent"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#CO__COM__Sender"/>
+        <Class IRI="#COM"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#CO__COM__Sender"/>
+        <Class IRI="#KIPCO__Agent"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#CO__COOP__Collaborative_Session"/>
+        <Class IRI="#CO"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Commited_Team_Member"/>
+        <Class IRI="#ontoscrum__Roles"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#DO_Fact"/>
+        <Class IRI="#DO"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#DO__Advantage"/>
+        <Class IRI="#DO"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#DO__Alternative"/>
+        <Class IRI="#DO"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#DO__Chosen_Alternative"/>
+        <Class IRI="#DO__Alternative"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#DO__Criterion"/>
+        <Class IRI="#DO"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#DO__Criterion"/>
+        <Class IRI="#KIPCO__Business_Rule"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#DO__Decision"/>
+        <Class IRI="#DO"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#DO__Disadvantage"/>
+        <Class IRI="#DO"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#DO__Discarded_Alternative"/>
+        <Class IRI="#DO__Alternative"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#DO__Evidence"/>
+        <Class IRI="#DO"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#DO__Fact"/>
+        <Class IRI="#DO"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#DO__Feeling"/>
+        <Class IRI="#DO"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#DO__Question"/>
+        <Class IRI="#DO"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#DO__Question"/>
+        <Class IRI="#KIPCO__Contigency"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#DO__Resource"/>
+        <Class IRI="#DO"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#DO__Restriction"/>
+        <Class IRI="#DO"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#DO__Restriction"/>
+        <Class IRI="#KIPCO__Business_Rule"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#DO__Risk"/>
+        <Class IRI="#DO"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Feature_Development"/>
+        <Class IRI="#Process_Task"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Impedments_Reporting"/>
+        <Class IRI="#Process_Task"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Initial_Backlog_Creation"/>
+        <Class IRI="#Process_Task"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Initial_Sprint_Planning"/>
+        <Class IRI="#Process_Task"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Involved_Team_Member"/>
+        <Class IRI="#ontoscrum__Roles"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#KIPCO__Activity_Goal"/>
+        <Class IRI="#KIPCO"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#KIPCO__Agent"/>
+        <Class IRI="#DO__Resource"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#KIPCO__Agent"/>
+        <Class IRI="#KIPCO"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#KIPCO__Assertion"/>
+        <Class IRI="#KIPCO"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#KIPCO__Assertion"/>
+        <Class IRI="#KIPCO__Knowledge_Structure"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#KIPCO__Belief"/>
+        <Class IRI="#KIPCO"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#KIPCO__Business_Rule"/>
+        <Class IRI="#BRO__Fundational_Business_Rule"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#KIPCO__Business_Rule"/>
+        <Class IRI="#KIPCO"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#KIPCO__Business_Rule"/>
+        <Class IRI="#KIPCO__Assertion"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#KIPCO__Communication"/>
+        <Class IRI="#KIPCO"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#KIPCO__Contigency"/>
+        <Class IRI="#KIPCO"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#KIPCO__Derivation_Rule"/>
+        <Class IRI="#BRO__Derivation_Foundational_Rule"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#KIPCO__Derivation_Rule"/>
+        <Class IRI="#KIPCO"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#KIPCO__Derivation_Rule"/>
+        <Class IRI="#KIPCO__Business_Rule"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#KIPCO__Desire"/>
+        <Class IRI="#KIPCO"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#KIPCO__Experience"/>
+        <Class IRI="#KIPCO"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#KIPCO__External_Agent"/>
+        <Class IRI="#KIPCO"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#KIPCO__External_Agent"/>
+        <Class IRI="#KIPCO__Agent"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#KIPCO__Impact_Agent"/>
+        <Class IRI="#KIPCO"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#KIPCO__Impact_Agent"/>
+        <Class IRI="#KIPCO__Agent"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#KIPCO__Informal_Exchange"/>
+        <Class IRI="#KIPCO"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#KIPCO__Innovation"/>
+        <Class IRI="#KIPCO"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#KIPCO__Innovation_Agent"/>
+        <Class IRI="#KIPCO"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#KIPCO__Innovation_Agent"/>
+        <Class IRI="#KIPCO__Agent"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#KIPCO__Integrity_Rule"/>
+        <Class IRI="#BRO__Foundational_Integrity_Rule"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#KIPCO__Integrity_Rule"/>
+        <Class IRI="#KIPCO"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#KIPCO__Integrity_Rule"/>
+        <Class IRI="#KIPCO__Business_Rule"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#KIPCO__Intention"/>
+        <Class IRI="#KIPCO"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#KIPCO__Intention"/>
+        <Class IRI="#KIPCO__Desire"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#KIPCO__Knowledge_Intensive_Process"/>
+        <Class IRI="#KIPCO"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#KIPCO__Knowledge_Intesive_Activity"/>
+        <Class IRI="#BPO__Activity"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#KIPCO__Knowledge_Intesive_Activity"/>
+        <Class IRI="#KIPCO"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#KIPCO__Knowledge_Structure"/>
+        <Class IRI="#KIPCO"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#KIPCO__Makes_to_Solve"/>
+        <Class IRI="#KIPCO"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#KIPCO__Mental_Image"/>
+        <Class IRI="#KIPCO"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#KIPCO__Mental_Image"/>
+        <Class IRI="#KIPCO__Knowledge_Structure"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#KIPCO__Message_Flow"/>
+        <Class IRI="#BPO__Message_Flow"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#KIPCO__Message_Flow"/>
+        <Class IRI="#KIPCO"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#KIPCO__Process_Goal"/>
+        <Class IRI="#KIPCO"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#KIPCO__Reaction_Rule"/>
+        <Class IRI="#BRO__Reaction_Foundational_Rule"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#KIPCO__Reaction_Rule"/>
+        <Class IRI="#KIPCO"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#KIPCO__Reaction_Rule"/>
+        <Class IRI="#KIPCO__Business_Rule"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#KIPCO__Socialization"/>
+        <Class IRI="#CO__COM__Communicative_Interaction"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#KIPCO__Socialization"/>
+        <Class IRI="#CO__COOP__Collaborative_Session"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#KIPCO__Socialization"/>
+        <Class IRI="#KIPCO"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#KIPCO__Specialty"/>
+        <Class IRI="#KIPCO"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Process_Task"/>
+        <Class IRI="#ontoscrum__Processes"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Product_Backlog"/>
+        <Class IRI="#ontoscrum__Artifacts"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Product_Backlog_Item"/>
+        <Class IRI="#Artifact_Item"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Product_Feature"/>
+        <Class IRI="#Artifact_Item"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Product_Owner"/>
+        <Class IRI="#ontoscrum__Roles"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Product_Roadmap_Creation"/>
+        <Class IRI="#Process_Task"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Release_Plan"/>
+        <Class IRI="#Artifact_Item"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Release_Planning"/>
+        <Class IRI="#Process_Task"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Scrum_Master"/>
+        <Class IRI="#ontoscrum__Roles"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Sprint_Backlog"/>
+        <Class IRI="#ontoscrum__Artifacts"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Sprint_Retrospective"/>
+        <Class IRI="#Process_Task"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Sprint_Review"/>
+        <Class IRI="#Process_Task"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Sprint_Tasks_Control"/>
+        <Class IRI="#Process_Task"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Sprint_Tasks_Updating"/>
+        <Class IRI="#Process_Task"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Stakeholder"/>
+        <Class IRI="#ontoscrum__Roles"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Task_Description"/>
+        <Class IRI="#Artifact_Item"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Vision_Creation"/>
+        <Class IRI="#Process_Task"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#ontoscrum__Artifacts"/>
+        <ObjectUnionOf>
+            <ObjectSomeValuesFrom>
+                <ObjectProperty IRI="#ontoscrum__creator"/>
+                <Class IRI="#ontoscrum__Roles"/>
+            </ObjectSomeValuesFrom>
+            <ObjectSomeValuesFrom>
+                <ObjectProperty IRI="#ontoscrum__is_executed_by"/>
+                <Class IRI="#ontoscrum__Roles"/>
+            </ObjectSomeValuesFrom>
+            <ObjectSomeValuesFrom>
+                <ObjectProperty IRI="#ontoscrum__is_managed_by"/>
+                <Class IRI="#ontoscrum__Roles"/>
+            </ObjectSomeValuesFrom>
+        </ObjectUnionOf>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#ontoscrum__Events"/>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#ontoscrum__during"/>
+            <Class IRI="#ontoscrum__Processes"/>
+        </ObjectSomeValuesFrom>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#ontoscrum__Processes"/>
+        <ObjectUnionOf>
+            <ObjectSomeValuesFrom>
+                <ObjectProperty IRI="#ontoscrum__has_input"/>
+                <Class IRI="#ontoscrum__Artifacts"/>
+            </ObjectSomeValuesFrom>
+            <ObjectSomeValuesFrom>
+                <ObjectProperty IRI="#ontoscrum__has_output"/>
+                <Class IRI="#ontoscrum__Artifacts"/>
+            </ObjectSomeValuesFrom>
+        </ObjectUnionOf>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#ontoscrum__Processes"/>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#ontoscrum__is_executed_by"/>
+            <Class IRI="#ontoscrum__Roles"/>
+        </ObjectSomeValuesFrom>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#scrum_Continuous"/>
+        <Class IRI="#ontoscrum__Events"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#scrum_Daily"/>
+        <Class IRI="#ontoscrum__Events"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#scrum_Daily"/>
+        <Class IRI="#ontoscrum__Processes"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#scrum_Daily_Scrum_Meeting"/>
+        <Class IRI="#ontoscrum__Events"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#scrum_Meeting"/>
+        <Class IRI="#ontoscrum__Events"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#scrum_PlanningHorizon"/>
+        <Class IRI="#ontoscrum__Events"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#scrum_Release_Planning_Horizon"/>
+        <Class IRI="#ontoscrum__Events"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#scrum_Release_Planning_Horizon"/>
+        <Class IRI="#ontoscrum__Processes"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#scrum_Sprint"/>
+        <Class IRI="#ontoscrum__Events"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#scrum_Sprint"/>
+        <Class IRI="#ontoscrum__Processes"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#scrum_Sprint_Planning_Meeting"/>
+        <Class IRI="#ontoscrum__Events"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#scrum_Sprint_Retrospective_Meeting"/>
+        <Class IRI="#ontoscrum__Events"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#scrum_Sprint_Review_Meeting"/>
+        <Class IRI="#ontoscrum__Events"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#scrum_Strategy_Planning_Horizon"/>
+        <Class IRI="#ontoscrum__Events"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#scrum_Strategy_Planning_Horizon"/>
+        <Class IRI="#ontoscrum__Processes"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#scrum_Team_Member"/>
+        <Class IRI="#ontoscrum__Roles"/>
+    </SubClassOf>
+    <DisjointClasses>
+        <Class IRI="#DO__Advantage"/>
+        <Class IRI="#DO__Disadvantage"/>
+    </DisjointClasses>
+    <DisjointClasses>
+        <Class IRI="#DO__Chosen_Alternative"/>
+        <Class IRI="#DO__Discarded_Alternative"/>
+    </DisjointClasses>
+    <DisjointClasses>
+        <Class IRI="#KIPCO__Agent"/>
+        <Class IRI="#KIPCO__Knowledge_Intesive_Activity"/>
+    </DisjointClasses>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#INV_according_to"/>
+        <ObjectProperty IRI="#INV"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#INV_associated_with"/>
+        <ObjectProperty IRI="#INV"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#INV_becomes"/>
+        <ObjectProperty IRI="#INV"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#INV_belongs_to"/>
+        <ObjectProperty IRI="#INV"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#INV_can_solve"/>
+        <ObjectProperty IRI="#INV"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#INV_caused_by"/>
+        <ObjectProperty IRI="#INV"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#INV_composed_by"/>
+        <ObjectProperty IRI="#INV"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#INV_composes"/>
+        <ObjectProperty IRI="#INV"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#INV_connects"/>
+        <ObjectProperty IRI="#INV"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#INV_considers"/>
+        <ObjectProperty IRI="#INV"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#INV_consist_of"/>
+        <ObjectProperty IRI="#INV"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#INV_contains"/>
+        <ObjectProperty IRI="#INV"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#INV_contributes_to_create"/>
+        <ObjectProperty IRI="#INV"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#INV_creates"/>
+        <ObjectProperty IRI="#INV"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#INV_delivers"/>
+        <ObjectProperty IRI="#INV_output"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#INV_demanded_by"/>
+        <ObjectProperty IRI="#INV_input"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#INV_determines"/>
+        <ObjectProperty IRI="#INV"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#INV_generates"/>
+        <ObjectProperty IRI="#INV"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#INV_get"/>
+        <ObjectProperty IRI="#INV"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#INV_has"/>
+        <ObjectProperty IRI="#INV"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#INV_has_a"/>
+        <ObjectProperty IRI="#INV"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#INV_help_to_innovate"/>
+        <ObjectProperty IRI="#INV"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#INV_identifies"/>
+        <ObjectProperty IRI="#INV"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#INV_influences"/>
+        <ObjectProperty IRI="#INV"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#INV_innovation_contribution"/>
+        <ObjectProperty IRI="#INV"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#INV_input"/>
+        <ObjectProperty IRI="#INV"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#INV_instance_of"/>
+        <ObjectProperty IRI="#INV"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#INV_involves"/>
+        <ObjectProperty IRI="#INV"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#INV_is_a"/>
+        <ObjectProperty IRI="#INV"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#INV_is_caused_by"/>
+        <ObjectProperty IRI="#INV"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#INV_is_connected_with"/>
+        <ObjectProperty IRI="#INV"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#INV_is_discussed_in"/>
+        <ObjectProperty IRI="#INV"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#INV_is_motivated_by"/>
+        <ObjectProperty IRI="#INV"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#INV_may_be_helped_by"/>
+        <ObjectProperty IRI="#INV"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#INV_motivates"/>
+        <ObjectProperty IRI="#INV"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#INV_occurs"/>
+        <ObjectProperty IRI="#INV"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#INV_ontoscrum__affects"/>
+        <ObjectProperty IRI="#INV"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#INV_ontoscrum__after"/>
+        <ObjectProperty IRI="#INV"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#INV_ontoscrum__before"/>
+        <ObjectProperty IRI="#INV"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#INV_ontoscrum__contains"/>
+        <ObjectProperty IRI="#INV"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#INV_ontoscrum__creator"/>
+        <ObjectProperty IRI="#INV"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#INV_ontoscrum__during"/>
+        <ObjectProperty IRI="#INV"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#INV_ontoscrum__finishes"/>
+        <ObjectProperty IRI="#INV"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#INV_ontoscrum__has_input"/>
+        <ObjectProperty IRI="#INV"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#INV_ontoscrum__has_output"/>
+        <ObjectProperty IRI="#INV"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#INV_ontoscrum__is_executed_by"/>
+        <ObjectProperty IRI="#INV"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#INV_ontoscrum__is_managed_by"/>
+        <ObjectProperty IRI="#INV"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#INV_ontoscrum__originator"/>
+        <ObjectProperty IRI="#INV"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#INV_ontoscrum__overlaps"/>
+        <ObjectProperty IRI="#INV"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#INV_ontoscrum__performs"/>
+        <ObjectProperty IRI="#INV"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#INV_ontoscrum__regarding"/>
+        <ObjectProperty IRI="#INV"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#INV_ontoscrum__simultaneously"/>
+        <ObjectProperty IRI="#INV"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#INV_output"/>
+        <ObjectProperty IRI="#INV"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#INV_participates"/>
+        <ObjectProperty IRI="#INV"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#INV_performs"/>
+        <ObjectProperty IRI="#INV"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#INV_precedes"/>
+        <ObjectProperty IRI="#INV"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#INV_produces"/>
+        <ObjectProperty IRI="#INV_output"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#INV_proposes"/>
+        <ObjectProperty IRI="#INV"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#INV_propositional_content_of"/>
+        <ObjectProperty IRI="#INV"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#INV_provides"/>
+        <ObjectProperty IRI="#INV"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#INV_required_by"/>
+        <ObjectProperty IRI="#INV_input"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#INV_resulting_event_expr"/>
+        <ObjectProperty IRI="#INV"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#INV_set_goal"/>
+        <ObjectProperty IRI="#INV"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#INV_stimulates"/>
+        <ObjectProperty IRI="#INV"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#INV_threatens"/>
+        <ObjectProperty IRI="#INV"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#INV_triggering_event_expr"/>
+        <ObjectProperty IRI="#INV"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#INV_undertakes_to_carry_out"/>
+        <ObjectProperty IRI="#INV"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#INV_uses"/>
+        <ObjectProperty IRI="#INV"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#according_to"/>
+        <ObjectProperty IRI="#DIR"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#associated_with"/>
+        <ObjectProperty IRI="#DIR"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#becomes"/>
+        <ObjectProperty IRI="#DIR"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#belongs_to"/>
+        <ObjectProperty IRI="#DIR"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#can_solve"/>
+        <ObjectProperty IRI="#DIR"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#caused_by"/>
+        <ObjectProperty IRI="#DIR"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#composed_by"/>
+        <ObjectProperty IRI="#DIR"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#composes"/>
+        <ObjectProperty IRI="#DIR"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#connects"/>
+        <ObjectProperty IRI="#DIR"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#considers"/>
+        <ObjectProperty IRI="#DIR"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#consist_of"/>
+        <ObjectProperty IRI="#DIR"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#contains"/>
+        <ObjectProperty IRI="#DIR"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#contributes_to_create"/>
+        <ObjectProperty IRI="#DIR"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#creates"/>
+        <ObjectProperty IRI="#DIR"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#delivers"/>
+        <ObjectProperty IRI="#output"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#demanded_by"/>
+        <ObjectProperty IRI="#input"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#determines"/>
+        <ObjectProperty IRI="#DIR"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#encerrar_atividades"/>
+        <ObjectProperty IRI="#DIR"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#generates"/>
+        <ObjectProperty IRI="#DIR"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#get"/>
+        <ObjectProperty IRI="#DIR"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#has"/>
+        <ObjectProperty IRI="#DIR"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#has_a"/>
+        <ObjectProperty IRI="#DIR"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#has_action"/>
+        <ObjectProperty IRI="#DIR"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#help_to_innovate"/>
+        <ObjectProperty IRI="#DIR"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#identifies"/>
+        <ObjectProperty IRI="#DIR"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#influences"/>
+        <ObjectProperty IRI="#DIR"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#innovation_contribution"/>
+        <ObjectProperty IRI="#DIR"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#input"/>
+        <ObjectProperty IRI="#DIR"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#instance_of"/>
+        <ObjectProperty IRI="#DIR"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#involves"/>
+        <ObjectProperty IRI="#DIR"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#isEventProperPartOf"/>
+        <ObjectProperty IRI="#DIR"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#is_a"/>
+        <ObjectProperty IRI="#DIR"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#is_caused_by"/>
+        <ObjectProperty IRI="#DIR"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#is_connected_with"/>
+        <ObjectProperty IRI="#DIR"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#is_discussed_in"/>
+        <ObjectProperty IRI="#DIR"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#is_motivated_by"/>
+        <ObjectProperty IRI="#DIR"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#may_be_helped_by"/>
+        <ObjectProperty IRI="#DIR"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#motivates"/>
+        <ObjectProperty IRI="#DIR"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#occurs"/>
+        <ObjectProperty IRI="#DIR"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#ontoscrum__affects"/>
+        <ObjectProperty IRI="#DIR"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#ontoscrum__after"/>
+        <ObjectProperty IRI="#DIR"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#ontoscrum__before"/>
+        <ObjectProperty IRI="#DIR"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#ontoscrum__contains"/>
+        <ObjectProperty IRI="#DIR"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#ontoscrum__creator"/>
+        <ObjectProperty IRI="#DIR"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#ontoscrum__during"/>
+        <ObjectProperty IRI="#DIR"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#ontoscrum__finishes"/>
+        <ObjectProperty IRI="#DIR"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#ontoscrum__has_input"/>
+        <ObjectProperty IRI="#DIR"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#ontoscrum__has_output"/>
+        <ObjectProperty IRI="#DIR"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#ontoscrum__is_executed_by"/>
+        <ObjectProperty IRI="#DIR"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#ontoscrum__is_managed_by"/>
+        <ObjectProperty IRI="#DIR"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#ontoscrum__originator"/>
+        <ObjectProperty IRI="#DIR"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#ontoscrum__overlaps"/>
+        <ObjectProperty IRI="#DIR"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#ontoscrum__performs"/>
+        <ObjectProperty IRI="#DIR"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#ontoscrum__regarding"/>
+        <ObjectProperty IRI="#DIR"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#ontoscrum__simultaneously"/>
+        <ObjectProperty IRI="#DIR"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#output"/>
+        <ObjectProperty IRI="#DIR"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#participates"/>
+        <ObjectProperty IRI="#DIR"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#performs"/>
+        <ObjectProperty IRI="#DIR"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#pos_state"/>
+        <ObjectProperty IRI="#DIR"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#precedes"/>
+        <ObjectProperty IRI="#DIR"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#produces"/>
+        <ObjectProperty IRI="#output"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#proposes"/>
+        <ObjectProperty IRI="#DIR"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#propositional_content_of"/>
+        <ObjectProperty IRI="#DIR"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#provides"/>
+        <ObjectProperty IRI="#DIR"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#required_by"/>
+        <ObjectProperty IRI="#input"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#resulting_event_expr"/>
+        <ObjectProperty IRI="#DIR"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#set_goal"/>
+        <ObjectProperty IRI="#DIR"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#stimulates"/>
+        <ObjectProperty IRI="#DIR"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#threatens"/>
+        <ObjectProperty IRI="#DIR"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#triggering_event_expr"/>
+        <ObjectProperty IRI="#DIR"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#undertakes_to_carry_out"/>
+        <ObjectProperty IRI="#DIR"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#used_intention"/>
+        <ObjectProperty IRI="#DIR"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#uses"/>
+        <ObjectProperty IRI="#DIR"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#uses_action"/>
+        <ObjectProperty IRI="#DIR"/>
+    </SubObjectPropertyOf>
+    <InverseObjectProperties>
+        <ObjectProperty IRI="#INV"/>
+        <ObjectProperty IRI="#INV"/>
+    </InverseObjectProperties>
+    <InverseObjectProperties>
+        <ObjectProperty IRI="#INV_according_to"/>
+        <ObjectProperty IRI="#according_to"/>
+    </InverseObjectProperties>
+    <InverseObjectProperties>
+        <ObjectProperty IRI="#INV_associated_with"/>
+        <ObjectProperty IRI="#associated_with"/>
+    </InverseObjectProperties>
+    <InverseObjectProperties>
+        <ObjectProperty IRI="#INV_becomes"/>
+        <ObjectProperty IRI="#becomes"/>
+    </InverseObjectProperties>
+    <InverseObjectProperties>
+        <ObjectProperty IRI="#INV_belongs_to"/>
+        <ObjectProperty IRI="#belongs_to"/>
+    </InverseObjectProperties>
+    <InverseObjectProperties>
+        <ObjectProperty IRI="#INV_can_solve"/>
+        <ObjectProperty IRI="#can_solve"/>
+    </InverseObjectProperties>
+    <InverseObjectProperties>
+        <ObjectProperty IRI="#INV_caused_by"/>
+        <ObjectProperty IRI="#caused_by"/>
+    </InverseObjectProperties>
+    <InverseObjectProperties>
+        <ObjectProperty IRI="#INV_composed_by"/>
+        <ObjectProperty IRI="#composed_by"/>
+    </InverseObjectProperties>
+    <InverseObjectProperties>
+        <ObjectProperty IRI="#INV_composes"/>
+        <ObjectProperty IRI="#composes"/>
+    </InverseObjectProperties>
+    <InverseObjectProperties>
+        <ObjectProperty IRI="#INV_connects"/>
+        <ObjectProperty IRI="#connects"/>
+    </InverseObjectProperties>
+    <InverseObjectProperties>
+        <ObjectProperty IRI="#INV_considers"/>
+        <ObjectProperty IRI="#considers"/>
+    </InverseObjectProperties>
+    <InverseObjectProperties>
+        <ObjectProperty IRI="#INV_consist_of"/>
+        <ObjectProperty IRI="#consist_of"/>
+    </InverseObjectProperties>
+    <InverseObjectProperties>
+        <ObjectProperty IRI="#INV_contains"/>
+        <ObjectProperty IRI="#contains"/>
+    </InverseObjectProperties>
+    <InverseObjectProperties>
+        <ObjectProperty IRI="#INV_contributes_to_create"/>
+        <ObjectProperty IRI="#contributes_to_create"/>
+    </InverseObjectProperties>
+    <InverseObjectProperties>
+        <ObjectProperty IRI="#INV_creates"/>
+        <ObjectProperty IRI="#creates"/>
+    </InverseObjectProperties>
+    <InverseObjectProperties>
+        <ObjectProperty IRI="#INV_delivers"/>
+        <ObjectProperty IRI="#delivers"/>
+    </InverseObjectProperties>
+    <InverseObjectProperties>
+        <ObjectProperty IRI="#INV_demanded_by"/>
+        <ObjectProperty IRI="#demanded_by"/>
+    </InverseObjectProperties>
+    <InverseObjectProperties>
+        <ObjectProperty IRI="#INV_determines"/>
+        <ObjectProperty IRI="#determines"/>
+    </InverseObjectProperties>
+    <InverseObjectProperties>
+        <ObjectProperty IRI="#INV_generates"/>
+        <ObjectProperty IRI="#generates"/>
+    </InverseObjectProperties>
+    <InverseObjectProperties>
+        <ObjectProperty IRI="#INV_get"/>
+        <ObjectProperty IRI="#get"/>
+    </InverseObjectProperties>
+    <InverseObjectProperties>
+        <ObjectProperty IRI="#INV_has"/>
+        <ObjectProperty IRI="#has"/>
+    </InverseObjectProperties>
+    <InverseObjectProperties>
+        <ObjectProperty IRI="#INV_has_a"/>
+        <ObjectProperty IRI="#has_a"/>
+    </InverseObjectProperties>
+    <InverseObjectProperties>
+        <ObjectProperty IRI="#INV_help_to_innovate"/>
+        <ObjectProperty IRI="#help_to_innovate"/>
+    </InverseObjectProperties>
+    <InverseObjectProperties>
+        <ObjectProperty IRI="#INV_identifies"/>
+        <ObjectProperty IRI="#identifies"/>
+    </InverseObjectProperties>
+    <InverseObjectProperties>
+        <ObjectProperty IRI="#INV_influences"/>
+        <ObjectProperty IRI="#influences"/>
+    </InverseObjectProperties>
+    <InverseObjectProperties>
+        <ObjectProperty IRI="#INV_innovation_contribution"/>
+        <ObjectProperty IRI="#innovation_contribution"/>
+    </InverseObjectProperties>
+    <InverseObjectProperties>
+        <ObjectProperty IRI="#INV_input"/>
+        <ObjectProperty IRI="#input"/>
+    </InverseObjectProperties>
+    <InverseObjectProperties>
+        <ObjectProperty IRI="#INV_instance_of"/>
+        <ObjectProperty IRI="#instance_of"/>
+    </InverseObjectProperties>
+    <InverseObjectProperties>
+        <ObjectProperty IRI="#INV_involves"/>
+        <ObjectProperty IRI="#involves"/>
+    </InverseObjectProperties>
+    <InverseObjectProperties>
+        <ObjectProperty IRI="#INV_is_a"/>
+        <ObjectProperty IRI="#is_a"/>
+    </InverseObjectProperties>
+    <InverseObjectProperties>
+        <ObjectProperty IRI="#INV_is_caused_by"/>
+        <ObjectProperty IRI="#is_caused_by"/>
+    </InverseObjectProperties>
+    <InverseObjectProperties>
+        <ObjectProperty IRI="#INV_is_connected_with"/>
+        <ObjectProperty IRI="#is_connected_with"/>
+    </InverseObjectProperties>
+    <InverseObjectProperties>
+        <ObjectProperty IRI="#INV_is_discussed_in"/>
+        <ObjectProperty IRI="#is_discussed_in"/>
+    </InverseObjectProperties>
+    <InverseObjectProperties>
+        <ObjectProperty IRI="#INV_is_motivated_by"/>
+        <ObjectProperty IRI="#is_motivated_by"/>
+    </InverseObjectProperties>
+    <InverseObjectProperties>
+        <ObjectProperty IRI="#INV_may_be_helped_by"/>
+        <ObjectProperty IRI="#may_be_helped_by"/>
+    </InverseObjectProperties>
+    <InverseObjectProperties>
+        <ObjectProperty IRI="#INV_motivates"/>
+        <ObjectProperty IRI="#motivates"/>
+    </InverseObjectProperties>
+    <InverseObjectProperties>
+        <ObjectProperty IRI="#INV_occurs"/>
+        <ObjectProperty IRI="#occurs"/>
+    </InverseObjectProperties>
+    <InverseObjectProperties>
+        <ObjectProperty IRI="#INV_ontoscrum__affects"/>
+        <ObjectProperty IRI="#ontoscrum__affects"/>
+    </InverseObjectProperties>
+    <InverseObjectProperties>
+        <ObjectProperty IRI="#INV_ontoscrum__after"/>
+        <ObjectProperty IRI="#ontoscrum__after"/>
+    </InverseObjectProperties>
+    <InverseObjectProperties>
+        <ObjectProperty IRI="#INV_ontoscrum__before"/>
+        <ObjectProperty IRI="#ontoscrum__before"/>
+    </InverseObjectProperties>
+    <InverseObjectProperties>
+        <ObjectProperty IRI="#INV_ontoscrum__contains"/>
+        <ObjectProperty IRI="#ontoscrum__contains"/>
+    </InverseObjectProperties>
+    <InverseObjectProperties>
+        <ObjectProperty IRI="#INV_ontoscrum__creator"/>
+        <ObjectProperty IRI="#ontoscrum__creator"/>
+    </InverseObjectProperties>
+    <InverseObjectProperties>
+        <ObjectProperty IRI="#INV_ontoscrum__during"/>
+        <ObjectProperty IRI="#ontoscrum__during"/>
+    </InverseObjectProperties>
+    <InverseObjectProperties>
+        <ObjectProperty IRI="#INV_ontoscrum__finishes"/>
+        <ObjectProperty IRI="#ontoscrum__finishes"/>
+    </InverseObjectProperties>
+    <InverseObjectProperties>
+        <ObjectProperty IRI="#INV_ontoscrum__has_input"/>
+        <ObjectProperty IRI="#ontoscrum__has_input"/>
+    </InverseObjectProperties>
+    <InverseObjectProperties>
+        <ObjectProperty IRI="#INV_ontoscrum__has_output"/>
+        <ObjectProperty IRI="#ontoscrum__has_output"/>
+    </InverseObjectProperties>
+    <InverseObjectProperties>
+        <ObjectProperty IRI="#INV_ontoscrum__is_executed_by"/>
+        <ObjectProperty IRI="#ontoscrum__is_executed_by"/>
+    </InverseObjectProperties>
+    <InverseObjectProperties>
+        <ObjectProperty IRI="#INV_ontoscrum__is_managed_by"/>
+        <ObjectProperty IRI="#ontoscrum__is_managed_by"/>
+    </InverseObjectProperties>
+    <InverseObjectProperties>
+        <ObjectProperty IRI="#INV_ontoscrum__originator"/>
+        <ObjectProperty IRI="#ontoscrum__originator"/>
+    </InverseObjectProperties>
+    <InverseObjectProperties>
+        <ObjectProperty IRI="#INV_ontoscrum__overlaps"/>
+        <ObjectProperty IRI="#ontoscrum__overlaps"/>
+    </InverseObjectProperties>
+    <InverseObjectProperties>
+        <ObjectProperty IRI="#INV_ontoscrum__performs"/>
+        <ObjectProperty IRI="#ontoscrum__performs"/>
+    </InverseObjectProperties>
+    <InverseObjectProperties>
+        <ObjectProperty IRI="#INV_ontoscrum__regarding"/>
+        <ObjectProperty IRI="#ontoscrum__regarding"/>
+    </InverseObjectProperties>
+    <InverseObjectProperties>
+        <ObjectProperty IRI="#INV_ontoscrum__simultaneously"/>
+        <ObjectProperty IRI="#ontoscrum__simultaneously"/>
+    </InverseObjectProperties>
+    <InverseObjectProperties>
+        <ObjectProperty IRI="#INV_output"/>
+        <ObjectProperty IRI="#output"/>
+    </InverseObjectProperties>
+    <InverseObjectProperties>
+        <ObjectProperty IRI="#INV_participates"/>
+        <ObjectProperty IRI="#participates"/>
+    </InverseObjectProperties>
+    <InverseObjectProperties>
+        <ObjectProperty IRI="#INV_performs"/>
+        <ObjectProperty IRI="#performs"/>
+    </InverseObjectProperties>
+    <InverseObjectProperties>
+        <ObjectProperty IRI="#INV_precedes"/>
+        <ObjectProperty IRI="#precedes"/>
+    </InverseObjectProperties>
+    <InverseObjectProperties>
+        <ObjectProperty IRI="#INV_produces"/>
+        <ObjectProperty IRI="#produces"/>
+    </InverseObjectProperties>
+    <InverseObjectProperties>
+        <ObjectProperty IRI="#INV_proposes"/>
+        <ObjectProperty IRI="#proposes"/>
+    </InverseObjectProperties>
+    <InverseObjectProperties>
+        <ObjectProperty IRI="#INV_propositional_content_of"/>
+        <ObjectProperty IRI="#propositional_content_of"/>
+    </InverseObjectProperties>
+    <InverseObjectProperties>
+        <ObjectProperty IRI="#INV_provides"/>
+        <ObjectProperty IRI="#provides"/>
+    </InverseObjectProperties>
+    <InverseObjectProperties>
+        <ObjectProperty IRI="#INV_required_by"/>
+        <ObjectProperty IRI="#required_by"/>
+    </InverseObjectProperties>
+    <InverseObjectProperties>
+        <ObjectProperty IRI="#INV_resulting_event_expr"/>
+        <ObjectProperty IRI="#resulting_event_expr"/>
+    </InverseObjectProperties>
+    <InverseObjectProperties>
+        <ObjectProperty IRI="#INV_set_goal"/>
+        <ObjectProperty IRI="#INV_set_goal"/>
+    </InverseObjectProperties>
+    <InverseObjectProperties>
+        <ObjectProperty IRI="#INV_stimulates"/>
+        <ObjectProperty IRI="#stimulates"/>
+    </InverseObjectProperties>
+    <InverseObjectProperties>
+        <ObjectProperty IRI="#INV_threatens"/>
+        <ObjectProperty IRI="#threatens"/>
+    </InverseObjectProperties>
+    <InverseObjectProperties>
+        <ObjectProperty IRI="#INV_triggering_event_expr"/>
+        <ObjectProperty IRI="#triggering_event_expr"/>
+    </InverseObjectProperties>
+    <InverseObjectProperties>
+        <ObjectProperty IRI="#INV_undertakes_to_carry_out"/>
+        <ObjectProperty IRI="#undertakes_to_carry_out"/>
+    </InverseObjectProperties>
+    <InverseObjectProperties>
+        <ObjectProperty IRI="#INV_uses"/>
+        <ObjectProperty IRI="#uses"/>
+    </InverseObjectProperties>
+    <ObjectPropertyDomain>
+        <ObjectProperty IRI="#according_to"/>
+        <ObjectUnionOf>
+            <Class IRI="#DO__Advantage"/>
+            <Class IRI="#DO__Disadvantage"/>
+        </ObjectUnionOf>
+    </ObjectPropertyDomain>
+    <ObjectPropertyDomain>
+        <ObjectProperty IRI="#associated_with"/>
+        <ObjectUnionOf>
+            <Class IRI="#BPO__Flow"/>
+            <Class IRI="#DO__Alternative"/>
+            <Class IRI="#DO__Question"/>
+        </ObjectUnionOf>
+    </ObjectPropertyDomain>
+    <ObjectPropertyDomain>
+        <ObjectProperty IRI="#becomes"/>
+        <Class IRI="#KIPCO__Belief"/>
+    </ObjectPropertyDomain>
+    <ObjectPropertyDomain>
+        <ObjectProperty IRI="#belongs_to"/>
+        <ObjectUnionOf>
+            <Class IRI="#DO__Feeling"/>
+            <Class IRI="#KIPCO__Experience"/>
+        </ObjectUnionOf>
+    </ObjectPropertyDomain>
+    <ObjectPropertyDomain>
+        <ObjectProperty IRI="#can_solve"/>
+        <Class IRI="#DO__Decision"/>
+    </ObjectPropertyDomain>
+    <ObjectPropertyDomain>
+        <ObjectProperty IRI="#caused_by"/>
+        <Class IRI="#CO__COM__Perception"/>
+    </ObjectPropertyDomain>
+    <ObjectPropertyDomain>
+        <ObjectProperty IRI="#composes"/>
+        <Class IRI="#DO__Chosen_Alternative"/>
+    </ObjectPropertyDomain>
+    <ObjectPropertyDomain>
+        <ObjectProperty IRI="#connects"/>
+        <ObjectUnionOf>
+            <Class IRI="#BPO__Association"/>
+            <Class IRI="#BPO__Message_Flow"/>
+            <Class IRI="#KIPCO__Message_Flow"/>
+        </ObjectUnionOf>
+    </ObjectPropertyDomain>
+    <ObjectPropertyDomain>
+        <ObjectProperty IRI="#considers"/>
+        <Class IRI="#DO__Decision"/>
+    </ObjectPropertyDomain>
+    <ObjectPropertyDomain>
+        <ObjectProperty IRI="#contributes_to_create"/>
+        <ObjectUnionOf>
+            <Class IRI="#BPO__Data_Object"/>
+            <Class IRI="#KIPCO__Mental_Image"/>
+        </ObjectUnionOf>
+    </ObjectPropertyDomain>
+    <ObjectPropertyDomain>
+        <ObjectProperty IRI="#creates"/>
+        <Class IRI="#KIPCO__Socialization"/>
+    </ObjectPropertyDomain>
+    <ObjectPropertyDomain>
+        <ObjectProperty IRI="#determines"/>
+        <Class IRI="#DO__Question"/>
+    </ObjectPropertyDomain>
+    <ObjectPropertyDomain>
+        <ObjectProperty IRI="#generates"/>
+        <Class IRI="#DO__Fact"/>
+    </ObjectPropertyDomain>
+    <ObjectPropertyDomain>
+        <ObjectProperty IRI="#get"/>
+        <Class IRI="#DO__Alternative"/>
+    </ObjectPropertyDomain>
+    <ObjectPropertyDomain>
+        <ObjectProperty IRI="#has"/>
+        <ObjectUnionOf>
+            <Class IRI="#DO__Alternative"/>
+            <Class IRI="#KIPCO__Innovation_Agent"/>
+            <Class IRI="#KIPCO__Knowledge_Intensive_Process"/>
+            <Class IRI="#KIPCO__Knowledge_Intesive_Activity"/>
+        </ObjectUnionOf>
+    </ObjectPropertyDomain>
+    <ObjectPropertyDomain>
+        <ObjectProperty IRI="#help_to_innovate"/>
+        <Class IRI="#KIPCO__Innovation_Agent"/>
+    </ObjectPropertyDomain>
+    <ObjectPropertyDomain>
+        <ObjectProperty IRI="#identifies"/>
+        <Class IRI="#KIPCO__Impact_Agent"/>
+    </ObjectPropertyDomain>
+    <ObjectPropertyDomain>
+        <ObjectProperty IRI="#influences"/>
+        <ObjectUnionOf>
+            <Class IRI="#DO__Fact"/>
+            <Class IRI="#DO__Feeling"/>
+            <Class IRI="#KIPCO__Contigency"/>
+            <Class IRI="#KIPCO__Specialty"/>
+        </ObjectUnionOf>
+    </ObjectPropertyDomain>
+    <ObjectPropertyDomain>
+        <ObjectProperty IRI="#innovation_contribution"/>
+        <Class IRI="#KIPCO__Innovation_Agent"/>
+    </ObjectPropertyDomain>
+    <ObjectPropertyDomain>
+        <ObjectProperty IRI="#instance_of"/>
+        <Class IRI="#DO_Fact"/>
+    </ObjectPropertyDomain>
+    <ObjectPropertyDomain>
+        <ObjectProperty IRI="#involves"/>
+        <Class IRI="#KIPCO__Knowledge_Intesive_Activity"/>
+    </ObjectPropertyDomain>
+    <ObjectPropertyDomain>
+        <ObjectProperty IRI="#is_caused_by"/>
+        <Class IRI="#DO__Question"/>
+    </ObjectPropertyDomain>
+    <ObjectPropertyDomain>
+        <ObjectProperty IRI="#is_connected_with"/>
+        <Class IRI="#BPO__Data_Object"/>
+    </ObjectPropertyDomain>
+    <ObjectPropertyDomain>
+        <ObjectProperty IRI="#is_discussed_in"/>
+        <Class IRI="#DO__Alternative"/>
+    </ObjectPropertyDomain>
+    <ObjectPropertyDomain>
+        <ObjectProperty IRI="#is_motivated_by"/>
+        <Class IRI="#DO__Feeling"/>
+    </ObjectPropertyDomain>
+    <ObjectPropertyDomain>
+        <ObjectProperty IRI="#may_be_helped_by"/>
+        <Class IRI="#KIPCO__Knowledge_Intesive_Activity"/>
+    </ObjectPropertyDomain>
+    <ObjectPropertyDomain>
+        <ObjectProperty IRI="#motivates"/>
+        <Class IRI="#KIPCO__Desire"/>
+    </ObjectPropertyDomain>
+    <ObjectPropertyDomain>
+        <ObjectProperty IRI="#occurs"/>
+        <Class IRI="#KIPCO__Informal_Exchange"/>
+    </ObjectPropertyDomain>
+    <ObjectPropertyDomain>
+        <ObjectProperty IRI="#participates"/>
+        <Class IRI="#KIPCO__External_Agent"/>
+    </ObjectPropertyDomain>
+    <ObjectPropertyDomain>
+        <ObjectProperty IRI="#performs"/>
+        <ObjectUnionOf>
+            <Class IRI="#CO__COM__Receiver"/>
+            <Class IRI="#CO__COM__Sender"/>
+            <Class IRI="#KIPCO__Agent"/>
+        </ObjectUnionOf>
+    </ObjectPropertyDomain>
+    <ObjectPropertyDomain>
+        <ObjectProperty IRI="#proposes"/>
+        <Class IRI="#KIPCO__Innovation_Agent"/>
+    </ObjectPropertyDomain>
+    <ObjectPropertyDomain>
+        <ObjectProperty IRI="#resulting_event_expr"/>
+        <Class IRI="#BRO__Reaction_Foundational_Rule"/>
+    </ObjectPropertyDomain>
+    <ObjectPropertyDomain>
+        <ObjectProperty IRI="#stimulates"/>
+        <ObjectUnionOf>
+            <Class IRI="#KIPCO__Informal_Exchange"/>
+            <Class IRI="#KIPCO__Socialization"/>
+        </ObjectUnionOf>
+    </ObjectPropertyDomain>
+    <ObjectPropertyDomain>
+        <ObjectProperty IRI="#threatens"/>
+        <Class IRI="#DO__Risk"/>
+    </ObjectPropertyDomain>
+    <ObjectPropertyDomain>
+        <ObjectProperty IRI="#triggering_event_expr"/>
+        <Class IRI="#BRO__Reaction_Foundational_Rule"/>
+    </ObjectPropertyDomain>
+    <ObjectPropertyDomain>
+        <ObjectProperty IRI="#undertakes_to_carry_out"/>
+        <Class IRI="#KIPCO__Agent"/>
+    </ObjectPropertyDomain>
+    <ObjectPropertyDomain>
+        <ObjectProperty IRI="#uses"/>
+        <Class IRI="#DO__Alternative"/>
+    </ObjectPropertyDomain>
+    <ObjectPropertyRange>
+        <ObjectProperty IRI="#according_to"/>
+        <Class IRI="#DO__Criterion"/>
+    </ObjectPropertyRange>
+    <ObjectPropertyRange>
+        <ObjectProperty IRI="#associated_with"/>
+        <ObjectUnionOf>
+            <Class IRI="#BPO__Association"/>
+            <Class IRI="#KIPCO__Belief"/>
+            <Class IRI="#KIPCO__Desire"/>
+            <Class IRI="#KIPCO__Experience"/>
+            <Class IRI="#KIPCO__Specialty"/>
+        </ObjectUnionOf>
+    </ObjectPropertyRange>
+    <ObjectPropertyRange>
+        <ObjectProperty IRI="#becomes"/>
+        <Class IRI="#KIPCO__Intention"/>
+    </ObjectPropertyRange>
+    <ObjectPropertyRange>
+        <ObjectProperty IRI="#belongs_to"/>
+        <Class IRI="#KIPCO__Agent"/>
+    </ObjectPropertyRange>
+    <ObjectPropertyRange>
+        <ObjectProperty IRI="#can_solve"/>
+        <Class IRI="#DO__Question"/>
+    </ObjectPropertyRange>
+    <ObjectPropertyRange>
+        <ObjectProperty IRI="#caused_by"/>
+        <Class IRI="#KIPCO__Communication"/>
+    </ObjectPropertyRange>
+    <ObjectPropertyRange>
+        <ObjectProperty IRI="#composes"/>
+        <Class IRI="#DO__Decision"/>
+    </ObjectPropertyRange>
+    <ObjectPropertyRange>
+        <ObjectProperty IRI="#connects"/>
+        <ObjectUnionOf>
+            <Class IRI="#BPO__Activity"/>
+            <Class IRI="#KIPCO__Informal_Exchange"/>
+        </ObjectUnionOf>
+    </ObjectPropertyRange>
+    <ObjectPropertyRange>
+        <ObjectProperty IRI="#considers"/>
+        <ObjectUnionOf>
+            <Class IRI="#DO__Alternative"/>
+            <Class IRI="#DO__Restriction"/>
+        </ObjectUnionOf>
+    </ObjectPropertyRange>
+    <ObjectPropertyRange>
+        <ObjectProperty IRI="#contributes_to_create"/>
+        <Class IRI="#KIPCO__Assertion"/>
+    </ObjectPropertyRange>
+    <ObjectPropertyRange>
+        <ObjectProperty IRI="#creates"/>
+        <Class IRI="#KIPCO__Mental_Image"/>
+    </ObjectPropertyRange>
+    <ObjectPropertyRange>
+        <ObjectProperty IRI="#determines"/>
+        <ObjectUnionOf>
+            <Class IRI="#KIPCO__Experience"/>
+            <Class IRI="#KIPCO__Specialty"/>
+        </ObjectUnionOf>
+    </ObjectPropertyRange>
+    <ObjectPropertyRange>
+        <ObjectProperty IRI="#generates"/>
+        <Class IRI="#DO__Evidence"/>
+    </ObjectPropertyRange>
+    <ObjectPropertyRange>
+        <ObjectProperty IRI="#get"/>
+        <ObjectUnionOf>
+            <Class IRI="#DO__Advantage"/>
+            <Class IRI="#DO__Disadvantage"/>
+        </ObjectUnionOf>
+    </ObjectPropertyRange>
+    <ObjectPropertyRange>
+        <ObjectProperty IRI="#has"/>
+        <ObjectUnionOf>
+            <Class IRI="#DO__Risk"/>
+            <Class IRI="#KIPCO__Activity_Goal"/>
+            <Class IRI="#KIPCO__Process_Goal"/>
+            <Class IRI="#KIPCO__Specialty"/>
+        </ObjectUnionOf>
+    </ObjectPropertyRange>
+    <ObjectPropertyRange>
+        <ObjectProperty IRI="#help_to_innovate"/>
+        <Class IRI="#KIPCO__Innovation"/>
+    </ObjectPropertyRange>
+    <ObjectPropertyRange>
+        <ObjectProperty IRI="#identifies"/>
+        <Class IRI="#DO__Question"/>
+    </ObjectPropertyRange>
+    <ObjectPropertyRange>
+        <ObjectProperty IRI="#influences"/>
+        <ObjectUnionOf>
+            <Class IRI="#DO__Alternative"/>
+            <Class IRI="#DO__Decision"/>
+        </ObjectUnionOf>
+    </ObjectPropertyRange>
+    <ObjectPropertyRange>
+        <ObjectProperty IRI="#innovation_contribution"/>
+        <Class IRI="#KIPCO__Knowledge_Intesive_Activity"/>
+    </ObjectPropertyRange>
+    <ObjectPropertyRange>
+        <ObjectProperty IRI="#instance_of"/>
+        <Class IRI="#KIPCO__Integrity_Rule"/>
+    </ObjectPropertyRange>
+    <ObjectPropertyRange>
+        <ObjectProperty IRI="#involves"/>
+        <Class IRI="#DO__Decision"/>
+    </ObjectPropertyRange>
+    <ObjectPropertyRange>
+        <ObjectProperty IRI="#is_caused_by"/>
+        <Class IRI="#DO__Evidence"/>
+    </ObjectPropertyRange>
+    <ObjectPropertyRange>
+        <ObjectProperty IRI="#is_connected_with"/>
+        <Class IRI="#BPO__Association"/>
+    </ObjectPropertyRange>
+    <ObjectPropertyRange>
+        <ObjectProperty IRI="#is_discussed_in"/>
+        <Class IRI="#KIPCO__Socialization"/>
+    </ObjectPropertyRange>
+    <ObjectPropertyRange>
+        <ObjectProperty IRI="#is_motivated_by"/>
+        <ObjectUnionOf>
+            <Class IRI="#DO__Evidence"/>
+            <Class IRI="#KIPCO__Belief"/>
+        </ObjectUnionOf>
+    </ObjectPropertyRange>
+    <ObjectPropertyRange>
+        <ObjectProperty IRI="#may_be_helped_by"/>
+        <Class IRI="#KIPCO__Innovation"/>
+    </ObjectPropertyRange>
+    <ObjectPropertyRange>
+        <ObjectProperty IRI="#motivates"/>
+        <Class IRI="#KIPCO__Agent"/>
+    </ObjectPropertyRange>
+    <ObjectPropertyRange>
+        <ObjectProperty IRI="#occurs"/>
+        <Class IRI="#KIPCO__Socialization"/>
+    </ObjectPropertyRange>
+    <ObjectPropertyRange>
+        <ObjectProperty IRI="#participates"/>
+        <Class IRI="#KIPCO__Socialization"/>
+    </ObjectPropertyRange>
+    <ObjectPropertyRange>
+        <ObjectProperty IRI="#performs"/>
+        <ObjectUnionOf>
+            <Class IRI="#CO__COM__Communicative_Interaction"/>
+            <Class IRI="#CO__COM__Perception"/>
+            <Class IRI="#DO__Decision"/>
+            <Class IRI="#KIPCO__Communication"/>
+            <Class IRI="#KIPCO__Knowledge_Intesive_Activity"/>
+        </ObjectUnionOf>
+    </ObjectPropertyRange>
+    <ObjectPropertyRange>
+        <ObjectProperty IRI="#proposes"/>
+        <Class IRI="#DO__Alternative"/>
+    </ObjectPropertyRange>
+    <ObjectPropertyRange>
+        <ObjectProperty IRI="#resulting_event_expr"/>
+        <Class IRI="#BRO__Foundational_Event"/>
+    </ObjectPropertyRange>
+    <ObjectPropertyRange>
+        <ObjectProperty IRI="#stimulates"/>
+        <Class IRI="#KIPCO__Contigency"/>
+    </ObjectPropertyRange>
+    <ObjectPropertyRange>
+        <ObjectProperty IRI="#threatens"/>
+        <Class IRI="#DO__Decision"/>
+    </ObjectPropertyRange>
+    <ObjectPropertyRange>
+        <ObjectProperty IRI="#triggering_event_expr"/>
+        <Class IRI="#BRO__Foundational_Event"/>
+    </ObjectPropertyRange>
+    <ObjectPropertyRange>
+        <ObjectProperty IRI="#undertakes_to_carry_out"/>
+        <Class IRI="#KIPCO__Intention"/>
+    </ObjectPropertyRange>
+    <ObjectPropertyRange>
+        <ObjectProperty IRI="#uses"/>
+        <Class IRI="#DO__Resource"/>
+    </ObjectPropertyRange>
+    <SubObjectPropertyOf>
+        <ObjectPropertyChain>
+            <ObjectProperty IRI="#help_to_innovate"/>
+            <ObjectProperty IRI="#INV_may_be_helped_by"/>
+        </ObjectPropertyChain>
+        <ObjectProperty IRI="#innovation_contribution"/>
+    </SubObjectPropertyOf>
+    <DataPropertyDomain>
+        <DataProperty IRI="#EstimatedBusinessValue"/>
+        <Class IRI="#Product_Backlog_Item"/>
+    </DataPropertyDomain>
+    <DataPropertyDomain>
+        <DataProperty IRI="#Nome"/>
+        <Class abbreviatedIRI="owl:Thing"/>
+    </DataPropertyDomain>
+    <DataPropertyDomain>
+        <DataProperty IRI="#Observacao"/>
+        <Class IRI="#BPO"/>
+    </DataPropertyDomain>
+    <DataPropertyDomain>
+        <DataProperty IRI="#Observacao"/>
+        <Class IRI="#BRO"/>
+    </DataPropertyDomain>
+    <DataPropertyDomain>
+        <DataProperty IRI="#Observacao"/>
+        <Class IRI="#CO"/>
+    </DataPropertyDomain>
+    <DataPropertyDomain>
+        <DataProperty IRI="#Observacao"/>
+        <Class IRI="#DO"/>
+    </DataPropertyDomain>
+    <DataPropertyDomain>
+        <DataProperty IRI="#Observacao"/>
+        <Class IRI="#KIPCO"/>
+    </DataPropertyDomain>
+    <DataPropertyDomain>
+        <DataProperty IRI="#Observacao"/>
+        <Class IRI="#Product_Backlog_Item"/>
+    </DataPropertyDomain>
+    <DataPropertyDomain>
+        <DataProperty IRI="#Observacao"/>
+        <Class IRI="#ontoscrum__Artifacts"/>
+    </DataPropertyDomain>
+    <DataPropertyDomain>
+        <DataProperty IRI="#Observacao"/>
+        <Class IRI="#ontoscrum__Events"/>
+    </DataPropertyDomain>
+    <DataPropertyDomain>
+        <DataProperty IRI="#Observacao"/>
+        <Class IRI="#ontoscrum__Processes"/>
+    </DataPropertyDomain>
+    <DataPropertyDomain>
+        <DataProperty IRI="#Observacao"/>
+        <Class IRI="#ontoscrum__Roles"/>
+    </DataPropertyDomain>
+    <DataPropertyDomain>
+        <DataProperty IRI="#Observacao"/>
+        <Class abbreviatedIRI="owl:Thing"/>
+    </DataPropertyDomain>
+    <DataPropertyDomain>
+        <DataProperty IRI="#StatusItemResolvido"/>
+        <Class IRI="#Artifact_Item"/>
+    </DataPropertyDomain>
+    <DataPropertyDomain>
+        <DataProperty IRI="#StatusProblemaResolvido"/>
+        <Class IRI="#DO__Decision"/>
+    </DataPropertyDomain>
+    <DataPropertyDomain>
+        <DataProperty IRI="#TaskDescription"/>
+        <Class IRI="#Product_Backlog_Item"/>
+    </DataPropertyDomain>
+    <DataPropertyDomain>
+        <DataProperty abbreviatedIRI="owl:topDataProperty"/>
+        <Class IRI="#Product_Backlog_Item"/>
+    </DataPropertyDomain>
+    <DataPropertyRange>
+        <DataProperty IRI="#EstimatedBusinessValue"/>
+        <Datatype abbreviatedIRI="xsd:unsignedInt"/>
+    </DataPropertyRange>
+    <DataPropertyRange>
+        <DataProperty IRI="#Nome"/>
+        <Datatype abbreviatedIRI="xsd:string"/>
+    </DataPropertyRange>
+    <DataPropertyRange>
+        <DataProperty IRI="#Observacao"/>
+        <Datatype abbreviatedIRI="xsd:string"/>
+    </DataPropertyRange>
+    <DataPropertyRange>
+        <DataProperty IRI="#StatusItemResolvido"/>
+        <Datatype abbreviatedIRI="xsd:boolean"/>
+    </DataPropertyRange>
+    <DataPropertyRange>
+        <DataProperty IRI="#StatusProblemaResolvido"/>
+        <Datatype abbreviatedIRI="xsd:boolean"/>
+    </DataPropertyRange>
+    <DataPropertyRange>
+        <DataProperty IRI="#TaskDescription"/>
+        <Datatype abbreviatedIRI="xsd:string"/>
+    </DataPropertyRange>
+    <AnnotationAssertion>
+        <AnnotationProperty abbreviatedIRI="rdfs:comment"/>
+        <IRI>#KIPCO__Innovation_Agent</IRI>
+        <Literal>INV_innovation_contribution min 1 KIPCO__Knowledge_Intesive_Activity</Literal>
+    </AnnotationAssertion>
+</Ontology>
+
+
+
+<!-- Generated by the OWL API (version 4.5.9.2019-02-01T07:24:44Z) https://github.com/owlcs/owlapi -->
+

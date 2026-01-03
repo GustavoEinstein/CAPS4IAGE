@@ -1,0 +1,33 @@
+{% extends 'welcome.html' %} 
+
+{% block content %}
+
+{% load crispy_forms_tags %} 
+
+<div style="padding:20px;">
+    <form action="" method="POST">
+
+        {% csrf_token %}
+        
+        {{ form|crispy }}
+        
+
+        </br>
+
+        <button class="btn btn-primary" type="submit">Submit</button>
+
+        </br>
+
+    </form>
+</div>
+
+<p>Decisao baseada em planning poker...</p>
+
+</br> 
+</br>
+<a class="btn btn-primary" href="/kipo_playground/welcome">Voltar</a>
+</br>
+</br>
+
+
+{% endblock %}
