@@ -75,6 +75,11 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
 ]
 
+CSRF_TRUSTED_ORIGINS = [
+    "https://localhost:8000",
+    "http://localhost:8000",
+]
+
 ROOT_URLCONF = 'TCC_DjangoScrumKipo.urls'
 
 TEMPLATES = [
