@@ -14,6 +14,10 @@ Para rodar localmente o sistema, execute:
 
 > python3 manage.py runserver
 
+Para rodar localmente o frontend, execute o comando na pasta frontend-comunidade:
+
+npm run dev
+
 Para criar ambiente virtual de Python3, execute:
 
 > python3 -m venv venv
