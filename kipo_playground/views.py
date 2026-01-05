@@ -16,6 +16,7 @@ from django.template import Template, Context
 from django.contrib.auth.decorators import login_required
 
 from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.models import User
 from django.contrib import messages
 from .forms import CreateUser, novo_instancias_tipoForm, inserir_instancias_tipoForm, inserir_instancias_dada_classeForm, definir_status_backlogitem_Form, definir_obs_backlogitem_Form, definir_esforco_backlogitem_Form, MateriaJornalistica_Form
 from .models import MateriaJornalistica
@@ -27,7 +28,8 @@ import json
 import sys 
 from random import randint
 
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
 # Comandos básicos
@@ -2887,3 +2889,25 @@ def api_listar_ciclos(request):
     # O DRF converte a lista de dicionários em JSON automaticamente
     return Response(objetos_finais)
 # ------------------------------------------------------------
+@api_view(['POST'])
+@permission_classes([AllowAny]) # Qualquer um pode se cadastrar
+def api_register_user(request):
+    data = request.data
+    username = data.get('username')
+    email = data.get('email')
+    password = data.get('password')
+    
+    # 1. Validações básicas
+    if not username or not password:
+        return Response({'erro': 'Usuário e senha são obrigatórios'}, status=400)
+    
+    if User.objects.filter(username=username).exists():
+        return Response({'erro': 'Este nome de usuário já está em uso'}, status=400)
+
+    # 2. Cria o usuário
+    try:
+        user = User.objects.create_user(username=username, email=email, password=password)
+        user.save()
+        return Response({'mensagem': 'Usuário criado com sucesso!'}, status=201)
+    except Exception as e:
+        return Response({'erro': str(e)}, status=500)
