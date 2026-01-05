@@ -6,6 +6,7 @@ Define uma lista com as possíveis URLs e sua equivalências com as suas views.
 
 from django.urls import path
 from . import views
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 urlpatterns = [
     
@@ -105,6 +106,8 @@ urlpatterns = [
     path('register', views.register), 
 
     #------------------------------------------------------------
-
+   # Rotas de login novas do react
+    path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 
 ]

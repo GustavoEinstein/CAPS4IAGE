@@ -1,0 +1,232 @@
+import React, { useState } from 'react';
+import axios from 'axios';
+// Importamos o Link para criar a navegação
+import { useNavigate, Link } from 'react-router-dom';
+
+const Login = () => {
+    const [username, setUsername] = useState('');
+    const [password, setPassword] = useState('');
+    const [error, setError] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
+    const [hover, setHover] = useState(false);
+
+    const navigate = useNavigate();
+
+    const handleLogin = async (e) => {
+        e.preventDefault();
+        setError('');
+        setIsLoading(true);
+
+        try {
+            const url = 'http://127.0.0.1:8000/kipo_playground/api/token/';
+            const response = await axios.post(url, {
+                username: username,
+                password: password
+            });
+
+            localStorage.setItem('access_token', response.data.access);
+            localStorage.setItem('refresh_token', response.data.refresh);
+
+            navigate('/dashboard');
+
+        } catch (err) {
+            console.error(err);
+            if (err.code === "ERR_NETWORK") {
+                setError('Erro de conexão. Verifique se o Django está rodando.');
+            } else if (err.response && err.response.status === 401) {
+                setError('Usuário ou senha incorretos.');
+            } else {
+                setError('Ocorreu um erro inesperado.');
+            }
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    return (
+        <div style={styles.pageBackground}>
+            <div style={styles.card}>
+                
+                <div style={styles.header}>
+                    <div style={styles.logoCircle}>
+                        <span style={{ fontSize: '32px' }}>📘</span>
+                    </div>
+                    <h2 style={styles.title}>CAPSIAGE</h2>
+                    <p style={styles.subtitle}>Uma comunidade de aprendizagem para professores</p>
+                </div>
+                
+                <form onSubmit={handleLogin} style={styles.form}>
+                    <div style={styles.inputGroup}>
+                        <label style={styles.label}>Usuário</label>
+                        <input 
+                            type="text" 
+                            value={username}
+                            onChange={(e) => setUsername(e.target.value)}
+                            style={styles.input}
+                            placeholder="Seu usuário"
+                            disabled={isLoading}
+                        />
+                    </div>
+                    
+                    <div style={styles.inputGroup}>
+                        <label style={styles.label}>Senha</label>
+                        <input 
+                            type="password" 
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            style={styles.input}
+                            placeholder="Sua senha"
+                            disabled={isLoading}
+                        />
+                    </div>
+
+                    {/* --- NOVO LINK DE CADASTRO AQUI --- */}
+                    <div style={styles.registerLinkContainer}>
+                        <Link to="/register" style={styles.registerLink}>
+                            Não tem conta? Cadastre-se
+                        </Link>
+                    </div>
+                    {/* ---------------------------------- */}
+
+                    {error && (
+                        <div style={styles.errorBox}>
+                            {error}
+                        </div>
+                    )}
+
+                    <button 
+                        type="submit" 
+                        style={{
+                            ...styles.button,
+                            ...(hover ? styles.buttonHover : {}),
+                            ...(isLoading ? styles.buttonDisabled : {})
+                        }}
+                        onMouseEnter={() => setHover(true)}
+                        onMouseLeave={() => setHover(false)}
+                        disabled={isLoading}
+                    >
+                        {isLoading ? 'Conectando...' : 'Entrar'}
+                    </button>
+                </form>
+            </div>
+        </div>
+    );
+};
+
+const styles = {
+    pageBackground: {
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        width: '100vw',
+        height: '100vh',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        background: 'linear-gradient(135deg, #1565C0 0%, #64B5F6 100%)',
+        fontFamily: 'Arial, sans-serif',
+        margin: 0,
+        padding: 0,
+    },
+    card: {
+        width: '100%',
+        maxWidth: '400px',
+        padding: '40px',
+        backgroundColor: 'white',
+        borderRadius: '12px',
+        boxShadow: '0 8px 20px rgba(0,0,0,0.2)',
+        display: 'flex',
+        flexDirection: 'column',
+    },
+    header: {
+        textAlign: 'center',
+        marginBottom: '25px',
+    },
+    logoCircle: {
+        width: '60px',
+        height: '60px',
+        backgroundColor: '#E3F2FD',
+        borderRadius: '50%',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        margin: '0 auto 15px auto',
+    },
+    title: {
+        color: '#0D47A1',
+        fontSize: '24px',
+        margin: '0 0 5px 0',
+        fontWeight: 'bold',
+    },
+    subtitle: {
+        color: '#546E7A',
+        fontSize: '14px',
+        margin: '0',
+    },
+    form: {
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '15px',
+    },
+    inputGroup: {
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '5px',
+    },
+    label: {
+        color: '#455A64',
+        fontSize: '13px',
+        fontWeight: '600',
+        marginLeft: '2px',
+    },
+    input: {
+        padding: '12px',
+        borderRadius: '6px',
+        border: '1px solid #CFD8DC',
+        fontSize: '15px',
+        outline: 'none',
+        transition: 'border 0.2s',
+    },
+    // Estilos para o Link de Cadastro
+    registerLinkContainer: {
+        display: 'flex',
+        justifyContent: 'flex-end', // Alinha à direita
+        marginTop: '-5px', // Aproxima um pouco do campo de senha
+    },
+    registerLink: {
+        color: '#1565C0', // Azul primário
+        fontSize: '13px',
+        textDecoration: 'none',
+        fontWeight: '600',
+        cursor: 'pointer',
+    },
+    button: {
+        marginTop: '10px',
+        padding: '14px',
+        backgroundColor: '#1565C0',
+        color: 'white',
+        border: 'none',
+        borderRadius: '6px',
+        fontSize: '16px',
+        fontWeight: 'bold',
+        cursor: 'pointer',
+        transition: 'background 0.3s',
+    },
+    buttonHover: {
+        backgroundColor: '#0D47A1',
+    },
+    buttonDisabled: {
+        backgroundColor: '#90CAF9',
+        cursor: 'not-allowed',
+    },
+    errorBox: {
+        backgroundColor: '#FFEBEE',
+        color: '#D32F2F',
+        padding: '10px',
+        borderRadius: '6px',
+        fontSize: '13px',
+        textAlign: 'center',
+    }
+};
+
+export default Login;

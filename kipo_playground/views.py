@@ -27,6 +27,9 @@ import json
 import sys 
 from random import randint
 
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+
 # Comandos básicos
 # source venv/bin/activate
 # python3 manage.py runserver 
@@ -2852,4 +2855,35 @@ def register(request):
     context = {'form':form}
     return render(request, 'register.html', context)
 
+@api_view(['GET'])
+def api_listar_ciclos(request):
+    """
+    API que retorna os Ciclos de Aprendizagem (antigas Sprints) em formato JSON
+    para o React consumir.
+    """
+    objetos_finais = []
+    
+    try:
+        # Carrega a ontologia (Copiado da sua lógica original)
+        myworld = World(filename='backup.db', exclusive=False)
+        # Ajuste o caminho se necessário, usando os.path.dirname como você já faz
+        kiposcrum = myworld.get_ontology("http://www.semanticweb.org/fialho/kipo").load()
+        sync_reasoner()
+        
+        with kiposcrum:
+            # Busca todas as Sprints (Ciclos)
+            lista_instancias = kiposcrum["scrum_Sprint"].instances()
+            
+            # REUSA sua função auxiliar 'transforma_objeto' que já limpa os dados!
+            # Isso economiza muito trabalho.
+            objetos_finais = transforma_objeto(lista_instancias)
+            
+    except Exception as e:
+        return Response({"status": "Erro", "mensagem": str(e)}, status=500)
+        
+    finally:
+        myworld.close()
+
+    # O DRF converte a lista de dicionários em JSON automaticamente
+    return Response(objetos_finais)
 # ------------------------------------------------------------
