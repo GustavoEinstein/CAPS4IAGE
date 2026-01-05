@@ -87,7 +87,7 @@ const Register = () => {
                 
                 <div style={styles.header}>
                     <div style={styles.logoCircle}>
-                        <span style={{ fontSize: '30px' }}>📘</span>
+                        <span style={{ fontSize: '30px' }}>🚀</span>
                     </div>
                     <h2 style={styles.title}>Criar Conta</h2>
                 </div>
