@@ -17,8 +17,11 @@ Para rodar localmente o sistema, execute:
 Para rodar localmente o frontend, execute o comando na pasta frontend-comunidade:
 
 > cd frontend-comunidade
+
 > npm install
+
 > npm run build
+
 > npm run dev
 
 Para criar ambiente virtual de Python3, execute:
