@@ -31,3 +31,6 @@ dist-ssr
 .env.development.local
 .env.test.local
 .env.production.local
+kipo_playground/__pycache__/*
+kipo_playground/migrations/__pycache__/*
+TCC_DjangoScrumKipo/__pycache__/*
