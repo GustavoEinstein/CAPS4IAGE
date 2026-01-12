@@ -31,3 +31,7 @@ dist-ssr
 .env.development.local
 .env.test.local
 .env.production.local
+
+#Cache
+kipo_playground/__pycache__
+db.sqlite3
