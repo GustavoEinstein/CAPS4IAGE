@@ -9,7 +9,7 @@
 .dashboard {
   display: flex;
   flex-direction: column;
-  width: 100vw;        /* ocupa toda a largura da tela */
+  width: 100%;        /* ocupa toda a largura da tela */
   min-height: 100vh;   /* ocupa toda a altura da tela */
 }
 
