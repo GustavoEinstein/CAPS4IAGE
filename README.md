@@ -1,62 +1,131 @@
 # Sistema Calliandra
 
-Módulo de workflow com anotação semântica em Django. Implementação da [Knowledge Intensive Ontology](https://www.researchgate.net/publication/282939286_KIPO_the_knowledge-intensive_process_ontology) com [Ontologia de Scrum](https://www.researchgate.net/publication/260480541_Integration_of_classical_and_agile_project_management_methodologies_based_on_ontological_models) em caso de estudo. Usando [owl2ready](https://owlready2.readthedocs.io/en/v0.37/#).
+Módulo de workflow com anotação semântica em Django. Implementação da [Knowledge Intensive Ontology](https://www.researchgate.net/publication/282939286_KIPO_the_knowledge-intensive_process_ontology) com [Ontologia de Scrum](https://www.researchgate.net/publication/260480541_Integration_of_classical_and_agile_project_management_methodologies_based_on_ontological_models) em caso de estudo. Usando [owlready2](https://owlready2.readthedocs.io/en/v0.37/#).
 
 Feito como parte de Projeto de Conclusão de Curso por Guilherme Braga Pinto. 
 
-[Minha apresentação.](https://www.youtube.com/watch?v=bHcpC9uw4fE)
+**Recursos:**
+- [Minha apresentação](https://www.youtube.com/watch?v=bHcpC9uw4fE)
+- [Demo](https://youtu.be/rF9q-QBYfUI)
+- [Mostra de como usar o sistema](https://youtu.be/z_WLy9MxVFA)
 
-[Demo.](https://youtu.be/rF9q-QBYfUI)
+## Quickstart - Rodar Localmente
 
-[Mostra de como usar o sistema.](https://youtu.be/z_WLy9MxVFA)
+### 1. Clonar e Navegar ao Projeto
+```bash
+git clone https://github.com/GustavoEinstein/CAPS4IAGE.git
+cd CAPS4IAGE
+```
 
-Para rodar localmente o sistema, execute:
+### 2. Setup Backend (Python/Django)
 
-> python3 manage.py runserver
+**IMPORTANTE: Execute os comandos separadamente (não em uma única linha)**
 
-Para rodar localmente o frontend, execute o comando na pasta frontend-comunidade:
+```bash
+# Criar ambiente virtual
+python3 -m venv venv
 
+# Ativar o ambiente virtual
+# Linux/Mac/WSL:
+source venv/bin/activate
+
+# Windows (PowerShell):
+# venv\Scripts\Activate
+
+# Atualizar pip
+pip install --upgrade pip
+
+# Instalar dependências
+pip install -r requirements.txt
+
+# Aplicar migrações do banco de dados
+python3 manage.py migrate
+
+# Rodar servidor Django (Terminal 1)
+python3 manage.py runserver
+```
+
+Backend estará disponível em: **http://127.0.0.1:8000**
+
+### 3. Setup Frontend (React/Vite)
+
+**Em um terminal separado:**
+
+```bash
+cd frontend-comunidade
+
+# Instalar dependências Node.js
+npm install
+
+# Rodar servidor de desenvolvimento (Terminal 2)
 npm run dev
+```
 
-Para criar ambiente virtual de Python3, execute:
+Frontend estará disponível em: **http://localhost:5173**
 
-> python3 -m venv venv
+## Usuário de Teste
 
-## Usuário de teste
+- **Username:** `mcgil`
+- **Senha:** `musgo123`
 
-mcgil
-musgo123
+## Troubleshooting
 
-## Dependências
+### WSL (Windows Subsystem for Linux)
 
-O script *./dependencias.sh* baixa dependências e executa o programa. 
+Se receber erros ao criar o venv, instale primeiro:
+```bash
+sudo apt update
+sudo apt install python3 python3-pip python3-venv nodejs npm -y
+```
 
-Para dar permissão para rodar o script, execute:
+### Resetar Ambiente Virtual
 
-> chmod +x dependencias.sh
+Se o venv ficar corrompido:
+```bash
+rm -rf venv
+python3 -m venv venv
+source venv/bin/activate
+pip install --upgrade pip
+pip install -r requirements.txt
+```
 
-Para verificar as permissões do script de dependências, execute:
+### Erro de Permissão no Script
 
-> ls -l dependencias.sh
+```bash
+chmod +x dependencias.sh
+```
 
-Para rodar, execute:
+## Desenvolvimento - Comandos Úteis
 
-> python3 -m venv venv
-> source venv/bin/activate
-> ./dependencias.sh
+### Backend
 
-Para atualizar models/forms:
+```bash
+# Criar novas migrações após alterações em models
+python3 manage.py makemigrations
 
-> python3 manage.py makemigrations
-> python3 manage.py migrate
+# Aplicar migrações
+python3 manage.py migrate
 
-Para gerar arquivos de requisitos:
+# Atualizar arquivo de dependências Python
+pip freeze > requirements.txt
+```
 
-> pip3 freeze > requirements.txt 
+### Frontend
 
-Para instalar o que veio no arquivo de requisitos:
+```bash
+# Certifique-se de estar em frontend-comunidade e tenha rodado npm install
+cd frontend-comunidade
+npm install          
 
-> pip3 install -r requirements.txt
+# Build para produção
+npm run build
+
+# Lint do código
+npm run lint
+
+# Preview da build
+npm run preview
+```
 
 ## Alterações para rodar no Servidor
 

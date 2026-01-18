@@ -34,4 +34,6 @@ dist-ssr
 
 #Cache
 kipo_playground/__pycache__
+kipo_playground/migrations/__pycache__
+TCC_DjangoScrumKipo/__pycache__
 db.sqlite3
