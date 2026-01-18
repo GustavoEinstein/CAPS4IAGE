@@ -7,9 +7,6 @@ import MinhasProducoes from './pages/MinhasProducoes';
 import RevisaoDuploCego from './pages/RevisaoDuploCego';
 import PainelComunidade from './pages/PainelComunidade';
 import Ajuda from './pages/Ajuda';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import Login from './Login';
-// import Dashboard from './Dashboard';
 import Register from './Register';
 
 function App() {
