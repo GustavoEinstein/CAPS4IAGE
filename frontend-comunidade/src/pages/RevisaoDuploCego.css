@@ -1,0 +1,91 @@
+.revisao-container {
+  max-width: 1000px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+.revisao-descricao {
+  margin: 0.5rem 0 1.2rem;
+  color: #555;
+  font-size: 0.95rem;
+}
+
+/* Lista */
+.revisao-lista {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+/* Card */
+.revisao-card {
+  background-color: #ffffff;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* Linhas */
+.linha {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.label {
+  font-weight: 600;
+  color: #555;
+}
+
+.valor {
+  text-align: right;
+  color: #222;
+}
+
+/* Ações */
+.acoes {
+  margin-top: 0.8rem;
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* Botão */
+.revisao-botao {
+  background-color: #1e1e1e;
+  color: #ffffff;
+  border: none;
+  padding: 0.5rem 1.2rem;
+  font-size: 0.9rem;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.revisao-botao:hover {
+  opacity: 0.9;
+}
+
+/* Desktop */
+@media (min-width: 768px) {
+  .revisao-lista {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .linha {
+    justify-content: flex-start;
+  }
+
+  .label {
+    width: 120px;
+  }
+
+  .valor {
+    text-align: left;
+  }
+}
