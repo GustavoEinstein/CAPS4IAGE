@@ -1,0 +1,96 @@
+.ajuda-container {
+  max-width: 1000px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+/* Seções */
+.ajuda-secao {
+  margin-top: 2rem;
+}
+
+.ajuda-secao h3 {
+  margin-bottom: 1rem;
+}
+
+/* ===== TUTORIAIS ===== */
+.tutorial-card {
+  background-color: #ffffff;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.tutorial-card h4 {
+  margin-bottom: 0.5rem;
+}
+
+.tutorial-card p {
+  color: #555;
+  margin-bottom: 0.8rem;
+}
+
+/* Placeholder de vídeo */
+.video-placeholder {
+  background-color: #f5f5f5;
+  border: 2px dashed #ccc;
+  border-radius: 8px;
+  padding: 1.5rem;
+  text-align: center;
+  font-size: 0.9rem;
+  color: #777;
+}
+
+/* ===== FAQ ===== */
+.faq-lista {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.faq-item {
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  margin-bottom: 0.8rem;
+  overflow: hidden;
+}
+
+/* Pergunta */
+.faq-pergunta {
+  width: 100%;
+  background: none;
+  border: none;
+  padding: 0.9rem 1rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  text-align: left;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+}
+
+.faq-pergunta:hover {
+  background-color: #f5f5f5;
+}
+
+.faq-icone {
+  font-size: 1.2rem;
+}
+
+/* Resposta */
+.faq-resposta {
+  padding: 0.8rem 1rem;
+  background-color: #fafafa;
+  font-size: 0.9rem;
+  color: #444;
+}
+
+/* Desktop */
+@media (min-width: 768px) {
+  .tutorial-card {
+    padding: 1.2rem 1.5rem;
+  }
+}

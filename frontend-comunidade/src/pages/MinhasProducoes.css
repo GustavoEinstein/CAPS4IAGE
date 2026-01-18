@@ -1,0 +1,83 @@
+.producoes-container {
+  max-width: 1000px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+/* Lista */
+.producoes-lista {
+  list-style: none;
+  padding: 0;
+  margin-top: 1rem;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+/* Card */
+.producao-card {
+  background: #ffffff;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* Linhas internas */
+.linha {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.label {
+  font-weight: 600;
+  color: #555;
+}
+
+.valor {
+  text-align: right;
+  color: #222;
+}
+
+/* Status */
+.status {
+  padding: 0.25rem 0.6rem;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.status.publicado {
+  background-color: #e6f4ea;
+  color: #2e7d32;
+}
+
+.status.em-revisão,
+.status.em-revisao {
+  background-color: #fff4e5;
+  color: #ef6c00;
+}
+
+/* Desktop */
+@media (min-width: 768px) {
+  .producoes-lista {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .linha {
+    justify-content: flex-start;
+  }
+
+  .label {
+    width: 120px;
+  }
+
+  .valor {
+    text-align: left;
+  }
+}

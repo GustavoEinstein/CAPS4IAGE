@@ -1,3 +1,4 @@
+import './Sidebar.css';
 import { NavLink } from "react-router-dom";
 
 function Sidebar() {
@@ -35,7 +36,7 @@ function Sidebar() {
 
           <li>
             <NavLink
-              to="/dashboard/revisao-duplo-cego"
+              to="/dashboard/revisao"
               className={({ isActive }) => (isActive ? "active" : "")}
             >
               Revisão de produção (duplo cego)
@@ -44,7 +45,7 @@ function Sidebar() {
 
           <li>
             <NavLink
-              to="/dashboard/painel-comunidade"
+              to="/dashboard/comunidade"
               className={({ isActive }) => (isActive ? "active" : "")}
             >
               Painel de produções didáticas da comunidade
