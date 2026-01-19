@@ -14,7 +14,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse
 from django.template import Template, Context
 from django.contrib.auth.decorators import login_required
-
+from django.core.files.storage import FileSystemStorage
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.contrib import messages
@@ -2911,3 +2911,71 @@ def api_register_user(request):
         return Response({'mensagem': 'Usuário criado com sucesso!'}, status=201)
     except Exception as e:
         return Response({'erro': str(e)}, status=500)
+
+# Função para o upload de arquivos
+@api_view(['POST'])
+@permission_classes([authenticate])
+def api_create_production(request):
+    """
+    Cria Produção Didática com suporte a Upload de Arquivos.
+    """
+    # Quando usamos multipart/form-data, os dados vêm em request.data e arquivos em request.FILES
+    data = request.data
+    
+    titulo = data.get('titulo')
+    prompt = data.get('prompt')
+    relato = data.get('relato')  # Renomeado de 'resultado'
+    disciplina = data.get('disciplina')
+    modelo_ia = data.get('modelo_ia')
+    nivel_ensino = data.get('nivel_ensino', 'Não especificado')
+    dicas = data.get('dicas', '')
+
+    # Tratamento do Arquivo
+    arquivo = request.FILES.get('arquivo') # O React vai enviar com este nome
+    url_arquivo = "Sem anexo"
+
+    if arquivo:
+        # Salva o arquivo fisicamente na pasta /media/
+        fs = FileSystemStorage()
+        nome_salvo = fs.save(arquivo.name, arquivo)
+        url_arquivo = fs.url(nome_salvo) # Ex: /media/foto_aula.jpg
+
+    if not titulo or not prompt:
+        return Response({'erro': 'Título e Prompt são obrigatórios.'}, status=400)
+
+    try:
+        myworld = World(filename='backup.db', exclusive=False)
+        caminho_owl = os.path.join(os.path.dirname(__file__), 'kipo_fialho.owl')
+        kiposcrum = myworld.get_ontology(caminho_owl).load()
+        
+        with kiposcrum:
+            seed = str(time.time())
+            id_unico = faz_id(seed)
+            
+            nova_instancia = kiposcrum["RelatoExperiencia"](f"relato_{id_unico}")
+            nova_instancia.Nome.append(titulo)
+            
+            # Monta a string de observação com o novo campo de anexo
+            conteudo_combinado = (
+                f"[DISCIPLINA]: {disciplina} | "
+                f"[NIVEL]: {nivel_ensino} | "
+                f"[IA]: {modelo_ia} | "
+                f"[PROMPT]: {prompt} | "
+                f"[RELATO]: {relato} | " # Mudou de Resultado para Relato
+                f"[DICAS]: {dicas} | "
+                f"[ANEXO]: {url_arquivo}" # Link do arquivo
+            )
+            nova_instancia.Observacao.append(conteudo_combinado)
+            
+            nome_usuario = request.user.username
+            agente = kiposcrum[nome_usuario] or kiposcrum["KIPCO__Agent"](nome_usuario)
+            
+            sync_reasoner()
+            myworld.save()
+            
+        return Response({'mensagem': 'Produção cadastrada com sucesso!', 'id': id_unico}, status=201)
+
+    except Exception as e:
+        return Response({'erro': str(e)}, status=500)
+    finally:
+        myworld.close()

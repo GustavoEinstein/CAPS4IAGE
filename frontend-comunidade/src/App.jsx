@@ -8,18 +8,24 @@ import RevisaoDuploCego from './pages/RevisaoDuploCego';
 import PainelComunidade from './pages/PainelComunidade';
 import Ajuda from './pages/Ajuda';
 import Register from './Register';
+import MainContent from './components/MainContent';
+import PrivateRoute from './components/PrivateRoute';
 
 function App() {
   return (
     <Router>
       <Routes>
+        {/* Rotas Públicas (Qualquer um acessa) */}
         {/* Tela de login */}
         <Route path="/" element={<Login />} />
+        <Route path="/register" element={<Register />} />
 
-        {/* Dashboard (layout base) */}
+        {/* Rotas Privadas (Só acessa se estiver logado) */}
+        <Route element={<PrivateRoute />}>
+                {/* Dashboard (layout base) */}
         <Route path="/dashboard" element={<Dashboard />}>
           {/* Página padrão da dashboard */}
-          <Route index element={<h2>Início</h2>} />
+          <Route index element={<MainContent />} />
 
           {/* Catalogar produções didáticas */}
           <Route
@@ -43,8 +49,7 @@ function App() {
             element={<Ajuda />} />
 
         </Route>
-        {/* <Route path="/dashboard" element={<Dashboard />} /> */}
-        <Route path="/register" element={<Register />} />
+        </Route>
       </Routes>
     </Router>
   );
