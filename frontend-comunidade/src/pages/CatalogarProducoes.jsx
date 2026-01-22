@@ -8,8 +8,12 @@ import {
     Mic, 
     ArrowLeft, 
     Sparkles, 
-    Keyboard 
+    Keyboard,
+    Volume2,
+    Trash2,
+    CheckCircle
 } from 'lucide-react';
+import { useSpeechRecognition } from '../hooks/useSpeechRecognition';
 
 const NewProduction = () => {
     const [mode, setMode] = useState('selecao'); 
@@ -239,8 +243,81 @@ const ManualForm = ({ onBack, navigate, isMobile }) => {
 };
 
 // --- 3. TELA DE VOZ ---
-const VoiceForm = ({ onBack, isMobile }) => {
-    const [isRecording, setIsRecording] = useState(false);
+const VoiceForm = ({ onBack, navigate, isMobile }) => {
+    const {
+        isListening,
+        transcript,
+        interimTranscript,
+        isSupported,
+        error,
+        toggleListening,
+        resetTranscript
+    } = useSpeechRecognition({ lang: 'pt-BR', continuous: true, interimResults: true });
+
+    const [isProcessing, setIsProcessing] = useState(false);
+    const [processedData, setProcessedData] = useState(null);
+    const [showSuccess, setShowSuccess] = useState(false);
+
+    // Simulate AI processing (you can replace this with actual API call)
+    const processWithAI = async () => {
+        if (!transcript.trim()) {
+            alert('Por favor, grave algo antes de processar.');
+            return;
+        }
+
+        setIsProcessing(true);
+        
+        try {
+            // Simulating AI processing - replace with actual backend call
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            
+            // Mock structured data from transcript
+            const processed = {
+                titulo: extractTitle(transcript),
+                disciplina: 'Geral',
+                nivel_ensino: 'Medio',
+                modelo_ia: 'ChatGPT-3.5',
+                prompt: extractPrompt(transcript),
+                relato: transcript,
+                dicas: extractTips(transcript)
+            };
+            
+            setProcessedData(processed);
+            setShowSuccess(true);
+            
+            // Auto redirect after showing success
+            setTimeout(() => {
+                // Here you would normally save to backend
+                // For now, just navigate back
+                alert('Produção processada com sucesso! (Dados: ' + JSON.stringify(processed).substring(0, 100) + '...)');
+                navigate('/dashboard');
+            }, 2000);
+            
+        } catch (err) {
+            console.error(err);
+            alert('Erro ao processar com IA. Tente novamente.');
+        } finally {
+            setIsProcessing(false);
+        }
+    };
+
+    // Simple extraction helpers (replace with actual AI/NLP)
+    const extractTitle = (text) => {
+        const words = text.split(' ').slice(0, 6).join(' ');
+        return words.charAt(0).toUpperCase() + words.slice(1);
+    };
+
+    const extractPrompt = (text) => {
+        const promptMatch = text.match(/prompt[:\s]+([^.!?]+)/i);
+        return promptMatch ? promptMatch[1] : 'Prompt não identificado na transcrição';
+    };
+
+    const extractTips = (text) => {
+        const tipsMatch = text.match(/dica[s]?[:\s]+([^.]+)/i);
+        return tipsMatch ? tipsMatch[1] : '';
+    };
+
+    const fullTranscript = transcript + interimTranscript;
 
     return (
         <div style={styles.container}>
@@ -254,40 +331,119 @@ const VoiceForm = ({ onBack, isMobile }) => {
                         <div style={styles.iconCirclePurple}>
                             <Sparkles size={24} color="#7B1FA2" />
                         </div>
-                        <h2 style={{...styles.title, color: '#4A148C', fontSize: '24px'}}>Entrevista com a IA</h2>
+                        <h2 style={{...styles.title, color: '#4A148C', fontSize: '24px'}}>
+                            {showSuccess ? 'Processado com Sucesso!' : 'Entrevista com a IA'}
+                        </h2>
                     </div>
                     
-                    <p style={{...styles.subtitle, textAlign: 'center', maxWidth: '600px', margin: '0 auto 40px auto'}}>
-                        Clique no microfone e descreva sua atividade didática. Fale sobre o tema, como os alunos reagiram e quais materiais usou. A IA vai estruturar tudo para você.
-                    </p>
+                    {!showSuccess ? (
+                        <>
+                            <p style={{...styles.subtitle, textAlign: 'center', maxWidth: '600px', margin: '0 auto 20px auto'}}>
+                                Clique no microfone e descreva sua atividade didática. Fale sobre o tema, como os alunos reagiram e quais materiais usou. A IA vai estruturar tudo para você.
+                            </p>
 
-                    <div style={styles.micWrapper}>
-                        <button 
-                            onClick={() => setIsRecording(!isRecording)}
-                            style={{
-                                ...styles.micButton,
-                                backgroundColor: isRecording ? '#FFEBEE' : '#F3E5F5',
-                                borderColor: isRecording ? '#EF5350' : '#E1BEE7',
-                                transform: isRecording ? 'scale(1.1)' : 'scale(1)'
-                            }}
-                        >
-                            <Mic size={48} color={isRecording ? "#D32F2F" : "#7B1FA2"} />
-                        </button>
-                        <p style={styles.micStatus}>
-                            {isRecording ? "Gravando... (Clique para parar)" : "Toque para falar"}
-                        </p>
-                    </div>
+                            {/* Browser support warning */}
+                            {!isSupported && (
+                                <div style={{...styles.errorBox, marginBottom: '20px'}}>
+                                    <AlertCircle size={18} style={{marginRight: '8px'}} />
+                                    Seu navegador não suporta reconhecimento de voz. Use Chrome, Edge ou Safari.
+                                </div>
+                            )}
 
-                    <div style={styles.transcriptionBox}>
-                        <p style={{color: '#999', fontStyle: 'italic'}}>
-                            {isRecording ? "Ouvindo sua voz..." : "Sua transcrição aparecerá aqui..."}
-                        </p>
-                    </div>
+                            {/* Error display */}
+                            {error && (
+                                <div style={{...styles.errorBox, marginBottom: '20px'}}>
+                                    <AlertCircle size={18} style={{marginRight: '8px'}} />
+                                    {error}
+                                </div>
+                            )}
 
-                    <div style={styles.footerActions}>
-                         <button style={styles.buttonCancel} onClick={onBack}>Cancelar</button>
-                         <button style={{...styles.button, backgroundColor: '#7B1FA2'}}>Processar com IA</button>
-                    </div>
+                            <div style={styles.micWrapper}>
+                                <button 
+                                    onClick={toggleListening}
+                                    disabled={!isSupported || isProcessing}
+                                    style={{
+                                        ...styles.micButton,
+                                        backgroundColor: isListening ? '#FFEBEE' : '#F3E5F5',
+                                        borderColor: isListening ? '#EF5350' : '#E1BEE7',
+                                        transform: isListening ? 'scale(1.1)' : 'scale(1)',
+                                        opacity: !isSupported || isProcessing ? 0.5 : 1,
+                                        cursor: !isSupported || isProcessing ? 'not-allowed' : 'pointer'
+                                    }}
+                                >
+                                    <Mic size={48} color={isListening ? "#D32F2F" : "#7B1FA2"} />
+                                </button>
+                                <p style={styles.micStatus}>
+                                    {isListening ? (
+                                        <span style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
+                                            <Volume2 size={18} />
+                                            Gravando... (Clique para parar)
+                                        </span>
+                                    ) : (
+                                        "Toque para falar"
+                                    )}
+                                </p>
+                            </div>
+
+                            <div style={styles.transcriptionBox}>
+                                {fullTranscript ? (
+                                    <div>
+                                        <p style={{color: '#333', lineHeight: '1.6', margin: 0}}>
+                                            {transcript}
+                                            {interimTranscript && (
+                                                <span style={{color: '#999', fontStyle: 'italic'}}>
+                                                    {interimTranscript}
+                                                </span>
+                                            )}
+                                        </p>
+                                    </div>
+                                ) : (
+                                    <p style={{color: '#999', fontStyle: 'italic'}}>
+                                        {isListening ? "Ouvindo sua voz..." : "Sua transcrição aparecerá aqui..."}
+                                    </p>
+                                )}
+                            </div>
+
+                            {/* Clear transcript button */}
+                            {transcript && !isListening && (
+                                <button 
+                                    onClick={resetTranscript}
+                                    style={{...styles.clearButton, marginBottom: '20px'}}
+                                >
+                                    <Trash2 size={16} style={{marginRight: '6px'}} />
+                                    Limpar Transcrição
+                                </button>
+                            )}
+
+                            <div style={styles.footerActions}>
+                                <button style={styles.buttonCancel} onClick={onBack} disabled={isProcessing}>
+                                    Cancelar
+                                </button>
+                                <button 
+                                    onClick={processWithAI}
+                                    disabled={!transcript.trim() || isListening || isProcessing || !isSupported}
+                                    style={{
+                                        ...styles.button, 
+                                        backgroundColor: '#7B1FA2',
+                                        opacity: (!transcript.trim() || isListening || isProcessing) ? 0.5 : 1,
+                                        cursor: (!transcript.trim() || isListening || isProcessing) ? 'not-allowed' : 'pointer'
+                                    }}
+                                >
+                                    <Sparkles size={18} style={{marginRight: '8px'}} />
+                                    {isProcessing ? 'Processando...' : 'Processar com IA'}
+                                </button>
+                            </div>
+                        </>
+                    ) : (
+                        <div style={{textAlign: 'center', padding: '40px'}}>
+                            <div style={{...styles.iconCirclePurple, width: '100px', height: '100px', margin: '0 auto 20px'}}>
+                                <CheckCircle size={48} color="#4CAF50" />
+                            </div>
+                            <p style={{fontSize: '18px', color: '#546E7A'}}>
+                                Sua produção foi estruturada e será salva em breve...
+                            </p>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>
@@ -378,6 +534,7 @@ const styles = {
     button: { padding: '12px 24px', backgroundColor: '#1565C0', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', fontSize: '15px' },
     buttonDisabled: { padding: '12px 24px', backgroundColor: '#B0BEC5', color: 'white', border: 'none', borderRadius: '8px', fontSize: '15px', fontWeight: 'bold', cursor: 'not-allowed' },
     buttonCancel: { padding: '12px 24px', backgroundColor: 'transparent', color: '#546E7A', border: '1px solid #CFD8DC', borderRadius: '8px', fontWeight: '600', cursor: 'pointer', fontSize: '15px' },
+    clearButton: { padding: '10px 20px', backgroundColor: 'transparent', color: '#D32F2F', border: '1px solid #FFCDD2', borderRadius: '8px', fontWeight: '600', cursor: 'pointer', fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', alignSelf: 'center' },
     errorBox: { backgroundColor: '#FFEBEE', color: '#C62828', padding: '12px', borderRadius: '8px', fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center' },
     title: { color: '#1565C0', fontSize: '26px', fontWeight: '800' },
     subtitle: { color: '#546E7A', fontSize: '15px' },
