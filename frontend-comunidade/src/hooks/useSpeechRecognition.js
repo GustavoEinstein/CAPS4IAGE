@@ -36,11 +36,13 @@ export const useSpeechRecognition = ({
 
             // Event: result (when speech is recognized)
             recognitionRef.current.onresult = (event) => {
+                console.log('Speech recognition result received:', event);
                 let interimText = '';
                 let finalText = '';
 
                 for (let i = event.resultIndex; i < event.results.length; i++) {
                     const transcriptPart = event.results[i][0].transcript;
+                    console.log('Transcript part:', transcriptPart, 'isFinal:', event.results[i].isFinal);
                     
                     if (event.results[i].isFinal) {
                         finalText += transcriptPart + ' ';
@@ -50,9 +52,13 @@ export const useSpeechRecognition = ({
                 }
 
                 if (finalText) {
+                    console.log('Final text:', finalText);
                     setTranscript(prev => prev + finalText);
                 }
                 
+                if (interimText) {
+                    console.log('Interim text:', interimText);
+                }
                 setInterimTranscript(interimText);
             };
 
@@ -80,8 +86,24 @@ export const useSpeechRecognition = ({
 
             // Event: start
             recognitionRef.current.onstart = () => {
+                console.log('Speech recognition started');
                 setError(null);
                 setIsListening(true);
+            };
+
+            // Event: audiostart
+            recognitionRef.current.onaudiostart = () => {
+                console.log('Audio capturing started');
+            };
+
+            // Event: soundstart
+            recognitionRef.current.onsoundstart = () => {
+                console.log('Sound detected');
+            };
+
+            // Event: speechstart
+            recognitionRef.current.onspeechstart = () => {
+                console.log('Speech detected');
             };
         } else {
             setIsSupported(false);
@@ -100,11 +122,19 @@ export const useSpeechRecognition = ({
         if (recognitionRef.current && !isListening) {
             setError(null);
             try {
+                console.log('Attempting to start speech recognition...');
+                console.log('Recognition settings:', {
+                    lang: recognitionRef.current.lang,
+                    continuous: recognitionRef.current.continuous,
+                    interimResults: recognitionRef.current.interimResults
+                });
                 recognitionRef.current.start();
             } catch (err) {
                 console.error('Error starting recognition:', err);
                 setError('Erro ao iniciar gravação. Tente novamente.');
             }
+        } else {
+            console.log('Cannot start - already listening or no recognition object');
         }
     };
 
