@@ -5,11 +5,12 @@ import Dashboard from "./Dashboard";
 import CatalogarProducoes from "./pages/CatalogarProducoes";
 import MinhasProducoes from './pages/MinhasProducoes';
 import RevisaoDuploCego from './pages/RevisaoDuploCego';
-import PainelComunidade from './pages/PainelComunidade';
+import Revisao from './pages/FormRevisao';
 import Ajuda from './pages/Ajuda';
 import Register from './Register';
 import MainContent from './components/MainContent';
 import PrivateRoute from './components/PrivateRoute';
+import DetalheProducao from './pages/DetalharProducao';
 
 function App() {
   return (
@@ -27,6 +28,9 @@ function App() {
           {/* Página padrão da dashboard */}
           <Route index element={<MainContent />} />
 
+          {/* Nova Rota para Visualização da Produção */}
+          <Route path="producao/:id" element={<DetalheProducao />} />
+
           {/* Catalogar produções didáticas */}
           <Route
             path="catalogar-producoes"
@@ -40,9 +44,10 @@ function App() {
             path="/dashboard/revisao"
             element={<RevisaoDuploCego />} />
 
-          <Route
-            path="/dashboard/comunidade"
-            element={<PainelComunidade />} />
+          {/* Rota do Formulário (Específica com ID) */}
+          <Route 
+            path="revisao/:id" 
+            element={<Revisao />} />         
 
           <Route
             path="ajuda"

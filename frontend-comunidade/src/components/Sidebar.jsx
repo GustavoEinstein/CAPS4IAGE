@@ -45,9 +45,6 @@ function Sidebar({ isOpen, isMobile, onClose }) {
           <li><NavLink to="/dashboard/catalogar-producoes" style={getLinkStyle} onClick={isMobile ? onClose : undefined}><FilePlus2 size={20} style={styles.icon} />Catalogar Produção</NavLink></li>
           <li><NavLink to="/dashboard/minhas-producoes" style={getLinkStyle} onClick={isMobile ? onClose : undefined}><FolderOpen size={20} style={styles.icon} />Minhas Produções</NavLink></li>
           <li><NavLink to="/dashboard/revisao" style={getLinkStyle} onClick={isMobile ? onClose : undefined}><Scale size={20} style={styles.icon} />Revisão (Duplo Cego)</NavLink></li>
-          
-          <p style={styles.sectionLabel}>COMUNIDADE</p>
-          <li><NavLink to="/dashboard/comunidade" style={getLinkStyle} onClick={isMobile ? onClose : undefined}><Globe size={20} style={styles.icon} />Painel da Comunidade</NavLink></li>
         </ul>
 
         <div style={{marginTop: 'auto'}}>

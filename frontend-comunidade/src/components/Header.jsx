@@ -38,7 +38,7 @@ function Header({ onToggleMenu, showMenuButton }) {
       <div style={styles.userArea}>
         <div style={styles.profile} onClick={handleLogout}>
             <div style={{...styles.userInfo, display: showMenuButton ? 'none' : 'flex'}}>
-                <span style={styles.userName}>Professor(a)</span>
+                <span style={styles.userName}>Professor(a) de filosofia teste</span>
                 <span style={styles.userRole}>Sair</span>
             </div>
             <div style={styles.avatar}>P</div>
