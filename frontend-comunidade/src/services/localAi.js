@@ -4,21 +4,37 @@
 let summarizer = null;
 let classifier = null;
 let initializing = false;
+let lastProgress = null;
 
 // Lazy initialize pipelines
-const initPipelines = async () => {
+const initPipelines = async (onProgress) => {
   if (initializing) return;
   initializing = true;
   try {
     const { pipeline } = await import('@xenova/transformers');
     // Summarization (small model)
-    summarizer = await pipeline('summarization', 'Xenova/distilbart-cnn-12-6');
+    summarizer = await pipeline('summarization', 'Xenova/distilbart-cnn-12-6', {
+      progress_callback: (p) => { lastProgress = p; if (onProgress) onProgress(p); }
+    });
     // Zero-shot classification (English MNLI; works reasonably on PT)
-    classifier = await pipeline('zero-shot-classification', 'Xenova/distilbert-base-uncased-mnli');
+    classifier = await pipeline('zero-shot-classification', 'Xenova/distilbert-base-uncased-mnli', {
+      progress_callback: (p) => { lastProgress = p; if (onProgress) onProgress(p); }
+    });
   } catch (e) {
     console.warn('Failed to init local AI pipelines:', e.message);
   } finally {
     initializing = false;
+  }
+};
+
+export const ensureLocalAIReady = async (onProgress) => {
+  try {
+    if (!summarizer || !classifier) {
+      await initPipelines(onProgress);
+    }
+    return { ready: !!(summarizer && classifier), initializing, progress: lastProgress };
+  } catch (e) {
+    return { ready: false, initializing: false, error: e.message };
   }
 };
 

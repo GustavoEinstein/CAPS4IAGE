@@ -17,6 +17,8 @@ import {
 } from 'lucide-react';
 import { useSpeechRecognition } from '../hooks/useSpeechRecognition';
 import { processTranscript } from '../services/aiProcessing';
+import { ensureLocalAIReady } from '../services/localAi';
+import { addUserKeyword } from '../config/keywords';
 
 const NewProduction = () => {
     const [mode, setMode] = useState('selecao'); 
@@ -261,6 +263,7 @@ const VoiceForm = ({ onBack, navigate, isMobile }) => {
     const [processedData, setProcessedData] = useState(null);
     const [showReview, setShowReview] = useState(false);
     const [aiError, setAiError] = useState(null);
+    const [localAIMessage, setLocalAIMessage] = useState('');
 
     // Process transcript with AI
     const processWithAI = async () => {
@@ -278,12 +281,24 @@ const VoiceForm = ({ onBack, navigate, isMobile }) => {
         setAiError(null);
         
         try {
+            // Pre-init local AI to show progress if first run
+            setLocalAIMessage('');
+            const status = await ensureLocalAIReady((p) => {
+                if (p && p.status) {
+                    setLocalAIMessage(`Baixando modelos (${p.status})...`);
+                }
+            });
+            if (!status.ready && status.initializing) {
+                setLocalAIMessage('Inicializando IA local (primeira execução)...');
+            }
+
             // Process with AI service (tries backend, falls back to rule-based)
             const processed = await processTranscript(transcript, true);
             
             console.log('Processed data:', processed);
             setProcessedData(processed);
             setShowReview(true);
+            setLocalAIMessage('');
             
         } catch (err) {
             console.error('Processing error:', err);
@@ -391,11 +406,11 @@ const VoiceForm = ({ onBack, navigate, isMobile }) => {
                         </div>
                     )}
 
-                    {/* Error display */}
-                    {(error || aiError) && (
+                    {/* Error/info display */}
+                    {(error || aiError || localAIMessage) && (
                         <div style={{...styles.errorBox, marginBottom: '20px'}}>
                             <AlertCircle size={18} style={{marginRight: '8px'}} />
-                            {error || aiError}
+                            {error || aiError || localAIMessage}
                         </div>
                     )}
 
@@ -483,6 +498,9 @@ const VoiceForm = ({ onBack, navigate, isMobile }) => {
 // --- 4. TELA DE REVISÃO (Review AI-processed data) ---
 const ReviewForm = ({ data, onBack, onSave, onEdit, isProcessing }) => {
     const [formData, setFormData] = useState(data);
+    const [newDiscSyn, setNewDiscSyn] = useState('');
+    const [newLevelSyn, setNewLevelSyn] = useState('');
+    const [newModelSyn, setNewModelSyn] = useState('');
 
     const handleChange = (field, value) => {
         setFormData(prev => ({ ...prev, [field]: value }));
@@ -572,6 +590,22 @@ const ReviewForm = ({ data, onBack, onSave, onEdit, isProcessing }) => {
                                 <option value="Artes">Artes</option>
                                 <option value="Filosofia">Filosofia</option>
                             </select>
+                            <div style={styles.inlineAdd}>
+                                <input 
+                                    type="text" 
+                                    placeholder={`Adicionar sinônimo para ${formData.disciplina}`}
+                                    value={newDiscSyn}
+                                    onChange={(e) => setNewDiscSyn(e.target.value)}
+                                    style={styles.smallInput}
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => { if (newDiscSyn.trim()) { addUserKeyword('disciplinas', formData.disciplina, newDiscSyn.trim()); setNewDiscSyn(''); } }}
+                                    style={styles.smallButton}
+                                >
+                                    Adicionar
+                                </button>
+                            </div>
                         </div>
                         <div style={styles.inputGroup}>
                             <label style={styles.label}>
@@ -589,6 +623,22 @@ const ReviewForm = ({ data, onBack, onSave, onEdit, isProcessing }) => {
                                 <option value="Superior">Ensino Superior</option>
                                 <option value="EJA">EJA</option>
                             </select>
+                            <div style={styles.inlineAdd}>
+                                <input 
+                                    type="text" 
+                                    placeholder={`Adicionar sinônimo para ${formData.nivel_ensino}`}
+                                    value={newLevelSyn}
+                                    onChange={(e) => setNewLevelSyn(e.target.value)}
+                                    style={styles.smallInput}
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => { if (newLevelSyn.trim()) { addUserKeyword('niveis', formData.nivel_ensino, newLevelSyn.trim()); setNewLevelSyn(''); } }}
+                                    style={styles.smallButton}
+                                >
+                                    Adicionar
+                                </button>
+                            </div>
                         </div>
                         <div style={styles.inputGroup}>
                             <label style={styles.label}>Modelo de IA</label>
@@ -604,6 +654,22 @@ const ReviewForm = ({ data, onBack, onSave, onEdit, isProcessing }) => {
                                 <option value="Copilot">Microsoft Copilot</option>
                                 <option value="Llama">Llama (Local)</option>
                             </select>
+                            <div style={styles.inlineAdd}>
+                                <input 
+                                    type="text" 
+                                    placeholder={`Adicionar sinônimo para ${formData.modelo_ia}`}
+                                    value={newModelSyn}
+                                    onChange={(e) => setNewModelSyn(e.target.value)}
+                                    style={styles.smallInput}
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => { if (newModelSyn.trim()) { addUserKeyword('modelos', formData.modelo_ia, newModelSyn.trim()); setNewModelSyn(''); } }}
+                                    style={styles.smallButton}
+                                >
+                                    Adicionar
+                                </button>
+                            </div>
                         </div>
                     </div>
 
@@ -748,6 +814,9 @@ const styles = {
     button: { padding: '12px 24px', backgroundColor: '#1565C0', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', fontSize: '15px' },
     buttonDisabled: { padding: '12px 24px', backgroundColor: '#B0BEC5', color: 'white', border: 'none', borderRadius: '8px', fontSize: '15px', fontWeight: 'bold', cursor: 'not-allowed' },
     buttonCancel: { padding: '12px 24px', backgroundColor: 'transparent', color: '#546E7A', border: '1px solid #CFD8DC', borderRadius: '8px', fontWeight: '600', cursor: 'pointer', fontSize: '15px' },
+    inlineAdd: { display: 'flex', gap: '8px', marginTop: '8px', alignItems: 'center' },
+    smallInput: { padding: '8px 10px', borderRadius: '6px', border: '1px solid #CFD8DC', backgroundColor: '#F7F9FC', fontSize: '13px', flex: 1 },
+    smallButton: { padding: '8px 12px', backgroundColor: '#E1BEE7', color: '#4A148C', border: 'none', borderRadius: '6px', fontWeight: '700', cursor: 'pointer', fontSize: '13px' },
     clearButton: { padding: '10px 20px', backgroundColor: 'transparent', color: '#D32F2F', border: '1px solid #FFCDD2', borderRadius: '8px', fontWeight: '600', cursor: 'pointer', fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', alignSelf: 'center' },
     errorBox: { backgroundColor: '#FFEBEE', color: '#C62828', padding: '12px', borderRadius: '8px', fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center' },
     warningBox: { backgroundColor: '#FFF3E0', color: '#E65100', padding: '12px', borderRadius: '8px', fontSize: '14px', display: 'flex', alignItems: 'center', fontWeight: '600' },
