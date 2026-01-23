@@ -370,6 +370,19 @@ const VoiceForm = ({ onBack, navigate, isMobile }) => {
                         Clique no microfone e descreva sua atividade didática. Fale sobre o tema, como os alunos reagiram e quais materiais usou. A IA vai estruturar tudo para você.
                     </p>
 
+                    {/* Talking points to guide the teacher */}
+                    <div style={styles.talkingPoints}>
+                        <p style={{margin: 0, color: '#7B1FA2', fontWeight: '700'}}>Dicas do que comentar:</p>
+                        <ul style={styles.talkingList}>
+                            <li>Disciplina e série (ex.: Matemática - Ensino Médio)</li>
+                            <li>Objetivo da atividade (o que alunos deveriam aprender)</li>
+                            <li>Como a IA foi usada (modelo, prompt, passos)</li>
+                            <li>Materiais/recursos utilizados (slides, livros, apps)</li>
+                            <li>Resultados e reações dos alunos</li>
+                            <li>Dicas e cuidados para outros professores</li>
+                        </ul>
+                    </div>
+
                     {/* Browser support warning */}
                     {!isSupported && (
                         <div style={{...styles.errorBox, marginBottom: '20px'}}>
@@ -713,6 +726,8 @@ const styles = {
     micButton: { width: '100px', height: '100px', borderRadius: '50%', border: '4px solid', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' },
     micStatus: { fontWeight: '600', color: '#555' },
     transcriptionBox: { width: '100%', maxWidth: '600px', height: '150px', backgroundColor: '#F9FAFB', border: '1px dashed #CCC', borderRadius: '12px', padding: '20px', overflowY: 'auto', marginBottom: '30px' },
+    talkingPoints: { width: '100%', maxWidth: '700px', backgroundColor: '#F8EAF6', border: '1px solid #E1BEE7', borderRadius: '12px', padding: '16px', margin: '10px auto 24px' },
+    talkingList: { margin: '8px 0 0', paddingLeft: '18px', color: '#4A148C', lineHeight: 1.6, fontSize: '14px' },
 
     // Comuns
     backButton: { background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px', color: '#546E7A', fontWeight: '600', marginBottom: '10px' },

@@ -2,6 +2,7 @@
  * AI Processing Service
  * Handles the extraction and structuring of educational activity data from voice transcripts
  */
+import { getMergedKeywords } from '../config/keywords';
 
 /**
  * Creates a structured prompt for AI to extract information from transcript
@@ -88,59 +89,31 @@ export const processWithBackendAI = async (transcript) => {
 export const processWithFallback = (transcript) => {
     console.log('Using fallback rule-based extraction');
     
-    // Basic extraction using keywords and patterns
-    const disciplinas = {
-        'matemática|matematica|calculo|algebra|geometria': 'Matematica',
-        'história|historia|guerra|revolução': 'Historia',
-        'português|portugues|redação|literatura|leitura': 'Portugues',
-        'ciências|ciencia|biologia|quimica|fisica': 'Ciencias',
-        'geografia': 'Geografia',
-        'artes|arte|música|musica|pintura': 'Artes',
-        'filosofia|etica': 'Filosofia'
-    };
-
-    const niveis = {
-        'fundamental (1|I)|anos iniciais|1º ao 5º': 'Fundamental1',
-        'fundamental (2|II)|anos finais|6º ao 9º': 'Fundamental2',
-        'médio|medio|ensino médio|2º grau': 'Medio',
-        'superior|faculdade|universidade': 'Superior',
-        'EJA|educação de jovens': 'EJA'
-    };
-
-    const modelos = {
-        'gpt-4|chatgpt 4|chat gpt 4': 'ChatGPT-4',
-        'chatgpt|gpt|chat gpt': 'ChatGPT-3.5',
-        'gemini|google gemini|bard': 'Gemini',
-        'claude': 'Claude',
-        'copilot': 'Microsoft Copilot',
-        'llama': 'Llama (Local)'
-    };
+    // Load merged keywords (defaults + user-added)
+    const merged = getMergedKeywords();
+    const disciplinas = merged.disciplinas;
+    const niveis = merged.niveis;
+    const modelos = merged.modelos;
 
     // Extract discipline
     let disciplina = 'Geral';
-    for (const [pattern, value] of Object.entries(disciplinas)) {
-        if (new RegExp(pattern, 'i').test(transcript)) {
-            disciplina = value;
-            break;
-        }
+    for (const [label, synonyms] of Object.entries(disciplinas)) {
+        const regex = new RegExp(synonyms.join('|'), 'i');
+        if (regex.test(transcript)) { disciplina = label; break; }
     }
 
     // Extract education level
     let nivel_ensino = 'Medio';
-    for (const [pattern, value] of Object.entries(niveis)) {
-        if (new RegExp(pattern, 'i').test(transcript)) {
-            nivel_ensino = value;
-            break;
-        }
+    for (const [label, synonyms] of Object.entries(niveis)) {
+        const regex = new RegExp(synonyms.join('|'), 'i');
+        if (regex.test(transcript)) { nivel_ensino = label; break; }
     }
 
     // Extract AI model
     let modelo_ia = 'ChatGPT-3.5';
-    for (const [pattern, value] of Object.entries(modelos)) {
-        if (new RegExp(pattern, 'i').test(transcript)) {
-            modelo_ia = value;
-            break;
-        }
+    for (const [label, synonyms] of Object.entries(modelos)) {
+        const regex = new RegExp(synonyms.join('|'), 'i');
+        if (regex.test(transcript)) { modelo_ia = label; break; }
     }
 
     // Extract prompt if mentioned
@@ -231,7 +204,20 @@ export const processTranscript = async (transcript, useBackend = true) => {
         throw new Error('Transcrição muito curta. Fale mais sobre a atividade.');
     }
 
-    // Try backend AI first if available
+    // Try local AI pre-fallback (runs fully in browser)
+    try {
+        const { processWithLocalAI } = await import('./localAi.js');
+        if (processWithLocalAI) {
+            const localResult = await processWithLocalAI(transcript);
+            if (localResult) {
+                return { ...localResult, processedWith: 'local' };
+            }
+        }
+    } catch (e) {
+        console.warn('Local AI unavailable, continuing:', e.message);
+    }
+
+    // Try backend AI next if available
     if (useBackend) {
         try {
             const result = await processWithBackendAI(transcript);
