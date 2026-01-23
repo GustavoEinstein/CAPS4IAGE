@@ -11,9 +11,12 @@ import {
     Keyboard,
     Volume2,
     Trash2,
-    CheckCircle
+    CheckCircle,
+    Edit3,
+    AlertTriangle
 } from 'lucide-react';
 import { useSpeechRecognition } from '../hooks/useSpeechRecognition';
+import { processTranscript } from '../services/aiProcessing';
 
 const NewProduction = () => {
     const [mode, setMode] = useState('selecao'); 
@@ -256,68 +259,95 @@ const VoiceForm = ({ onBack, navigate, isMobile }) => {
 
     const [isProcessing, setIsProcessing] = useState(false);
     const [processedData, setProcessedData] = useState(null);
-    const [showSuccess, setShowSuccess] = useState(false);
+    const [showReview, setShowReview] = useState(false);
+    const [aiError, setAiError] = useState(null);
 
-    // Simulate AI processing (you can replace this with actual API call)
+    // Process transcript with AI
     const processWithAI = async () => {
         if (!transcript.trim()) {
             alert('Por favor, grave algo antes de processar.');
             return;
         }
 
+        if (transcript.trim().length < 50) {
+            alert('A transcrição está muito curta. Fale mais sobre a atividade.');
+            return;
+        }
+
         setIsProcessing(true);
+        setAiError(null);
         
         try {
-            // Simulating AI processing - replace with actual backend call
-            await new Promise(resolve => setTimeout(resolve, 2000));
+            // Process with AI service (tries backend, falls back to rule-based)
+            const processed = await processTranscript(transcript, true);
             
-            // Mock structured data from transcript
-            const processed = {
-                titulo: extractTitle(transcript),
-                disciplina: 'Geral',
-                nivel_ensino: 'Medio',
-                modelo_ia: 'ChatGPT-3.5',
-                prompt: extractPrompt(transcript),
-                relato: transcript,
-                dicas: extractTips(transcript)
-            };
-            
+            console.log('Processed data:', processed);
             setProcessedData(processed);
-            setShowSuccess(true);
-            
-            // Auto redirect after showing success
-            setTimeout(() => {
-                // Here you would normally save to backend
-                // For now, just navigate back
-                alert('Produção processada com sucesso! (Dados: ' + JSON.stringify(processed).substring(0, 100) + '...)');
-                navigate('/dashboard');
-            }, 2000);
+            setShowReview(true);
             
         } catch (err) {
-            console.error(err);
-            alert('Erro ao processar com IA. Tente novamente.');
+            console.error('Processing error:', err);
+            setAiError(err.message || 'Erro ao processar com IA. Tente novamente.');
         } finally {
             setIsProcessing(false);
         }
     };
 
-    // Simple extraction helpers (replace with actual AI/NLP)
-    const extractTitle = (text) => {
-        const words = text.split(' ').slice(0, 6).join(' ');
-        return words.charAt(0).toUpperCase() + words.slice(1);
+    // Save processed data to backend
+    const saveProduction = async () => {
+        if (!processedData) return;
+
+        setIsProcessing(true);
+        try {
+            const token = localStorage.getItem('access_token');
+            const url = 'http://127.0.0.1:8000/kipo_playground/api/production/create/';
+            
+            const formData = new FormData();
+            formData.append('titulo', processedData.titulo);
+            formData.append('disciplina', processedData.disciplina);
+            formData.append('nivel_ensino', processedData.nivel_ensino);
+            formData.append('modelo_ia', processedData.modelo_ia);
+            formData.append('prompt', processedData.prompt);
+            formData.append('relato', processedData.relato);
+            formData.append('dicas', processedData.dicas);
+
+            await axios.post(url, formData, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'multipart/form-data'
+                }
+            });
+
+            alert('✅ Produção salva com sucesso!');
+            navigate('/dashboard');
+        } catch (err) {
+            console.error('Save error:', err);
+            alert('Erro ao salvar. Tente novamente ou use o formulário manual.');
+        } finally {
+            setIsProcessing(false);
+        }
     };
 
-    const extractPrompt = (text) => {
-        const promptMatch = text.match(/prompt[:\s]+([^.!?]+)/i);
-        return promptMatch ? promptMatch[1] : 'Prompt não identificado na transcrição';
-    };
-
-    const extractTips = (text) => {
-        const tipsMatch = text.match(/dica[s]?[:\s]+([^.]+)/i);
-        return tipsMatch ? tipsMatch[1] : '';
+    // Update a specific field in processed data
+    const updateField = (field, value) => {
+        setProcessedData(prev => ({
+            ...prev,
+            [field]: value
+        }));
     };
 
     const fullTranscript = transcript + interimTranscript;
+
+    // Review screen after AI processing
+    if (showReview && processedData) {
+        return <ReviewForm 
+            data={processedData} 
+            onBack={() => setShowReview(false)}
+            onSave={saveProduction}
+            onEdit={updateField}
+            isProcessing={isProcessing}
+        />;
+    }
 
     return (
         <div style={styles.container}>
@@ -332,119 +362,288 @@ const VoiceForm = ({ onBack, navigate, isMobile }) => {
                             <Sparkles size={24} color="#7B1FA2" />
                         </div>
                         <h2 style={{...styles.title, color: '#4A148C', fontSize: '24px'}}>
-                            {showSuccess ? 'Processado com Sucesso!' : 'Entrevista com a IA'}
+                            Entrevista com a IA
                         </h2>
                     </div>
                     
-                    {!showSuccess ? (
-                        <>
-                            <p style={{...styles.subtitle, textAlign: 'center', maxWidth: '600px', margin: '0 auto 20px auto'}}>
-                                Clique no microfone e descreva sua atividade didática. Fale sobre o tema, como os alunos reagiram e quais materiais usou. A IA vai estruturar tudo para você.
-                            </p>
+                    <p style={{...styles.subtitle, textAlign: 'center', maxWidth: '600px', margin: '0 auto 20px auto'}}>
+                        Clique no microfone e descreva sua atividade didática. Fale sobre o tema, como os alunos reagiram e quais materiais usou. A IA vai estruturar tudo para você.
+                    </p>
 
-                            {/* Browser support warning */}
-                            {!isSupported && (
-                                <div style={{...styles.errorBox, marginBottom: '20px'}}>
-                                    <AlertCircle size={18} style={{marginRight: '8px'}} />
-                                    Seu navegador não suporta reconhecimento de voz. Use Chrome, Edge ou Safari.
-                                </div>
+                    {/* Browser support warning */}
+                    {!isSupported && (
+                        <div style={{...styles.errorBox, marginBottom: '20px'}}>
+                            <AlertCircle size={18} style={{marginRight: '8px'}} />
+                            Seu navegador não suporta reconhecimento de voz. Use Chrome, Edge ou Safari.
+                        </div>
+                    )}
+
+                    {/* Error display */}
+                    {(error || aiError) && (
+                        <div style={{...styles.errorBox, marginBottom: '20px'}}>
+                            <AlertCircle size={18} style={{marginRight: '8px'}} />
+                            {error || aiError}
+                        </div>
+                    )}
+
+                    <div style={styles.micWrapper}>
+                        <button 
+                            onClick={toggleListening}
+                            disabled={!isSupported || isProcessing}
+                            style={{
+                                ...styles.micButton,
+                                backgroundColor: isListening ? '#FFEBEE' : '#F3E5F5',
+                                borderColor: isListening ? '#EF5350' : '#E1BEE7',
+                                transform: isListening ? 'scale(1.1)' : 'scale(1)',
+                                opacity: !isSupported || isProcessing ? 0.5 : 1,
+                                cursor: !isSupported || isProcessing ? 'not-allowed' : 'pointer'
+                            }}
+                        >
+                            <Mic size={48} color={isListening ? "#D32F2F" : "#7B1FA2"} />
+                        </button>
+                        <p style={styles.micStatus}>
+                            {isListening ? (
+                                <span style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
+                                    <Volume2 size={18} />
+                                    Gravando... (Clique para parar)
+                                </span>
+                            ) : (
+                                "Toque para falar"
                             )}
+                        </p>
+                    </div>
 
-                            {/* Error display */}
-                            {error && (
-                                <div style={{...styles.errorBox, marginBottom: '20px'}}>
-                                    <AlertCircle size={18} style={{marginRight: '8px'}} />
-                                    {error}
-                                </div>
-                            )}
-
-                            <div style={styles.micWrapper}>
-                                <button 
-                                    onClick={toggleListening}
-                                    disabled={!isSupported || isProcessing}
-                                    style={{
-                                        ...styles.micButton,
-                                        backgroundColor: isListening ? '#FFEBEE' : '#F3E5F5',
-                                        borderColor: isListening ? '#EF5350' : '#E1BEE7',
-                                        transform: isListening ? 'scale(1.1)' : 'scale(1)',
-                                        opacity: !isSupported || isProcessing ? 0.5 : 1,
-                                        cursor: !isSupported || isProcessing ? 'not-allowed' : 'pointer'
-                                    }}
-                                >
-                                    <Mic size={48} color={isListening ? "#D32F2F" : "#7B1FA2"} />
-                                </button>
-                                <p style={styles.micStatus}>
-                                    {isListening ? (
-                                        <span style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
-                                            <Volume2 size={18} />
-                                            Gravando... (Clique para parar)
+                    <div style={styles.transcriptionBox}>
+                        {fullTranscript ? (
+                            <div>
+                                <p style={{color: '#333', lineHeight: '1.6', margin: 0}}>
+                                    {transcript}
+                                    {interimTranscript && (
+                                        <span style={{color: '#999', fontStyle: 'italic'}}>
+                                            {interimTranscript}
                                         </span>
-                                    ) : (
-                                        "Toque para falar"
                                     )}
                                 </p>
                             </div>
-
-                            <div style={styles.transcriptionBox}>
-                                {fullTranscript ? (
-                                    <div>
-                                        <p style={{color: '#333', lineHeight: '1.6', margin: 0}}>
-                                            {transcript}
-                                            {interimTranscript && (
-                                                <span style={{color: '#999', fontStyle: 'italic'}}>
-                                                    {interimTranscript}
-                                                </span>
-                                            )}
-                                        </p>
-                                    </div>
-                                ) : (
-                                    <p style={{color: '#999', fontStyle: 'italic'}}>
-                                        {isListening ? "Ouvindo sua voz..." : "Sua transcrição aparecerá aqui..."}
-                                    </p>
-                                )}
-                            </div>
-
-                            {/* Clear transcript button */}
-                            {transcript && !isListening && (
-                                <button 
-                                    onClick={resetTranscript}
-                                    style={{...styles.clearButton, marginBottom: '20px'}}
-                                >
-                                    <Trash2 size={16} style={{marginRight: '6px'}} />
-                                    Limpar Transcrição
-                                </button>
-                            )}
-
-                            <div style={styles.footerActions}>
-                                <button style={styles.buttonCancel} onClick={onBack} disabled={isProcessing}>
-                                    Cancelar
-                                </button>
-                                <button 
-                                    onClick={processWithAI}
-                                    disabled={!transcript.trim() || isListening || isProcessing || !isSupported}
-                                    style={{
-                                        ...styles.button, 
-                                        backgroundColor: '#7B1FA2',
-                                        opacity: (!transcript.trim() || isListening || isProcessing) ? 0.5 : 1,
-                                        cursor: (!transcript.trim() || isListening || isProcessing) ? 'not-allowed' : 'pointer'
-                                    }}
-                                >
-                                    <Sparkles size={18} style={{marginRight: '8px'}} />
-                                    {isProcessing ? 'Processando...' : 'Processar com IA'}
-                                </button>
-                            </div>
-                        </>
-                    ) : (
-                        <div style={{textAlign: 'center', padding: '40px'}}>
-                            <div style={{...styles.iconCirclePurple, width: '100px', height: '100px', margin: '0 auto 20px'}}>
-                                <CheckCircle size={48} color="#4CAF50" />
-                            </div>
-                            <p style={{fontSize: '18px', color: '#546E7A'}}>
-                                Sua produção foi estruturada e será salva em breve...
+                        ) : (
+                            <p style={{color: '#999', fontStyle: 'italic'}}>
+                                {isListening ? "Ouvindo sua voz..." : "Sua transcrição aparecerá aqui..."}
                             </p>
-                        </div>
+                        )}
+                    </div>
+
+                    {/* Clear transcript button */}
+                    {transcript && !isListening && (
+                        <button 
+                            onClick={resetTranscript}
+                            style={{...styles.clearButton, marginBottom: '20px'}}
+                        >
+                            <Trash2 size={16} style={{marginRight: '6px'}} />
+                            Limpar Transcrição
+                        </button>
                     )}
+
+                    <div style={styles.footerActions}>
+                        <button style={styles.buttonCancel} onClick={onBack} disabled={isProcessing}>
+                            Cancelar
+                        </button>
+                        <button 
+                            onClick={processWithAI}
+                            disabled={!transcript.trim() || isListening || isProcessing || !isSupported}
+                            style={{
+                                ...styles.button, 
+                                backgroundColor: '#7B1FA2',
+                                opacity: (!transcript.trim() || isListening || isProcessing) ? 0.5 : 1,
+                                cursor: (!transcript.trim() || isListening || isProcessing) ? 'not-allowed' : 'pointer'
+                            }}
+                        >
+                            <Sparkles size={18} style={{marginRight: '8px'}} />
+                            {isProcessing ? 'Processando...' : 'Processar com IA'}
+                        </button>
+                    </div>
                 </div>
+            </div>
+        </div>
+    );
+};
+
+// --- 4. TELA DE REVISÃO (Review AI-processed data) ---
+const ReviewForm = ({ data, onBack, onSave, onEdit, isProcessing }) => {
+    const [formData, setFormData] = useState(data);
+
+    const handleChange = (field, value) => {
+        setFormData(prev => ({ ...prev, [field]: value }));
+        onEdit(field, value);
+    };
+
+    const getConfidenceBadge = (level) => {
+        const styles = {
+            alta: { bg: '#E8F5E9', color: '#2E7D32', text: 'Alta confiança' },
+            media: { bg: '#FFF3E0', color: '#E65100', text: 'Confiança média' },
+            baixa: { bg: '#FFEBEE', color: '#C62828', text: 'Baixa confiança - Revise!' }
+        };
+        const style = styles[level] || styles.media;
+        return (
+            <span style={{
+                backgroundColor: style.bg,
+                color: style.color,
+                padding: '4px 10px',
+                borderRadius: '12px',
+                fontSize: '11px',
+                fontWeight: '600',
+                marginLeft: '8px'
+            }}>
+                {style.text}
+            </span>
+        );
+    };
+
+    return (
+        <div style={styles.container}>
+            <div style={styles.card}>
+                <div style={{display: 'flex', alignItems: 'center', marginBottom: '20px', borderBottom: '1px solid #F0F2F5', paddingBottom: '20px'}}>
+                    <button onClick={onBack} style={styles.backButton}>
+                        <ArrowLeft size={20} />
+                    </button>
+                    <div style={{flex: 1, marginLeft: '10px'}}>
+                        <h2 style={{...styles.title, margin: 0, fontSize: '24px', display: 'flex', alignItems: 'center'}}>
+                            <Edit3 size={24} style={{marginRight: '10px'}} />
+                            Revisar Dados Extraídos pela IA
+                        </h2>
+                        <p style={{margin: '5px 0 0 34px', color: '#546E7A', fontSize: '14px'}}>
+                            {data.processedWith === 'backend' ? '✨ Processado com IA do servidor' : '⚡ Processado com extração automática'}
+                        </p>
+                    </div>
+                </div>
+
+                {/* Warning if low confidence */}
+                {(data.confianca?.titulo === 'baixa' || data.confianca?.disciplina === 'baixa' || data.confianca?.nivel_ensino === 'baixa') && (
+                    <div style={{...styles.warningBox, marginBottom: '20px'}}>
+                        <AlertTriangle size={18} style={{marginRight: '8px'}} />
+                        Alguns campos têm baixa confiança. Por favor, revise e ajuste conforme necessário.
+                    </div>
+                )}
+
+                <form style={styles.form}>
+                    <div style={styles.inputGroup}>
+                        <label style={styles.label}>
+                            Título da Atividade
+                            {data.confianca?.titulo && getConfidenceBadge(data.confianca.titulo)}
+                        </label>
+                        <input 
+                            type="text" 
+                            value={formData.titulo} 
+                            onChange={(e) => handleChange('titulo', e.target.value)}
+                            style={styles.input} 
+                            required 
+                        />
+                    </div>
+
+                    <div style={styles.row}>
+                        <div style={styles.inputGroup}>
+                            <label style={styles.label}>
+                                Disciplina
+                                {data.confianca?.disciplina && getConfidenceBadge(data.confianca.disciplina)}
+                            </label>
+                            <select 
+                                value={formData.disciplina} 
+                                onChange={(e) => handleChange('disciplina', e.target.value)}
+                                style={styles.select}
+                            >
+                                <option value="Geral">Geral / Gestão</option>
+                                <option value="Matematica">Matemática</option>
+                                <option value="Historia">História</option>
+                                <option value="Portugues">Língua Portuguesa</option>
+                                <option value="Ciencias">Ciências / Biologia</option>
+                                <option value="Geografia">Geografia</option>
+                                <option value="Artes">Artes</option>
+                                <option value="Filosofia">Filosofia</option>
+                            </select>
+                        </div>
+                        <div style={styles.inputGroup}>
+                            <label style={styles.label}>
+                                Nível de Ensino
+                                {data.confianca?.nivel_ensino && getConfidenceBadge(data.confianca.nivel_ensino)}
+                            </label>
+                            <select 
+                                value={formData.nivel_ensino} 
+                                onChange={(e) => handleChange('nivel_ensino', e.target.value)}
+                                style={styles.select}
+                            >
+                                <option value="Fundamental1">Fund. Anos Iniciais</option>
+                                <option value="Fundamental2">Fund. Anos Finais</option>
+                                <option value="Medio">Ensino Médio</option>
+                                <option value="Superior">Ensino Superior</option>
+                                <option value="EJA">EJA</option>
+                            </select>
+                        </div>
+                        <div style={styles.inputGroup}>
+                            <label style={styles.label}>Modelo de IA</label>
+                            <select 
+                                value={formData.modelo_ia} 
+                                onChange={(e) => handleChange('modelo_ia', e.target.value)}
+                                style={styles.select}
+                            >
+                                <option value="ChatGPT-3.5">ChatGPT-3.5</option>
+                                <option value="ChatGPT-4">ChatGPT-4</option>
+                                <option value="Gemini">Google Gemini</option>
+                                <option value="Claude">Claude 3</option>
+                                <option value="Copilot">Microsoft Copilot</option>
+                                <option value="Llama">Llama (Local)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div style={styles.inputGroup}>
+                        <label style={styles.label}>Prompt (Comando dado à IA)</label>
+                        <textarea 
+                            value={formData.prompt} 
+                            onChange={(e) => handleChange('prompt', e.target.value)}
+                            style={{...styles.textarea, height: '100px'}} 
+                            placeholder="Prompt usado com a IA..."
+                        />
+                    </div>
+
+                    <div style={styles.inputGroup}>
+                        <label style={styles.label}>
+                            Relato da Experiência (Anonimizado)
+                            <span style={{fontWeight: 'normal', fontSize: '12px', marginLeft: '8px', color: '#666'}}>
+                                ✅ Dados pessoais removidos automaticamente
+                            </span>
+                        </label>
+                        <textarea 
+                            value={formData.relato} 
+                            onChange={(e) => handleChange('relato', e.target.value)}
+                            style={{...styles.textarea, height: '180px'}} 
+                            required
+                        />
+                    </div>
+
+                    <div style={styles.inputGroup}>
+                        <label style={styles.label}>Dicas de Aplicação</label>
+                        <textarea 
+                            value={formData.dicas} 
+                            onChange={(e) => handleChange('dicas', e.target.value)}
+                            style={{...styles.textarea, height: '80px'}} 
+                            placeholder="Dicas práticas extraídas..."
+                        />
+                    </div>
+
+                    <div style={styles.footerActions}>
+                        <button type="button" onClick={onBack} style={styles.buttonCancel} disabled={isProcessing}>
+                            Voltar para Editar
+                        </button>
+                        <button 
+                            type="button" 
+                            onClick={onSave}
+                            style={isProcessing ? styles.buttonDisabled : {...styles.button, backgroundColor: '#4CAF50'}} 
+                            disabled={isProcessing}
+                        >
+                            <Save size={18} style={{marginRight: '8px'}} />
+                            {isProcessing ? 'Salvando...' : 'Salvar Produção'}
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     );
@@ -536,6 +735,7 @@ const styles = {
     buttonCancel: { padding: '12px 24px', backgroundColor: 'transparent', color: '#546E7A', border: '1px solid #CFD8DC', borderRadius: '8px', fontWeight: '600', cursor: 'pointer', fontSize: '15px' },
     clearButton: { padding: '10px 20px', backgroundColor: 'transparent', color: '#D32F2F', border: '1px solid #FFCDD2', borderRadius: '8px', fontWeight: '600', cursor: 'pointer', fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', alignSelf: 'center' },
     errorBox: { backgroundColor: '#FFEBEE', color: '#C62828', padding: '12px', borderRadius: '8px', fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center' },
+    warningBox: { backgroundColor: '#FFF3E0', color: '#E65100', padding: '12px', borderRadius: '8px', fontSize: '14px', display: 'flex', alignItems: 'center', fontWeight: '600' },
     title: { color: '#1565C0', fontSize: '26px', fontWeight: '800' },
     subtitle: { color: '#546E7A', fontSize: '15px' },
 };

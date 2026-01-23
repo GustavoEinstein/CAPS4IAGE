@@ -26,8 +26,15 @@ cd CAPS4IAGE
 python3 -m venv venv
 
 # Ativar o ambiente virtual
-# Linux/Mac/WSL:
+## Linux/Mac/WSL:
 source venv/bin/activate
+
+## Command Prompt (cmd.exe):
+venv\Scripts\activate.bat
+## PowerShell:
+venv\Scripts\Activate.ps1
+## Git Bash or other Unix-like shells on Windows:
+source venv/Scripts/activate
 
 # Windows (PowerShell):
 # venv\Scripts\Activate
