@@ -1,16 +1,66 @@
-# React + Vite
+# CAPS4IAGE – Comunidade Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+This app helps catalog classroom activities with voice input and AI-assisted structuring. It’s built with React + Vite and works entirely client-side by default.
 
-Currently, two official plugins are available:
+## Quick Start
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+```bash
+npm install
+npm run dev
+# open http://localhost:5173
+```
 
-## React Compiler
+## Features Overview
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- **Voice Capture:** Web Speech API for in-browser transcription.
+- **AI Processing:** Orchestrates three paths: local AI (in-browser), backend AI (Django), and rule-based fallback.
+- **Review & Save:** Edit extracted fields, add synonyms, and save (backend endpoint pending).
+- **Keyword Config:** Merge default synonyms with user-added ones via localStorage.
 
-## Expanding the ESLint configuration
+## Key Files
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+- Voice: [src/hooks/useSpeechRecognition.js](src/hooks/useSpeechRecognition.js)
+- Page: [src/pages/CatalogarProducoes.jsx](src/pages/CatalogarProducoes.jsx)
+- AI Orchestrator: [src/services/aiProcessing.js](src/services/aiProcessing.js)
+- Local AI: [src/services/localAi.js](src/services/localAi.js)
+- Keywords: [src/config/keywords.js](src/config/keywords.js)
+- Feature Toggles: [src/config/features.js](src/config/features.js)
+
+## Using the Catalogar Page
+
+1. Select voice mode and press record; speak your activity.
+2. Click “Processar com IA” to extract fields.
+3. Review results, edit if needed, and optionally add synonyms.
+4. Save (requires backend endpoint implementation).
+
+## Feature Toggles
+
+Control behavior while exploring:
+
+- `useLocalAI` (default: true): Enables in-browser AI via `@xenova/transformers`.
+- `useBackendAI` (default: false): Enables Django endpoint calls.
+
+Edit the toggles in [src/config/features.js](src/config/features.js).
+
+## Troubleshooting
+
+- **Local AI init error:** “Unexpected token '<' … not valid JSON” → Model download returned HTML (network/proxy). Options:
+	- Ensure `huggingface.co` is reachable.
+	- Disable local AI via feature toggle to rely on fallback.
+	- Host models locally and point transformers to `/public/models` (optional).
+
+- **Backend 404:** `/kipo_playground/api/ai/process-transcript/` not found → Endpoint not implemented. Set `useBackendAI` to false; the app will use fallback.
+
+- **Large bundle warnings:** Non-blocking. Can be improved later with code-splitting.
+
+## Dev Commands
+
+```bash
+npm run dev     # start local dev server
+npm run build   # production build
+```
+
+## Dependencies
+
+- React, Vite
+- `@xenova/transformers` for local AI (browser-based)

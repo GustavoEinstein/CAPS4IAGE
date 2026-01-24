@@ -3,6 +3,8 @@
  * Handles the extraction and structuring of educational activity data from voice transcripts
  */
 import { getMergedKeywords } from '../config/keywords';
+import { FEATURES } from '../config/features';
+import { logTranscript } from './transcriptLogger';
 
 /**
  * Creates a structured prompt for AI to extract information from transcript
@@ -205,29 +207,45 @@ export const processTranscript = async (transcript, useBackend = true) => {
     }
 
     // Try local AI pre-fallback (runs fully in browser)
-    try {
-        const { processWithLocalAI } = await import('./localAi.js');
-        if (processWithLocalAI) {
-            const localResult = await processWithLocalAI(transcript);
-            if (localResult) {
-                return { ...localResult, processedWith: 'local' };
+    let processed = null;
+
+    if (FEATURES.useLocalAI) {
+        try {
+            const { processWithLocalAI } = await import('./localAi.js');
+            if (processWithLocalAI) {
+                const localResult = await processWithLocalAI(transcript);
+                if (localResult) {
+                    processed = { ...localResult, processedWith: 'local' };
+                }
             }
+        } catch (e) {
+            console.warn('Local AI unavailable, continuing:', e.message);
         }
-    } catch (e) {
-        console.warn('Local AI unavailable, continuing:', e.message);
+    } else {
+        console.info('Local AI disabled via FEATURE toggle.');
     }
 
     // Try backend AI next if available
-    if (useBackend) {
+    const tryBackend = useBackend && FEATURES.useBackendAI;
+    if (tryBackend && !processed) {
         try {
             const result = await processWithBackendAI(transcript);
-            return { ...result, processedWith: 'backend' };
+            processed = { ...result, processedWith: 'backend' };
         } catch (error) {
             console.warn('Backend AI unavailable, using fallback:', error.message);
             // Fall through to fallback
         }
+    } else if (useBackend && !FEATURES.useBackendAI) {
+        console.info('Backend AI disabled via FEATURE toggle.');
     }
 
     // Use fallback extraction
-    return processWithFallback(transcript);
+    if (!processed) {
+        processed = processWithFallback(transcript);
+    }
+
+    // Fire-and-forget logging; do not block UX
+    logTranscript({ transcript, result: processed, ts: new Date().toISOString() }).catch(() => {});
+
+    return processed;
 };
