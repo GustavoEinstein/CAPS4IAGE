@@ -154,7 +154,23 @@ const ManualFormSplit = ({ onBack, navigate, isMobile }) => {
                                 <div style={styles.inputGroup}><label style={styles.label}>Título</label><input type="text" name="titulo" value={formData.titulo} onChange={handleChange} style={styles.input} required placeholder="Ex: Dilemas Éticos" /></div>
                                 <div style={styles.inputGroup}><label style={styles.label}>Disciplina</label><div style={styles.lockedInputWrapper}><Lock size={16} color="#78909C" style={{marginLeft: '12px'}}/><input type="text" value={formData.disciplina} readOnly style={styles.lockedInput}/></div></div>
                                 <div style={styles.inputGroup}><label style={styles.label}>Nível</label><select name="nivel" value={formData.nivel} onChange={handleChange} style={styles.input} required><option value="">Selecione...</option><option value="Fundamental 1">Fundamental 1</option><option value="Fundamental 2">Fundamental 2</option><option value="Ensino Médio">Ensino Médio</option><option value="Ensino Superior">Ensino Superior</option></select></div>
-                                <div style={styles.inputGroup}><label style={styles.label}><Layers size={14}/> Tipo de Material</label><select name="categoria" value={formData.categoria} onChange={handleChange} style={styles.input} required><option value="">Selecione...</option><optgroup label="Planejamento"><option value="Plano de Aula">Plano de Aula</option><option value="Sequência Didática">Sequência Didática</option></optgroup><optgroup label="Recursos"><option value="Slide / Apresentação">Slide</option><option value="Quiz / Questões">Quiz</option><option value="Texto de Apoio">Texto</option></optgroup><optgroup label="Prática"><option value="Simulação / Roleplay">Simulação</option><option value="Estudo de Caso">Estudo de Caso</option><option value="Prompt para Alunos">Prompt</option></optgroup></select></div>
+                                <div style={styles.inputGroup}><label style={styles.label}><Layers size={14}/> Conteúdo Gerado</label><select name="categoria" value={formData.categoria} onChange={handleChange} style={styles.input} required><option value="">O que a IA ajudou a criar?</option>
+                                        <optgroup label="Planejamento">
+                                            <option value="Plano de Aula">Plano de Aula / Roteiro</option>
+                                            <option value="Sequência Didática">Sequência Didática</option>
+                                            <option value="Rubrica de Avaliação">Rubrica de Avaliação</option>
+                                        </optgroup>
+                                        <optgroup label="Recursos Didáticos">
+                                            <option value="Texto de Apoio">Texto de Apoio / Artigo</option>
+                                            <option value="Slide / Apresentação">Slide / Apresentação</option>
+                                            <option value="Lista de Exercícios">Lista de Exercícios</option>
+                                            <option value="Quiz / Questões">Quiz / Banco de Questões</option>
+                                        </optgroup>
+                                        <optgroup label="Atividades Práticas">
+                                            <option value="Estudo de Caso">Estudo de Caso</option>
+                                            <option value="Simulação / Roleplay">Simulação / Roleplay</option>
+                                            <option value="Prompt para Alunos">Prompt para Alunos</option>
+                                        </optgroup></select></div>
                                 <div style={styles.inputGroup}><label style={styles.label}>Modelo de IA</label><input type="text" name="modelo_ia" value={formData.modelo_ia} onChange={handleChange} style={styles.input} required placeholder="Ex: ChatGPT-4" /></div>
                                 <div style={styles.uploadSection}><label style={styles.label}><UploadCloud size={16}/> Anexar</label><div style={styles.uploadContainer}><input type="file" id="file-upload" onChange={handleFileChange} style={{display: 'none'}} /><label htmlFor="file-upload" style={styles.uploadLabel}>{formData.arquivo ? (<div style={styles.fileSelected}><CheckCircle2 size={28} color="#4CAF50" /><span style={styles.fileName}>{formData.arquivo.name}</span></div>) : (<><div style={styles.uploadIconCircle}><UploadCloud size={20} color="#1565C0" /></div><span style={styles.uploadTextMain}>Carregar Arquivo</span></>)}</label></div></div>
                             </div>
