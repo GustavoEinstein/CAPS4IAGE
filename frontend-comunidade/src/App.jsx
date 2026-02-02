@@ -1,60 +1,78 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 
+// --- PÁGINAS PÚBLICAS ---
+import LandingPage from "./pages/LandingPage";
 import Login from "./Login";
+import Register from "./Register";
+
+// --- PÁGINAS DE RECUPERAÇÃO DE SENHA (NOVAS) ---
+import EsqueceuSenha from "./pages/EsqueceuSenha";
+import NovaSenha from "./pages/NovaSenha";
+
+// --- PÁGINAS DO DASHBOARD (PRIVADAS) ---
 import Dashboard from "./Dashboard";
+import MainContent from './components/MainContent';
+import DetalheProducao from './pages/DetalharProducao';
+import VisualizarMinhaProducao from './pages/VisualizarMinhaProducao';
 import CatalogarProducoes from "./pages/CatalogarProducoes";
 import MinhasProducoes from './pages/MinhasProducoes';
 import RevisaoDuploCego from './pages/RevisaoDuploCego';
-import Revisao from './pages/FormRevisao';
+import Revisao from './pages/FormRevisao'; 
 import Ajuda from './pages/Ajuda';
-import Register from './Register';
-import MainContent from './components/MainContent';
+import Profile from './pages/Profile'; 
+
+// --- COMPONENTE DE PROTEÇÃO ---
 import PrivateRoute from './components/PrivateRoute';
-import DetalheProducao from './pages/DetalharProducao';
 
 function App() {
   return (
     <Router>
       <Routes>
-        {/* Rotas Públicas (Qualquer um acessa) */}
-        {/* Tela de login */}
-        <Route path="/" element={<Login />} />
+        
+        {/* === ROTAS PÚBLICAS === */}
+        
+        {/* 1. Página Inicial (Landing Page) */}
+        <Route path="/" element={<LandingPage />} />
+        
+        {/* 2. Acesso e Cadastro */}
+        <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
 
-        {/* Rotas Privadas (Só acessa se estiver logado) */}
+        {/* 3. Recuperação de Senha */}
+        <Route path="/esqueceu-senha" element={<EsqueceuSenha />} />
+        <Route path="/reset-password/:uid/:token" element={<NovaSenha />} />
+
+        {/* === ROTAS PRIVADAS (Só acessa com login) === */}
         <Route element={<PrivateRoute />}>
-                {/* Dashboard (layout base) */}
-        <Route path="/dashboard" element={<Dashboard />}>
-          {/* Página padrão da dashboard */}
-          <Route index element={<MainContent />} />
+            
+            {/* O Dashboard contém a barra lateral e o topo */}
+            <Route path="/dashboard" element={<Dashboard />}>
+                
+                {/* Rota padrão do dashboard (Feed) */}
+                <Route index element={<MainContent />} />
 
-          {/* Nova Rota para Visualização da Produção */}
-          <Route path="producao/:id" element={<DetalheProducao />} />
+                {/* Visualizações */}
+                <Route path="producao/:id" element={<DetalheProducao />} />
+                <Route path="minha-producao/:id" element={<VisualizarMinhaProducao />} />
 
-          {/* Catalogar produções didáticas */}
-          <Route
-            path="catalogar-producoes"
-            element={<CatalogarProducoes />} />
+                {/* Funcionalidades */}
+                <Route path="catalogar-producoes" element={<CatalogarProducoes />} />
+                <Route path="minhas-producoes" element={<MinhasProducoes />} />
+                <Route path="revisao" element={<RevisaoDuploCego />} />
+                <Route path="revisao/:id" element={<Revisao />} />          
+                <Route path="ajuda" element={<Ajuda />} />
 
-          <Route 
-            path="/dashboard/minhas-producoes" 
-            element={<MinhasProducoes />} />
+            </Route>
 
-          <Route
-            path="/dashboard/revisao"
-            element={<RevisaoDuploCego />} />
-
-          {/* Rota do Formulário (Específica com ID) */}
-          <Route 
-            path="revisao/:id" 
-            element={<Revisao />} />         
-
-          <Route
-            path="ajuda"
-            element={<Ajuda />} />
+            {/* Perfil fica fora do layout do Dashboard (Tela cheia) */}
+            <Route path="/perfil" element={<Profile />} />
 
         </Route>
-        </Route>
+
+        {/* Rota de segurança: Qualquer endereço desconhecido volta para a Home */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+
       </Routes>
     </Router>
   );

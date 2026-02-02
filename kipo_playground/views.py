@@ -27,10 +27,30 @@ import shutil
 import json 
 import sys 
 from random import randint
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from .models import Profile  # Importante importar o Model aqui
 
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
+from .models import Producao
+from django.utils import timezone
+
+from django.contrib.auth.tokens import default_token_generator
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.utils.encoding import force_bytes, force_str
+from django.core.mail import send_mail
+from django.template.loader import render_to_string
+from django.core.mail import EmailMultiAlternatives
+from django.utils.html import strip_tags
+from django.conf import settings
+
+
+
+
+
 
 # Comandos básicos
 # source venv/bin/activate
@@ -167,7 +187,7 @@ def welcome(request):
             myworld = World(filename='backup.db', exclusive=False)
             
             onto_path.append(os.path.dirname(__file__))
-            
+        
             # aqui a KIPO e a Ontologia do Scrum tiveram um Merge!
             kiposcrum = myworld.get_ontology(os.path.dirname(__file__) + '/kipo_fialho.owl').load()
             
@@ -2857,125 +2877,400 @@ def register(request):
     context = {'form':form}
     return render(request, 'register.html', context)
 
-@api_view(['GET'])
-def api_listar_ciclos(request):
-    """
-    API que retorna os Ciclos de Aprendizagem (antigas Sprints) em formato JSON
-    para o React consumir.
-    """
-    objetos_finais = []
-    
-    try:
-        # Carrega a ontologia (Copiado da sua lógica original)
-        myworld = World(filename='backup.db', exclusive=False)
-        # Ajuste o caminho se necessário, usando os.path.dirname como você já faz
-        kiposcrum = myworld.get_ontology("http://www.semanticweb.org/fialho/kipo").load()
-        sync_reasoner()
-        
-        with kiposcrum:
-            # Busca todas as Sprints (Ciclos)
-            lista_instancias = kiposcrum["scrum_Sprint"].instances()
-            
-            # REUSA sua função auxiliar 'transforma_objeto' que já limpa os dados!
-            # Isso economiza muito trabalho.
-            objetos_finais = transforma_objeto(lista_instancias)
-            
-    except Exception as e:
-        return Response({"status": "Erro", "mensagem": str(e)}, status=500)
-        
-    finally:
-        myworld.close()
-
-    # O DRF converte a lista de dicionários em JSON automaticamente
-    return Response(objetos_finais)
-# ------------------------------------------------------------
 @api_view(['POST'])
-@permission_classes([AllowAny]) # Qualquer um pode se cadastrar
+@permission_classes([AllowAny])
 def api_register_user(request):
     data = request.data
+    
     username = data.get('username')
     email = data.get('email')
     password = data.get('password')
-    
-    # 1. Validações básicas
-    if not username or not password:
-        return Response({'erro': 'Usuário e senha são obrigatórios'}, status=400)
-    
+    name = data.get('name')
+    disciplina = data.get('disciplina', 'Outra')
+
+    if not username or not password or not email:
+        return Response({'erro': 'Preencha todos os campos obrigatórios.'}, status=400)
+
     if User.objects.filter(username=username).exists():
-        return Response({'erro': 'Este nome de usuário já está em uso'}, status=400)
+        return Response({'erro': 'Este nome de usuário já está em uso.'}, status=400)
 
-    # 2. Cria o usuário
+    if User.objects.filter(email=email).exists():
+        return Response({'erro': 'Este e-mail já possui uma conta cadastrada.'}, status=400)
+
     try:
-        user = User.objects.create_user(username=username, email=email, password=password)
-        user.save()
-        return Response({'mensagem': 'Usuário criado com sucesso!'}, status=201)
+        user = User.objects.create_user(
+            username=username,
+            email=email,
+            password=password,
+            first_name=name 
+        )
+        
+        profile, created = Profile.objects.get_or_create(user=user)
+        profile.disciplina = disciplina
+        profile.save()
+        
+        return Response({'mensagem': 'Conta criada com sucesso!'}, status=201)
+        
     except Exception as e:
-        return Response({'erro': str(e)}, status=500)
+        print("Erro ao criar user:", e)
+        return Response({'erro': 'Erro interno ao criar conta.'}, status=500)
 
-# Função para o upload de arquivos
+
+@api_view(['GET', 'PUT'])
+@permission_classes([IsAuthenticated])
+def api_user_profile(request):
+    user = request.user
+    profile, created = Profile.objects.get_or_create(user=user)
+
+    if request.method == 'GET':
+        avatar_url = None
+        try:
+            if profile.avatar:
+                avatar_url = request.build_absolute_uri(profile.avatar.url)
+        except:
+            pass
+
+        nome_exibicao = user.first_name if user.first_name else user.username
+
+        return Response({
+            'id': user.id,
+            'username': nome_exibicao,
+            'email': user.email,
+            'disciplina': profile.disciplina,
+            'avatar': avatar_url
+        })
+
+    elif request.method == 'PUT':
+        data = request.data
+        
+        if 'disciplina' in data:
+            profile.disciplina = data['disciplina']
+
+        file = request.FILES.get('avatar')
+        if file:
+            profile.avatar = file
+            
+        profile.save()
+
+        if 'username' in data and data['username']: 
+             user.first_name = data['username']
+             user.save()
+        
+        avatar_url = request.build_absolute_uri(profile.avatar.url) if profile.avatar else None
+        nome_exibicao = user.first_name if user.first_name else user.username
+
+        return Response({
+            'mensagem': 'Perfil atualizado com sucesso!',
+            'username': nome_exibicao,
+            'avatar': avatar_url,
+            'disciplina': profile.disciplina
+        })
+
+
+# ============================================================================
+# 2. PRODUÇÕES DIDÁTICAS (CRUD)
+# ============================================================================
+
 @api_view(['POST'])
-@permission_classes([authenticate])
+@permission_classes([IsAuthenticated])
 def api_create_production(request):
-    """
-    Cria Produção Didática com suporte a Upload de Arquivos.
-    """
-    # Quando usamos multipart/form-data, os dados vêm em request.data e arquivos em request.FILES
+    user = request.user
     data = request.data
     
-    titulo = data.get('titulo')
-    prompt = data.get('prompt')
-    relato = data.get('relato')  # Renomeado de 'resultado'
-    disciplina = data.get('disciplina')
-    modelo_ia = data.get('modelo_ia')
-    nivel_ensino = data.get('nivel_ensino', 'Não especificado')
-    dicas = data.get('dicas', '')
+    try:
+        recursos_input = data.getlist('recursos') if hasattr(data, 'getlist') else data.get('recursos', '')
+        
+        if isinstance(recursos_input, list):
+            recursos_str = ", ".join(recursos_input)
+        else:
+            recursos_str = str(recursos_input)
 
-    # Tratamento do Arquivo
-    arquivo = request.FILES.get('arquivo') # O React vai enviar com este nome
-    url_arquivo = "Sem anexo"
+        nova_producao = Producao.objects.create(
+            user=user, 
+            titulo=data.get('titulo'),
+            disciplina=data.get('disciplina'),
+            nivel=data.get('nivel_ensino'), 
+            modelo_ia=data.get('modelo_ia'),
+            categoria=data.get('categoria'),
+            bncc=data.get('bncc'),
+            metodologia=data.get('metodologia'),
+            duracao=data.get('duracao'),
+            recursos=recursos_str,
+            experiencia=data.get('experiencia'), 
+            resultados=data.get('resultados'),
+            arquivo=request.FILES.get('arquivo')
+        )
+        return Response({'mensagem': 'Produção criada com sucesso!', 'id': nova_producao.id}, status=201)
+    
+    except Exception as e:
+        print(f"Erro ao criar produção: {e}")
+        return Response({'erro': 'Erro ao salvar produção.'}, status=500)
 
-    if arquivo:
-        # Salva o arquivo fisicamente na pasta /media/
-        fs = FileSystemStorage()
-        nome_salvo = fs.save(arquivo.name, arquivo)
-        url_arquivo = fs.url(nome_salvo) # Ex: /media/foto_aula.jpg
 
-    if not titulo or not prompt:
-        return Response({'erro': 'Título e Prompt são obrigatórios.'}, status=400)
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def api_list_my_productions(request):
+    user = request.user
+    producoes = Producao.objects.filter(user=user).order_by('-data_criacao')
+    
+    lista = []
+    for p in producoes:
+        lista.append({
+            'id': p.id,
+            'titulo': p.titulo,
+            'disciplina': p.disciplina,
+            'data': p.data_criacao.strftime('%d/%m/%Y'),
+            'status': p.status,
+            'modelo_ia': p.modelo_ia,
+            'feedback_revisor': p.feedback_revisao
+        })
+    
+    return Response(lista)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def api_get_production_details(request, pk):
+    try:
+        p = Producao.objects.get(id=pk)
+        
+        arquivo_url = None
+        if p.arquivo:
+            arquivo_url = request.build_absolute_uri(p.arquivo.url)
+
+        data = {
+            'id': p.id,
+            'titulo': p.titulo,
+            'disciplina': p.disciplina,
+            'nivel': p.nivel,
+            'modelo_ia': p.modelo_ia,
+            'categoria': p.categoria,
+            'bncc': p.bncc,
+            'metodologia': p.metodologia,
+            'duracao': p.duracao,
+            'recursos': p.recursos,
+            'experiencia': p.experiencia,
+            'resultados': p.resultados,
+            'arquivo': arquivo_url, 
+            'data': p.data_criacao.strftime('%d/%m/%Y'),
+            'status': p.status,
+            'autor': p.user.first_name or p.user.username,
+            'feedback_revisor': p.feedback_revisao
+        }
+        return Response(data)
+    except Producao.DoesNotExist:
+        return Response({'erro': 'Produção não encontrada'}, status=404)
+
+
+# ============================================================================
+# 3. SISTEMA DE REVISÃO (DUPLO CEGO & HISTÓRICO)
+# ============================================================================
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def api_list_review_queue(request):
+    """
+    Lista produções pendentes.
+    """
+    user = request.user
+    
+    try:
+        minha_disciplina = user.profile.disciplina
+    except:
+        minha_disciplina = 'Outra'
+
+    producoes_para_revisar = Producao.objects.filter(
+        disciplina=minha_disciplina,
+        status='Em revisão'
+    ).exclude(user=user).order_by('data_criacao')
+
+    lista = []
+    for p in producoes_para_revisar:
+        lista.append({
+            'id': p.id,
+            'titulo': p.titulo,
+            'disciplina': p.disciplina,
+            'nivel': p.nivel,
+            'data': p.data_criacao.strftime('%d/%m/%Y'),
+            'modelo_ia': p.modelo_ia
+        })
+    
+    return Response(lista)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def api_submit_review(request, pk):
+    """
+    Salva a revisão e ATRIBUI O REVISOR (usuário logado).
+    """
+    try:
+        p = Producao.objects.get(id=pk)
+        
+        aprovado = request.data.get('aprovado') 
+        pontos_fortes = request.data.get('pontos_fortes', '')
+        pontos_melhoria = request.data.get('pontos_melhoria', '')
+        
+        feedback_texto = f"PONTOS FORTES:\n{pontos_fortes}\n\nSUGESTÕES DE MELHORIA:\n{pontos_melhoria}"
+        
+        # --- ATUALIZAÇÃO ---
+        p.feedback_revisao = feedback_texto
+        p.revisor = request.user # Salva QUEM revisou (Você)
+        p.data_revisao = timezone.now() # Salva QUANDO revisou
+
+        if aprovado:
+            p.status = 'Aprovado'
+        else:
+            p.status = 'Correção solicitada' # (Equivalente a Rejeitado)
+            
+        p.save()
+        
+        return Response({'mensagem': 'Revisão registrada com sucesso!'})
+        
+    except Producao.DoesNotExist:
+        return Response({'erro': 'Produção não encontrada'}, status=404)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def api_review_history(request):
+    """
+    Lista todas as produções que o usuário atual JÁ revisou.
+    """
+    user = request.user
+    
+    # Busca produções onde o campo 'revisor' é o usuário logado
+    revisoes = Producao.objects.filter(revisor=user).order_by('-data_revisao')
+    
+    lista = []
+    for p in revisoes:
+        # Define se o veredito foi positivo ou negativo baseado no status
+        veredito_final = "APROVADO" if "Aprovado" in p.status else "REJEITADO"
+        
+        lista.append({
+            'id': p.id,
+            'titulo': p.titulo,
+            'disciplina': p.disciplina,
+            'data_revisao': p.data_revisao.strftime('%d/%m/%Y') if p.data_revisao else 'Data n/d',
+            'meu_veredito': veredito_final,
+            'autor_anonimo': f"Prof. de {p.disciplina}" 
+        })
+    
+    return Response(lista)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def api_list_public_feed(request):
+    producoes = Producao.objects.filter(status='Aprovado').order_by('-data_criacao')
+    
+    lista = []
+    for p in producoes:
+        lista.append({
+            'id': p.id,
+            'titulo': p.titulo,
+            'disciplina': p.disciplina,
+            'nivel': p.nivel,
+            'modelo_ia': p.modelo_ia,
+            'categoria': p.categoria,
+            'autor': p.user.first_name or p.user.username,
+            'resumo': p.experiencia[:150] + '...' if p.experiencia else '',
+            'likes': 0
+        })
+    
+    return Response(lista)
+
+# --- ONTOLOGIA (LEGADO) ---
+@api_view(['GET'])
+def api_listar_ciclos(request):
+    return Response([])
+
+
+# ============================================================================
+# 4. RECUPERAÇÃO DE SENHA (SMTP GOOGLE)
+# ============================================================================
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def api_password_reset_request(request):
+    """
+    Recebe o e-mail, gera o token e envia o e-mail com template HTML.
+    """
+    email = request.data.get('email')
+    if not email:
+        return Response({'erro': 'E-mail é obrigatório.'}, status=400)
 
     try:
-        myworld = World(filename='backup.db', exclusive=False)
-        caminho_owl = os.path.join(os.path.dirname(__file__), 'kipo_fialho.owl')
-        kiposcrum = myworld.get_ontology(caminho_owl).load()
-        
-        with kiposcrum:
-            seed = str(time.time())
-            id_unico = faz_id(seed)
-            
-            nova_instancia = kiposcrum["RelatoExperiencia"](f"relato_{id_unico}")
-            nova_instancia.Nome.append(titulo)
-            
-            # Monta a string de observação com o novo campo de anexo
-            conteudo_combinado = (
-                f"[DISCIPLINA]: {disciplina} | "
-                f"[NIVEL]: {nivel_ensino} | "
-                f"[IA]: {modelo_ia} | "
-                f"[PROMPT]: {prompt} | "
-                f"[RELATO]: {relato} | " # Mudou de Resultado para Relato
-                f"[DICAS]: {dicas} | "
-                f"[ANEXO]: {url_arquivo}" # Link do arquivo
-            )
-            nova_instancia.Observacao.append(conteudo_combinado)
-            
-            nome_usuario = request.user.username
-            agente = kiposcrum[nome_usuario] or kiposcrum["KIPCO__Agent"](nome_usuario)
-            
-            sync_reasoner()
-            myworld.save()
-            
-        return Response({'mensagem': 'Produção cadastrada com sucesso!', 'id': id_unico}, status=201)
+        user = User.objects.get(email=email)
+    except User.DoesNotExist:
+        return Response({'mensagem': 'Se o e-mail existir, um link foi enviado.'})
 
+    # 1. Gerar Tokens
+    token = default_token_generator.make_token(user)
+    uid = urlsafe_base64_encode(force_bytes(user.pk))
+
+    # 2. Criar o Link
+    reset_link = f"http://localhost:5173/reset-password/{uid}/{token}"
+
+    # 3. Preparar o E-mail
+    subject = "Redefinição de Senha - Comunidade IA"
+    from_email = settings.DEFAULT_FROM_EMAIL
+    to = [email]
+
+    # --- AJUSTE DO NOME AQUI ---
+    # Pega o nome completo ou username
+    raw_name = user.first_name or user.username
+    # Pega só o primeiro nome e deixa a primeira letra maiúscula (ex: "gusthavo" -> "Gusthavo")
+    first_name = raw_name.split()[0].title()
+
+    # Contexto para o HTML
+    context = {
+        'nome': first_name, # Manda só "Gusthavo"
+        'link': reset_link
+    }
+
+    try:
+        try:
+            html_content = render_to_string('emails/password_reset.html', context)
+            text_content = strip_tags(html_content)
+        except Exception:
+            html_content = None
+            text_content = f"Olá, professor(a) {context['nome']}.\n\nClique no link: {reset_link}"
+
+        if html_content:
+            msg = EmailMultiAlternatives(subject, text_content, from_email, to)
+            msg.attach_alternative(html_content, "text/html")
+            msg.send()
+        else:
+            send_mail(subject, text_content, from_email, to, fail_silently=False)
+        
+        return Response({'mensagem': 'E-mail enviado com sucesso!'})
+        
     except Exception as e:
-        return Response({'erro': str(e)}, status=500)
-    finally:
-        myworld.close()
+        print("Erro ao enviar email:", e)
+        return Response({'erro': 'Erro ao enviar e-mail.'}, status=500)
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def api_password_reset_confirm(request, uidb64, token):
+    """
+    Recebe o token e a nova senha para efetivar a troca.
+    """
+    new_password = request.data.get('password')
+    
+    if not new_password:
+        return Response({'erro': 'Nova senha é obrigatória.'}, status=400)
+
+    try:
+        uid = force_str(urlsafe_base64_decode(uidb64))
+        user = User.objects.get(pk=uid)
+    except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+        return Response({'erro': 'Link inválido.'}, status=400)
+
+    if default_token_generator.check_token(user, token):
+        user.set_password(new_password)
+        user.save()
+        return Response({'mensagem': 'Senha alterada com sucesso!'})
+    else:
+        return Response({'erro': 'Link expirado ou inválido.'}, status=400)

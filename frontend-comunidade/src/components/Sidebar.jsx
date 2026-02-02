@@ -26,7 +26,7 @@ function Sidebar({ isOpen, isMobile, onClose }) {
                 <BookOpenCheck size={28} color="#1565C0" />
             </div>
             <div>
-            <h1 style={styles.logoTitle}>CAPSIAGE</h1>
+            <h1 style={styles.logoTitle}>TEIA</h1>
             </div>
         </div>
         
@@ -56,8 +56,9 @@ function Sidebar({ isOpen, isMobile, onClose }) {
 
       <div style={styles.footer}>
         <div style={styles.proCard}>
-          <p style={{margin: '0 0 4px 0', fontWeight: 'bold'}}>Sistema CAPSIAGE</p>
-          <p style={{margin: 0, fontSize: '11px', opacity: 0.85}}>Versão Beta 1.0</p>
+          <p style={{margin: '0 0 4px 0', fontWeight: 'bold'}}>TEIA</p>
+          <p style={{margin: 0, fontSize: '11px', opacity: 0.85}}>Tecendo Educação com Inteligência Artificial
+</p>
         </div>
       </div>
     </aside>

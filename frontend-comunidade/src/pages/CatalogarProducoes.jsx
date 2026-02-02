@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import api from '../services/api'; // <--- Trazendo sua configuração de API
 import { useNavigate, useOutletContext } from 'react-router-dom';
 import { 
     ArrowLeft, 
@@ -11,20 +12,19 @@ import {
     Package, 
     Lightbulb, 
     Target, 
-    FileText,
-    CheckCircle2,
-    Layers,
-    Plus,
-    X,
-    Mic,
-    Keyboard,
-    Sparkles,
-    Volume2,
-    AlertCircle,
-    Trash2
+    FileText, 
+    CheckCircle2, 
+    Layers, 
+    Plus, 
+    X, 
+    Mic, 
+    Keyboard, 
+    Sparkles, 
+    Volume2, 
+    Trash2 
 } from 'lucide-react';
 
-const NewProduction = () => {
+const CatalogarProducoes = () => {
     const [mode, setMode] = useState('selecao'); // 'selecao', 'manual', 'voz'
     const navigate = useNavigate();
     const { isMobile } = useOutletContext() || { isMobile: false };
@@ -46,7 +46,7 @@ const NewProduction = () => {
 };
 
 // =================================================================================
-// 1. TELA DE SELEÇÃO (2 CARDS)
+// 1. TELA DE SELEÇÃO (VISUAL NOVO)
 // =================================================================================
 const SelectionScreen = ({ onSelect, isMobile, navigate }) => {
     return (
@@ -97,15 +97,25 @@ const SelectionScreen = ({ onSelect, isMobile, navigate }) => {
 };
 
 // =================================================================================
-// 2. FORMULÁRIO MANUAL (SPLIT LAYOUT - O QUE VOCÊ GOSTOU)
+// 2. FORMULÁRIO MANUAL (VISUAL NOVO + SUA LÓGICA DE BACKEND)
 // =================================================================================
 const ManualFormSplit = ({ onBack, navigate, isMobile }) => {
-    const user = { nome: "Ricardo Silva", disciplina: "Filosofia" };
+    // Lógica para pegar disciplina do usuário (Mantida do seu código)
+    const storedDisc = localStorage.getItem('user_disciplina') || "Geral";
     
     const [formData, setFormData] = useState({
-        titulo: '', disciplina: user.disciplina, nivel: '', modelo_ia: '',
-        categoria: '', bncc: '', metodologia: '', duracao: '',
-        recursos: [], experiencia: '', resultados: '', arquivo: null
+        titulo: '', 
+        disciplina: storedDisc !== 'Outra' ? storedDisc : 'Geral', 
+        nivel: '', 
+        modelo_ia: '',
+        categoria: '', 
+        bncc: '', 
+        metodologia: '', 
+        duracao: '',
+        recursos: [], 
+        experiencia: '', 
+        resultados: '', 
+        arquivo: null
     });
     
     const [customResource, setCustomResource] = useState("");
@@ -114,13 +124,16 @@ const ManualFormSplit = ({ onBack, navigate, isMobile }) => {
     const RECURSOS_COMUNS = ["Projetor / Datashow", "Internet / Wi-Fi", "Celulares (BYOD)", "Laboratório de Informática", "Tablets", "Quadro Branco", "IA Generativa", "Jogos", "Livro Didático"];
 
     const handleChange = (e) => { const { name, value } = e.target; setFormData(prev => ({ ...prev, [name]: value })); };
+    
     const handleFileChange = (e) => { setFormData(prev => ({ ...prev, arquivo: e.target.files[0] })); };
+    
     const toggleRecurso = (recurso) => {
         setFormData(prev => {
             const exists = prev.recursos.includes(recurso);
             return exists ? { ...prev, recursos: prev.recursos.filter(r => r !== recurso) } : { ...prev, recursos: [...prev.recursos, recurso] };
         });
     };
+    
     const addCustomResource = (e) => {
         if ((e.key === 'Enter' || e.type === 'click') && customResource.trim()) {
             e.preventDefault();
@@ -128,10 +141,47 @@ const ManualFormSplit = ({ onBack, navigate, isMobile }) => {
             setCustomResource("");
         }
     };
-    const handleSubmit = (e) => {
+    
+    // --- LÓGICA DE ENVIO INTEGRADA (SUA LÓGICA) ---
+    const handleSubmit = async (e) => {
         e.preventDefault();
         setIsSubmitting(true);
-        setTimeout(() => { alert("Prática enviada!"); navigate('/dashboard/minhas-atividades'); }, 1500);
+
+        try {
+            const url = 'api/production/create/';
+            const dataToSend = new FormData();
+
+            dataToSend.append('titulo', formData.titulo);
+            dataToSend.append('disciplina', formData.disciplina);
+            dataToSend.append('nivel_ensino', formData.nivel); // O backend espera nivel_ensino
+            dataToSend.append('modelo_ia', formData.modelo_ia);
+            dataToSend.append('categoria', formData.categoria);
+            dataToSend.append('bncc', formData.bncc);
+            dataToSend.append('metodologia', formData.metodologia);
+            dataToSend.append('duracao', formData.duracao);
+            dataToSend.append('experiencia', formData.experiencia);
+            dataToSend.append('resultados', formData.resultados);
+
+            // Envia recursos
+            formData.recursos.forEach(r => dataToSend.append('recursos', r));
+
+            if (formData.arquivo) {
+                dataToSend.append('arquivo', formData.arquivo);
+            }
+
+            await api.post(url, dataToSend, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
+
+            alert("Prática enviada com sucesso!");
+            navigate('/dashboard/minhas-producoes'); 
+
+        } catch (error) {
+            console.error("Erro ao salvar:", error);
+            alert("Ocorreu um erro ao salvar sua produção. Tente novamente.");
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     return (
@@ -148,13 +198,39 @@ const ManualFormSplit = ({ onBack, navigate, isMobile }) => {
                 <div style={styles.mainCard}>
                     <form onSubmit={handleSubmit}>
                         <div style={{...styles.splitLayout, flexDirection: isMobile ? 'column' : 'row'}}>
-                            {/* ESQUERDA */}
+                            
+                            {/* ESQUERDA (FICHA TÉCNICA) */}
                             <div style={{...styles.leftCol, width: isMobile ? '100%' : '35%'}}>
                                 <h3 style={styles.sectionTitle}><FileText size={20} color="#1565C0" /> Ficha Técnica</h3>
-                                <div style={styles.inputGroup}><label style={styles.label}>Título</label><input type="text" name="titulo" value={formData.titulo} onChange={handleChange} style={styles.input} required placeholder="Ex: Dilemas Éticos" /></div>
-                                <div style={styles.inputGroup}><label style={styles.label}>Disciplina</label><div style={styles.lockedInputWrapper}><Lock size={16} color="#78909C" style={{marginLeft: '12px'}}/><input type="text" value={formData.disciplina} readOnly style={styles.lockedInput}/></div></div>
-                                <div style={styles.inputGroup}><label style={styles.label}>Nível</label><select name="nivel" value={formData.nivel} onChange={handleChange} style={styles.input} required><option value="">Selecione...</option><option value="Fundamental 1">Fundamental 1</option><option value="Fundamental 2">Fundamental 2</option><option value="Ensino Médio">Ensino Médio</option><option value="Ensino Superior">Ensino Superior</option></select></div>
-                                <div style={styles.inputGroup}><label style={styles.label}><Layers size={14}/> Conteúdo Gerado</label><select name="categoria" value={formData.categoria} onChange={handleChange} style={styles.input} required><option value="">O que a IA ajudou a criar?</option>
+                                
+                                <div style={styles.inputGroup}>
+                                    <label style={styles.label}>Título</label>
+                                    <input type="text" name="titulo" value={formData.titulo} onChange={handleChange} style={styles.input} required placeholder="Ex: Dilemas Éticos" />
+                                </div>
+                                
+                                <div style={styles.inputGroup}>
+                                    <label style={styles.label}>Disciplina</label>
+                                    <div style={styles.lockedInputWrapper}>
+                                        <Lock size={16} color="#78909C" style={{marginLeft: '12px'}}/>
+                                        <input type="text" value={formData.disciplina} readOnly style={styles.lockedInput}/>
+                                    </div>
+                                </div>
+                                
+                                <div style={styles.inputGroup}>
+                                    <label style={styles.label}>Nível</label>
+                                    <select name="nivel" value={formData.nivel} onChange={handleChange} style={styles.input} required>
+                                        <option value="">Selecione...</option>
+                                        <option value="Fundamental 1">Fundamental 1</option>
+                                        <option value="Fundamental 2">Fundamental 2</option>
+                                        <option value="Ensino Médio">Ensino Médio</option>
+                                        <option value="Ensino Superior">Ensino Superior</option>
+                                    </select>
+                                </div>
+                                
+                                <div style={styles.inputGroup}>
+                                    <label style={styles.label}><Layers size={14}/> Conteúdo Gerado</label>
+                                    <select name="categoria" value={formData.categoria} onChange={handleChange} style={styles.input} required>
+                                        <option value="">O que a IA ajudou a criar?</option>
                                         <optgroup label="Planejamento">
                                             <option value="Plano de Aula">Plano de Aula / Roteiro</option>
                                             <option value="Sequência Didática">Sequência Didática</option>
@@ -170,20 +246,97 @@ const ManualFormSplit = ({ onBack, navigate, isMobile }) => {
                                             <option value="Estudo de Caso">Estudo de Caso</option>
                                             <option value="Simulação / Roleplay">Simulação / Roleplay</option>
                                             <option value="Prompt para Alunos">Prompt para Alunos</option>
-                                        </optgroup></select></div>
-                                <div style={styles.inputGroup}><label style={styles.label}>Modelo de IA</label><input type="text" name="modelo_ia" value={formData.modelo_ia} onChange={handleChange} style={styles.input} required placeholder="Ex: ChatGPT-4" /></div>
-                                <div style={styles.uploadSection}><label style={styles.label}><UploadCloud size={16}/> Anexar</label><div style={styles.uploadContainer}><input type="file" id="file-upload" onChange={handleFileChange} style={{display: 'none'}} /><label htmlFor="file-upload" style={styles.uploadLabel}>{formData.arquivo ? (<div style={styles.fileSelected}><CheckCircle2 size={28} color="#4CAF50" /><span style={styles.fileName}>{formData.arquivo.name}</span></div>) : (<><div style={styles.uploadIconCircle}><UploadCloud size={20} color="#1565C0" /></div><span style={styles.uploadTextMain}>Carregar Arquivo</span></>)}</label></div></div>
+                                        </optgroup>
+                                    </select>
+                                </div>
+                                
+                                <div style={styles.inputGroup}>
+                                    <label style={styles.label}>Modelo de IA</label>
+                                    <input type="text" name="modelo_ia" value={formData.modelo_ia} onChange={handleChange} style={styles.input} required placeholder="Ex: ChatGPT-4" />
+                                </div>
+                                
+                                <div style={styles.uploadSection}>
+                                    <label style={styles.label}><UploadCloud size={16}/> Anexar</label>
+                                    <div style={styles.uploadContainer}>
+                                        <input type="file" id="file-upload" onChange={handleFileChange} style={{display: 'none'}} />
+                                        <label htmlFor="file-upload" style={styles.uploadLabel}>
+                                            {formData.arquivo ? (
+                                                <div style={styles.fileSelected}>
+                                                    <CheckCircle2 size={28} color="#4CAF50" />
+                                                    <span style={styles.fileName}>{formData.arquivo.name}</span>
+                                                </div>
+                                            ) : (
+                                                <>
+                                                    <div style={styles.uploadIconCircle}>
+                                                        <UploadCloud size={20} color="#1565C0" />
+                                                    </div>
+                                                    <span style={styles.uploadTextMain}>Carregar Arquivo</span>
+                                                </>
+                                            )}
+                                        </label>
+                                    </div>
+                                </div>
                             </div>
+                            
                             {!isMobile && <div style={styles.verticalDivider}></div>}
-                            {/* DIREITA */}
+                            
+                            {/* DIREITA (DETALHAMENTO) */}
                             <div style={{...styles.rightCol, width: isMobile ? '100%' : '65%'}}>
                                 <h3 style={styles.sectionTitle}><BookOpen size={20} color="#1565C0" /> Detalhamento Pedagógico</h3>
-                                <div style={styles.inputGroup}><label style={styles.label}>BNCC / Objetivos</label><textarea name="bncc" value={formData.bncc} onChange={handleChange} style={styles.textarea} rows="2" required placeholder="Cite os códigos e objetivos..." /></div>
-                                <div style={styles.gridThree}><div style={styles.inputGroup}><label style={styles.label}><Wrench size={14}/> Metodologia</label><input type="text" name="metodologia" value={formData.metodologia} onChange={handleChange} style={styles.input} placeholder="Ex: Sala Invertida" /></div><div style={styles.inputGroup}><label style={styles.label}><Clock size={14}/> Duração</label><input type="text" name="duracao" value={formData.duracao} onChange={handleChange} style={styles.input} placeholder="Ex: 50 min" /></div></div>
-                                <div style={styles.inputGroup}><label style={styles.label}><Package size={14}/> Recursos (Clique para adicionar)</label><div style={styles.resourcesGrid}>{RECURSOS_COMUNS.map(res => (<button key={res} type="button" onClick={() => toggleRecurso(res)} style={{...styles.resourceChip, ...(formData.recursos.includes(res) ? styles.resourceChipActive : {})}}>{res}</button>))}</div><div style={styles.addResourceRow}><input type="text" placeholder="Outro..." value={customResource} onChange={(e) => setCustomResource(e.target.value)} onKeyDown={addCustomResource} style={styles.inputSmall} /><button type="button" onClick={addCustomResource} style={styles.addButton}><Plus size={16}/></button></div><div style={{marginTop: '10px', display: 'flex', gap: '5px', flexWrap: 'wrap'}}>{formData.recursos.filter(r => !RECURSOS_COMUNS.includes(r)).map((res, i) => (<span key={i} style={styles.customChip}>{res} <X size={12} style={{cursor: 'pointer'}} onClick={() => toggleRecurso(res)}/></span>))}</div></div>
-                                <div style={styles.inputGroup}><label style={styles.label}><Lightbulb size={14}/> Relato da Experiência</label><textarea name="experiencia" value={formData.experiencia} onChange={handleChange} style={{...styles.textarea, minHeight: '100px'}} required placeholder="Descreva como foi a aplicação em sala..." /></div>
-                                <div style={styles.inputGroup}><label style={styles.label}><Target size={14}/> Resultados</label><textarea name="resultados" value={formData.resultados} onChange={handleChange} style={styles.textarea} rows="2" required placeholder="Quais foram as evidências de aprendizagem?" /></div>
-                                <div style={styles.formFooter}><button type="submit" disabled={isSubmitting} style={styles.submitButton}><Save size={18} /> {isSubmitting ? "Enviando..." : "Enviar Prática para Revisão"}</button></div>
+                                
+                                <div style={styles.inputGroup}>
+                                    <label style={styles.label}>BNCC / Objetivos</label>
+                                    <textarea name="bncc" value={formData.bncc} onChange={handleChange} style={styles.textarea} rows="2" required placeholder="Cite os códigos e objetivos..." />
+                                </div>
+                                
+                                <div style={styles.gridThree}>
+                                    <div style={styles.inputGroup}>
+                                        <label style={styles.label}><Wrench size={14}/> Metodologia</label>
+                                        <input type="text" name="metodologia" value={formData.metodologia} onChange={handleChange} style={styles.input} placeholder="Ex: Sala Invertida" />
+                                    </div>
+                                    <div style={styles.inputGroup}>
+                                        <label style={styles.label}><Clock size={14}/> Duração</label>
+                                        <input type="text" name="duracao" value={formData.duracao} onChange={handleChange} style={styles.input} placeholder="Ex: 50 min" />
+                                    </div>
+                                </div>
+                                
+                                <div style={styles.inputGroup}>
+                                    <label style={styles.label}><Package size={14}/> Recursos (Clique para adicionar)</label>
+                                    <div style={styles.resourcesGrid}>
+                                        {RECURSOS_COMUNS.map(res => (
+                                            <button key={res} type="button" onClick={() => toggleRecurso(res)} style={{...styles.resourceChip, ...(formData.recursos.includes(res) ? styles.resourceChipActive : {})}}>
+                                                {res}
+                                            </button>
+                                        ))}
+                                    </div>
+                                    <div style={styles.addResourceRow}>
+                                        <input type="text" placeholder="Outro..." value={customResource} onChange={(e) => setCustomResource(e.target.value)} onKeyDown={addCustomResource} style={styles.inputSmall} />
+                                        <button type="button" onClick={addCustomResource} style={styles.addButton}><Plus size={16}/></button>
+                                    </div>
+                                    <div style={{marginTop: '10px', display: 'flex', gap: '5px', flexWrap: 'wrap'}}>
+                                        {formData.recursos.filter(r => !RECURSOS_COMUNS.includes(r)).map((res, i) => (
+                                            <span key={i} style={styles.customChip}>
+                                                {res} <X size={12} style={{cursor: 'pointer'}} onClick={() => toggleRecurso(res)}/>
+                                            </span>
+                                        ))}
+                                    </div>
+                                </div>
+                                
+                                <div style={styles.inputGroup}>
+                                    <label style={styles.label}><Lightbulb size={14}/> Relato da Experiência</label>
+                                    <textarea name="experiencia" value={formData.experiencia} onChange={handleChange} style={{...styles.textarea, minHeight: '100px'}} required placeholder="Descreva como foi a aplicação em sala..." />
+                                </div>
+                                
+                                <div style={styles.inputGroup}>
+                                    <label style={styles.label}><Target size={14}/> Resultados</label>
+                                    <textarea name="resultados" value={formData.resultados} onChange={handleChange} style={styles.textarea} rows="2" required placeholder="Quais foram as evidências de aprendizagem?" />
+                                </div>
+                                
+                                <div style={styles.formFooter}>
+                                    <button type="submit" disabled={isSubmitting} style={styles.submitButton}>
+                                        <Save size={18} /> {isSubmitting ? "Enviando..." : "Enviar Prática para Revisão"}
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </form>
@@ -194,17 +347,15 @@ const ManualFormSplit = ({ onBack, navigate, isMobile }) => {
 };
 
 // =================================================================================
-// 3. TELA DE VOZ (VISUAL "VERSÃO 2")
+// 3. TELA DE VOZ (VISUAL NOVO)
 // =================================================================================
 const VoiceFormV2 = ({ onBack, navigate }) => {
-    // Apenas estados visuais, sem a simulação de "auto-fill"
     const [isListening, setIsListening] = useState(false);
     const [transcript, setTranscript] = useState("");
 
     const toggleListening = () => {
         setIsListening(!isListening);
         if (!isListening) {
-            // Placeholder apenas para feedback visual
             setTranscript("Ouvindo...");
         }
     };
@@ -292,7 +443,7 @@ const VoiceFormV2 = ({ onBack, navigate }) => {
     );
 };
 
-// --- ESTILOS UNIFICADOS ---
+// --- ESTILOS UNIFICADOS E MODERNOS ---
 const styles = {
     fullPageWrapper: { backgroundColor: '#F8F9FA', minHeight: '100vh', width: '100%', boxSizing: 'border-box', padding: '20px' },
     
@@ -376,4 +527,4 @@ const styles = {
     clearButton: { padding: '10px 20px', backgroundColor: 'transparent', color: '#D32F2F', border: '1px solid #FFCDD2', borderRadius: '8px', fontWeight: '600', cursor: 'pointer', fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', alignSelf: 'center' }
 };
 
-export default NewProduction;
+export default CatalogarProducoes;
