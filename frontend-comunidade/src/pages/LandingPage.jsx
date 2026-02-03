@@ -1,22 +1,30 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
     ArrowRight, 
-    Zap, 
     Share2, 
     Shield, 
     Cpu,
-    CheckCircle2, // <--- ADICIONADO AQUI
-    Layout
+    CheckCircle2, 
+    Layout,
+    Mail,
+    ShieldCheck,
+    X // Ícone para fechar o modal
 } from 'lucide-react';
 
 const LandingPage = () => {
     const navigate = useNavigate();
 
+    // --- ESTADOS DOS MODAIS (Termos e Privacidade) ---
+    const [activeModal, setActiveModal] = useState(null); // 'terms', 'privacy' ou null
+
+    const openModal = (type) => setActiveModal(type);
+    const closeModal = () => setActiveModal(null);
+
     return (
         <div style={styles.wrapper}>
             
-            {/* --- 1. NAVBAR PROFISSIONAL --- */}
+            {/* --- 1. NAVBAR --- */}
             <nav style={styles.nav}>
                 <div style={styles.navContent}>
                     <div style={styles.logoGroup}>
@@ -59,32 +67,36 @@ const LandingPage = () => {
                         </div>
                     </div>
                     
-                    {/* Visual Abstrato (Simulando Dashboard) */}
+                    {/* Visual Embaçado (Duplo Cego) */}
                     <div style={styles.heroVisual}>
-                        <div style={styles.mockupCard}>
-                            <div style={styles.mockupHeader}>
-                                <div style={styles.mockupDotRed}></div>
-                                <div style={styles.mockupDotYellow}></div>
-                                <div style={styles.mockupDotGreen}></div>
-                            </div>
-                            <div style={styles.mockupBody}>
-                                <div style={styles.skeletonLineLg}></div>
-                                <div style={styles.skeletonLineSm}></div>
-                                <div style={styles.skeletonGrid}>
-                                    <div style={styles.skeletonBox}></div>
-                                    <div style={styles.skeletonBox}></div>
+                        <div style={styles.blurredCardWrapper}>
+                            <div style={styles.blurredBackground}>
+                                <div style={styles.fakeLineLg}></div>
+                                <div style={styles.fakeLineSm}></div>
+                                <div style={styles.fakeGrid}>
+                                    <div style={styles.fakeBox}></div>
+                                    <div style={styles.fakeBox}></div>
                                 </div>
+                                <div style={{...styles.fakeLineLg, marginTop: '20px'}}></div>
+                                <div style={styles.fakeLineSm}></div>
                             </div>
-                            <div style={styles.floatingBadge}>
-                                <Shield size={16} color="#1565C0" />
-                                <span>Revisão Duplo-Cego Ativa</span>
+                            <div style={styles.securityOverlay}>
+                                <div style={styles.securityIconCircle}>
+                                    <ShieldCheck size={32} color="#1E40AF" />
+                                </div>
+                                <h3 style={styles.securityTitle}>Revisão Duplo-Cego Ativada</h3>
+                                <p style={styles.securityText}>
+                                    Aqui, sua produção e sua identidade são <strong>invioláveis</strong>. 
+                                    <br/>
+                                    O anonimato garante uma avaliação justa, focada puramente no mérito pedagógico.
+                                </p>
                             </div>
                         </div>
                     </div>
                 </div>
             </header>
 
-            {/* --- 3. PILARES DO PROJETO --- */}
+            {/* --- 3. PILARES --- */}
             <section style={styles.pillarsSection}>
                 <div style={styles.container}>
                     <p style={styles.sectionLabel}>NOSSOS PILARES</p>
@@ -131,7 +143,6 @@ const LandingPage = () => {
                         </div>
                     </div>
                     <div style={styles.aboutVisual}>
-                        {/* Grade decorativa */}
                         <div style={styles.gridDecoration}>
                             {Array.from({ length: 16 }).map((_, i) => (
                                 <div key={i} style={{
@@ -174,25 +185,107 @@ const LandingPage = () => {
                 </div>
             </section>
 
-            {/* --- 6. FOOTER --- */}
+            {/* --- 6. FOOTER (CORRIGIDO E ORGANIZADO) --- */}
             <footer style={styles.footer}>
                 <div style={styles.container}>
                     <div style={styles.footerTop}>
-                        <div>
+                        
+                        {/* Coluna 1: Logo e Descrição */}
+                        <div style={{flex: 2, paddingRight: '40px'}}>
                             <span style={styles.footerLogo}>CAPSIAGE</span>
-                            <p style={styles.footerDesc}>Conectando inteligência humana e artificial.</p>
+                            <p style={styles.footerDesc}>
+                                Conectando inteligência humana e artificial para transformar a educação básica.
+                            </p>
                         </div>
-                        <div style={styles.footerLinks}>
-                            <span style={styles.linkFooter}>Termos de Uso</span>
-                            <span style={styles.linkFooter}>Privacidade</span>
-                            <span style={styles.linkFooter}>Contato</span>
+
+                        {/* Coluna 2: Navegação */}
+                        <div style={styles.footerCol}>
+                            <h4 style={styles.footerColTitle}>Navegação</h4>
+                            <div style={styles.footerLinksStack}>
+                                <span onClick={() => window.scrollTo({top: 0, behavior: 'smooth'})} style={styles.linkFooter}>Início</span>
+                                <span onClick={() => navigate('/login')} style={styles.linkFooter}>Login</span>
+                                <span onClick={() => navigate('/register')} style={styles.linkFooter}>Cadastro</span>
+                            </div>
                         </div>
+
+                        {/* Coluna 3: Legal (Abre Modais) */}
+                        <div style={styles.footerCol}>
+                            <h4 style={styles.footerColTitle}>Legal</h4>
+                            <div style={styles.footerLinksStack}>
+                                <button onClick={() => openModal('terms')} style={styles.linkFooterBtn}>Termos de Uso</button>
+                                <button onClick={() => openModal('privacy')} style={styles.linkFooterBtn}>Privacidade</button>
+                            </div>
+                        </div>
+
+                        {/* Coluna 4: Suporte */}
+                        <div style={styles.footerCol}>
+                            <h4 style={styles.footerColTitle}>Suporte</h4>
+                            <div style={styles.footerLinksStack}>
+                                <div style={{display: 'flex', gap: '8px', color: '#94A3B8', fontSize: '14px', alignItems: 'flex-start'}}>
+                                    <Mail size={16} style={{marginTop: '3px'}} />
+                                    <a 
+                                        href="mailto:suporte.ianaeducacaobasica.unb@gmail.com" 
+                                        style={styles.emailLink}
+                                    >
+                                        suporte.ianaeducacaobasica<br/>.unb@gmail.com
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+
                     </div>
                     <div style={styles.footerBottom}>
                         © 2026 Capsiage Inc. Todos os direitos reservados.
                     </div>
                 </div>
             </footer>
+
+            {/* --- MODAIS (TELINHAS) --- */}
+            {activeModal && (
+                <div style={styles.modalOverlay} onClick={closeModal}>
+                    <div style={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+                        <button onClick={closeModal} style={styles.closeModalBtn}>
+                            <X size={24} />
+                        </button>
+                        
+                        {activeModal === 'terms' && (
+                            <>
+                                <h2 style={styles.modalTitle}>Termos de Uso</h2>
+                                <div style={styles.modalBody}>
+                                    <p>Bem-vindo ao CAPSIAGE. Ao utilizar nossa plataforma, você concorda com os seguintes termos:</p>
+                                    <ul>
+                                        <li><strong>Respeito e Colaboração:</strong> A comunidade se baseia no respeito mútuo. Comentários ofensivos nas revisões não serão tolerados.</li>
+                                        <li><strong>Conteúdo Original:</strong> Você garante que o material submetido é de sua autoria ou que possui direitos de uso.</li>
+                                        <li><strong>Uso Educacional:</strong> Os materiais disponíveis são exclusivamente para fins educacionais e não comerciais.</li>
+                                        <li><strong>Revisão Duplo-Cego:</strong> Você aceita que seu material será revisado anonimamente e, se aprovado, publicado na plataforma.</li>
+                                    </ul>
+                                    <p>O descumprimento destas regras pode levar à suspensão da conta.</p>
+                                </div>
+                            </>
+                        )}
+
+                        {activeModal === 'privacy' && (
+                            <>
+                                <h2 style={styles.modalTitle}>Política de Privacidade</h2>
+                                <div style={styles.modalBody}>
+                                    <p>Sua privacidade é fundamental para nós. Veja como tratamos seus dados:</p>
+                                    <ul>
+                                        <li><strong>Coleta de Dados:</strong> Coletamos apenas nome, e-mail e dados profissionais para funcionamento do sistema.</li>
+                                        <li><strong>Anonimato:</strong> No processo de revisão, sua identidade é ocultada para garantir imparcialidade.</li>
+                                        <li><strong>Compartilhamento:</strong> Não vendemos nem compartilhamos seus dados com terceiros para fins publicitários.</li>
+                                        <li><strong>LGPD:</strong> Você tem o direito de solicitar a exclusão de seus dados a qualquer momento através do nosso suporte.</li>
+                                    </ul>
+                                </div>
+                            </>
+                        )}
+                        
+                        <div style={styles.modalFooter}>
+                            <button onClick={closeModal} style={styles.btnPrimaryLarge}>Entendi</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
         </div>
     );
 };
@@ -233,17 +326,16 @@ const styles = {
 
     // HERO VISUAL
     heroVisual: { flex: 1, display: 'flex', justifyContent: 'center' },
-    mockupCard: { width: '340px', height: '400px', backgroundColor: 'white', borderRadius: '12px', border: '1px solid #E2E8F0', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)', position: 'relative', padding: '20px' },
-    mockupHeader: { display: 'flex', gap: '6px', marginBottom: '30px' },
-    mockupDotRed: { width: '10px', height: '10px', borderRadius: '50%', backgroundColor: '#EF4444' },
-    mockupDotYellow: { width: '10px', height: '10px', borderRadius: '50%', backgroundColor: '#F59E0B' },
-    mockupDotGreen: { width: '10px', height: '10px', borderRadius: '50%', backgroundColor: '#10B981' },
-    mockupBody: { display: 'flex', flexDirection: 'column', gap: '15px' },
-    skeletonLineLg: { width: '80%', height: '20px', backgroundColor: '#F1F5F9', borderRadius: '4px' },
-    skeletonLineSm: { width: '50%', height: '20px', backgroundColor: '#F1F5F9', borderRadius: '4px' },
-    skeletonGrid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', marginTop: '20px' },
-    skeletonBox: { height: '120px', backgroundColor: '#F8FAFC', borderRadius: '8px', border: '1px dashed #CBD5E1' },
-    floatingBadge: { position: 'absolute', bottom: '30px', right: '-30px', backgroundColor: 'white', padding: '12px 20px', borderRadius: '8px', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)', display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px', fontWeight: '600', color: '#1E293B', border: '1px solid #F1F5F9' },
+    blurredCardWrapper: { width: '360px', height: '420px', position: 'relative', borderRadius: '16px', overflow: 'hidden', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)', border: '1px solid #E2E8F0', backgroundColor: '#FFFFFF' },
+    blurredBackground: { position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', padding: '20px', display: 'flex', flexDirection: 'column', gap: '15px', filter: 'blur(8px)', opacity: 0.5 },
+    fakeLineLg: { width: '80%', height: '20px', backgroundColor: '#CBD5E1', borderRadius: '4px' },
+    fakeLineSm: { width: '50%', height: '20px', backgroundColor: '#E2E8F0', borderRadius: '4px' },
+    fakeGrid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', marginTop: '20px' },
+    fakeBox: { height: '120px', backgroundColor: '#F1F5F9', borderRadius: '8px' },
+    securityOverlay: { position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', backgroundColor: 'rgba(255, 255, 255, 0.95)', padding: '30px', borderRadius: '12px', textAlign: 'center', width: '80%', border: '1px solid #E2E8F0', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)' },
+    securityIconCircle: { width: '60px', height: '60px', backgroundColor: '#DBEAFE', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 15px auto' },
+    securityTitle: { fontSize: '18px', fontWeight: '800', color: '#1E3A8A', marginBottom: '10px' },
+    securityText: { fontSize: '14px', color: '#475569', lineHeight: '1.5' },
 
     // PILLARS
     pillarsSection: { padding: '80px 0', borderBottom: '1px solid #F1F5F9' },
@@ -273,14 +365,33 @@ const styles = {
     faqQuestion: { fontSize: '16px', fontWeight: '700', color: '#0F172A', marginBottom: '10px', marginTop: 0 },
     faqAnswer: { fontSize: '15px', lineHeight: '1.6', color: '#334155', margin: 0 },
 
-    // FOOTER
+    // --- FOOTER (CORRIGIDO) ---
     footer: { backgroundColor: '#0F172A', padding: '60px 0 30px 0', color: 'white' },
-    footerTop: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '1px solid #334155', paddingBottom: '40px', marginBottom: '30px', flexWrap: 'wrap', gap: '30px' },
+    footerTop: { 
+        display: 'grid', 
+        gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
+        gap: '40px', 
+        borderBottom: '1px solid #334155', 
+        paddingBottom: '40px', 
+        marginBottom: '30px' 
+    },
     footerLogo: { fontSize: '20px', fontWeight: '800', display: 'block', marginBottom: '10px' },
-    footerDesc: { color: '#94A3B8', fontSize: '14px' },
-    footerLinks: { display: 'flex', gap: '20px' },
-    linkFooter: { color: '#CBD5E1', fontSize: '14px', cursor: 'pointer' },
-    footerBottom: { textAlign: 'center', color: '#64748B', fontSize: '13px' }
+    footerDesc: { color: '#94A3B8', fontSize: '14px', lineHeight: '1.6' },
+    footerCol: { display: 'flex', flexDirection: 'column', alignItems: 'flex-start' },
+    footerColTitle: { fontSize: '14px', fontWeight: '700', color: 'white', textTransform: 'uppercase', marginBottom: '15px' },
+    footerLinksStack: { display: 'flex', flexDirection: 'column', gap: '10px' },
+    linkFooter: { color: '#CBD5E1', fontSize: '14px', cursor: 'pointer', transition: 'color 0.2s', textDecoration: 'none' },
+    linkFooterBtn: { background: 'none', border: 'none', color: '#CBD5E1', fontSize: '14px', cursor: 'pointer', textAlign: 'left', padding: 0 },
+    emailLink: { color: '#94A3B8', fontSize: '13px', textDecoration: 'none', lineHeight: '1.5', wordBreak: 'break-all' },
+    footerBottom: { textAlign: 'center', color: '#64748B', fontSize: '13px' },
+
+    // --- MODAL STYLES ---
+    modalOverlay: { position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000, backdropFilter: 'blur(4px)' },
+    modalContent: { backgroundColor: 'white', width: '90%', maxWidth: '600px', padding: '30px', borderRadius: '16px', position: 'relative', boxShadow: '0 20px 50px rgba(0,0,0,0.2)', maxHeight: '80vh', overflowY: 'auto' },
+    closeModalBtn: { position: 'absolute', top: '15px', right: '15px', background: 'none', border: 'none', cursor: 'pointer', color: '#64748B' },
+    modalTitle: { fontSize: '24px', fontWeight: '800', color: '#0F172A', marginBottom: '20px' },
+    modalBody: { fontSize: '15px', lineHeight: '1.7', color: '#475569' },
+    modalFooter: { marginTop: '30px', textAlign: 'right' }
 };
 
 export default LandingPage;
