@@ -46,7 +46,8 @@ from django.template.loader import render_to_string
 from django.core.mail import EmailMultiAlternatives
 from django.utils.html import strip_tags
 from django.conf import settings
-
+from django.views.decorators.csrf import csrf_exempt
+from rest_framework.decorators import api_view, permission_classes, authentication_classes
 
 
 
@@ -2877,9 +2878,10 @@ def register(request):
     context = {'form':form}
     return render(request, 'register.html', context)
 
+@csrf_exempt
 @api_view(['POST'])
 @permission_classes([AllowAny])
-def api_register_user(request):
+def api_register_user(request): 
     data = request.data
     
     username = data.get('username')
@@ -3189,8 +3191,9 @@ def api_listar_ciclos(request):
 # ============================================================================
 # 4. RECUPERAÇÃO DE SENHA (SMTP GOOGLE)
 # ============================================================================
-
+@csrf_exempt
 @api_view(['POST'])
+@authentication_classes([]) # Remove a autenticação por sessão para evitar erro CSRF
 @permission_classes([AllowAny])
 def api_password_reset_request(request):
     """
@@ -3203,6 +3206,7 @@ def api_password_reset_request(request):
     try:
         user = User.objects.get(email=email)
     except User.DoesNotExist:
+        # Por segurança, não dizemos que o usuário não existe
         return Response({'mensagem': 'Se o e-mail existir, um link foi enviado.'})
 
     # 1. Gerar Tokens
@@ -3217,15 +3221,12 @@ def api_password_reset_request(request):
     from_email = settings.DEFAULT_FROM_EMAIL
     to = [email]
 
-    # --- AJUSTE DO NOME AQUI ---
-    # Pega o nome completo ou username
+    # Ajuste do Nome
     raw_name = user.first_name or user.username
-    # Pega só o primeiro nome e deixa a primeira letra maiúscula (ex: "gusthavo" -> "Gusthavo")
     first_name = raw_name.split()[0].title()
 
-    # Contexto para o HTML
     context = {
-        'nome': first_name, # Manda só "Gusthavo"
+        'nome': first_name,
         'link': reset_link
     }
 
@@ -3235,7 +3236,7 @@ def api_password_reset_request(request):
             text_content = strip_tags(html_content)
         except Exception:
             html_content = None
-            text_content = f"Olá, professor(a) {context['nome']}.\n\nClique no link: {reset_link}"
+            text_content = f"Olá, professor(a) {first_name}.\n\nClique no link: {reset_link}"
 
         if html_content:
             msg = EmailMultiAlternatives(subject, text_content, from_email, to)
@@ -3250,8 +3251,9 @@ def api_password_reset_request(request):
         print("Erro ao enviar email:", e)
         return Response({'erro': 'Erro ao enviar e-mail.'}, status=500)
 
-
+@csrf_exempt
 @api_view(['POST'])
+@authentication_classes([]) # Remove a autenticação por sessão aqui também
 @permission_classes([AllowAny])
 def api_password_reset_confirm(request, uidb64, token):
     """

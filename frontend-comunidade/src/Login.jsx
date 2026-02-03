@@ -73,8 +73,8 @@ const Login = () => {
                     <div style={styles.logoCircle}>
                         <span style={{ fontSize: '32px' }}>📘</span>
                     </div>
-                    <h2 style={styles.title}>TEIA</h2>
-                    <p style={styles.subtitle}>Tecendo Educação com Inteligência Artificial</p>
+                    <h2 style={styles.title}>CAPSIAGE</h2>
+                    <p style={styles.subtitle}>Uma comunidade de aprendizagem para professores</p>
                 </div>
                 
                 <form onSubmit={handleLogin} style={styles.form}>

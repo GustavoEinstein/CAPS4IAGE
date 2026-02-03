@@ -12,7 +12,6 @@ https://docs.djangoproject.com/en/4.0/ref/settings/
 
 from pathlib import Path
 import os
-from datetime import timedelta
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -24,13 +23,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-+3r1c&7gv-^f=50onda+y4ziv2fi+ad8=1!7-hq8lm%1bjn(ai'
 
-
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
 ALLOWED_HOSTS = ["*"]
 
-CKEDITOR_BASEPATH = "/static/ckeditor/ckeditor/"
+CKEDITOR_BASEPATH = "/staticfiles/ckeditor/ckeditor/"
 
 CKEDITOR_UPLOAD_PATH = "/kipo_playground/uploads/"
 
@@ -150,34 +148,18 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.0/howto/static-files/
 
-STATIC_URL = '/static/'
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATIC_URL = '/staticfiles/'
+STATIC_ROOT = 'staticfiles'
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'kipo_playground/static')
 ]
 
 MEDIA_URL = '/media/' 
-MEDIA_ROOT = os.path.join(BASE_DIR, 'kipo_playground/media/') 
+MEDIA_ROOT = os.path.join(BASE_DIR, 'kipo_playground/media/')
+
+STATIC_URL = os.path.join(BASE_DIR, 'kipo_playground/static/') 
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(hours=24), # Define a duração para 24h
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=2),
-    'ROTATE_REFRESH_TOKENS': False,
-    'BLACKLIST_AFTER_ROTATION': True,
-    'AUTH_HEADER_TYPES': ('Bearer',),
-}
-
-EMAIL_BACKEND = 'TCC_DjangoScrumKipo.email_backend.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'
-
-# --- ALTERE ESTAS LINHAS ---
-EMAIL_PORT = 465          # Mudou de 587 para 465
-EMAIL_USE_TLS = False     # Mudou de True para False
-EMAIL_USE_SSL = True      # Nova linha: Usa SSL direto
-EMAIL_HOST_USER = 'suporte.ianaeducacaobasica.unb@gmail.com' # <--- COLOQUE SEU EMAIL AQUI
-EMAIL_HOST_PASSWORD = 'aqes qcah swes hzbo' # <--- COLOQUE A SENHA DE APP AQUI (sem espaços)
-DEFAULT_FROM_EMAIL = 'Equipe De suporte <suporte.ianaeducacaobasica.unb@gmail.com>'

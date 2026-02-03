@@ -26,7 +26,7 @@ function Sidebar({ isOpen, isMobile, onClose }) {
                 <BookOpenCheck size={28} color="#1565C0" />
             </div>
             <div>
-            <h1 style={styles.logoTitle}>TEIA</h1>
+            <h1 style={styles.logoTitle}>CAPSIAGE</h1>
             </div>
         </div>
         
@@ -45,6 +45,9 @@ function Sidebar({ isOpen, isMobile, onClose }) {
           <li><NavLink to="/dashboard/catalogar-producoes" style={getLinkStyle} onClick={isMobile ? onClose : undefined}><FilePlus2 size={20} style={styles.icon} />Catalogar Produção</NavLink></li>
           <li><NavLink to="/dashboard/minhas-producoes" style={getLinkStyle} onClick={isMobile ? onClose : undefined}><FolderOpen size={20} style={styles.icon} />Minhas Produções</NavLink></li>
           <li><NavLink to="/dashboard/revisao" style={getLinkStyle} onClick={isMobile ? onClose : undefined}><Scale size={20} style={styles.icon} />Revisão (Duplo Cego)</NavLink></li>
+          
+          <p style={styles.sectionLabel}>COMUNIDADE</p>
+          <li><NavLink to="/dashboard/comunidade" style={getLinkStyle} onClick={isMobile ? onClose : undefined}><Globe size={20} style={styles.icon} />Painel da Comunidade</NavLink></li>
         </ul>
 
         <div style={{marginTop: 'auto'}}>
@@ -56,9 +59,8 @@ function Sidebar({ isOpen, isMobile, onClose }) {
 
       <div style={styles.footer}>
         <div style={styles.proCard}>
-          <p style={{margin: '0 0 4px 0', fontWeight: 'bold'}}>TEIA</p>
-          <p style={{margin: 0, fontSize: '11px', opacity: 0.85}}>Tecendo Educação com Inteligência Artificial
-</p>
+          <p style={{margin: '0 0 4px 0', fontWeight: 'bold'}}>Sistema CAPSIAGE</p>
+          <p style={{margin: 0, fontSize: '11px', opacity: 0.85}}>Versão Beta 1.0</p>
         </div>
       </div>
     </aside>
