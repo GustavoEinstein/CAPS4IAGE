@@ -3081,12 +3081,24 @@ def api_get_production_details(request, pk):
             'data': p.data_criacao.strftime('%d/%m/%Y'),
             'status': p.status,
             'autor': p.user.first_name or p.user.username,
-            'feedback_revisor': p.feedback_revisao
+            'feedback_revisor': p.feedback_revisao,
+            
+            # --- NOVO: DATA E HORA DA REVISÃO ---
+            'data_revisao': p.data_revisao.strftime('%d/%m/%Y às %H:%M') if p.data_revisao else None,
+            # ------------------------------------
+
+            'notas': {
+                'coerencia': p.nota_coerencia,
+                'qualidade': p.nota_qualidade,
+                'metodologia': p.nota_metodologia,
+                'avaliacao': p.nota_avaliacao,
+                'inclusao': p.nota_inclusao,
+                'inovacao': p.nota_inovacao
+            }
         }
         return Response(data)
     except Producao.DoesNotExist:
         return Response({'erro': 'Produção não encontrada'}, status=404)
-
 
 # ============================================================================
 # 3. SISTEMA DE REVISÃO (DUPLO CEGO & HISTÓRICO)
