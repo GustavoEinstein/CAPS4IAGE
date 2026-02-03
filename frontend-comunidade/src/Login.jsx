@@ -2,6 +2,31 @@ import React, { useState } from 'react';
 import api from './services/api'; // <--- USANDO A CONFIGURAÇÃO CENTRAL (URL Base automática)
 import { useNavigate, Link } from 'react-router-dom';
 
+const SpiderWebIcon = ({ size = 24, color = "currentColor" }) => (
+    <svg 
+        width={size} 
+        height={size} 
+        viewBox="0 0 24 24" 
+        fill="none" 
+        stroke={color} 
+        strokeWidth="1.5" // Linhas ligeiramente mais finas para elegância
+        strokeLinecap="round" 
+        strokeLinejoin="round"
+    >
+        {/* Eixos Radiais (A estrutura da rede) */}
+        <path d="M12 2v20" /> {/* Vertical */}
+        <path d="M2 12h20" /> {/* Horizontal */}
+        <path d="M4.93 4.93l14.14 14.14" /> {/* Diagonal 1 */}
+        <path d="M19.07 4.93L4.93 19.07" /> {/* Diagonal 2 */}
+        
+        {/* Conexões Internas (Octógono Menor) */}
+        <path d="M12 7 L15.53 8.47 L17 12 L15.53 15.53 L12 17 L8.47 15.53 L7 12 L8.47 8.47 Z" />
+        
+        {/* Conexões Externas (Octógono Maior) */}
+        <path d="M12 3 L18.36 5.64 L21 12 L18.36 18.36 L12 21 L5.64 18.36 L3 12 L5.64 5.64 Z" />
+    </svg>
+);
+
 const Login = () => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
@@ -71,15 +96,16 @@ const Login = () => {
                 
                 <div style={styles.header}>
                     <div style={styles.logoCircle}>
-                        <span style={{ fontSize: '32px' }}>📘</span>
+                        <span><SpiderWebIcon size={32} color="#1565C0" /></span>
                     </div>
-                    <h2 style={styles.title}>CAPSIAGE</h2>
-                    <p style={styles.subtitle}>Uma comunidade de aprendizagem para professores</p>
+                    <h2 style={styles.title}>TEIA</h2>
+                    <p style={styles.subtitle}>Tecendo Educação com Inteligência Artificial</p>
                 </div>
                 
                 <form onSubmit={handleLogin} style={styles.form}>
                     <div style={styles.inputGroup}>
                         <label style={styles.label}>Usuário</label>
+                        <div style={styles.inputWrapper}>
                         <input 
                             type="text" 
                             value={username}
@@ -88,10 +114,12 @@ const Login = () => {
                             placeholder="Seu usuário"
                             required
                         />
+                        </div>
                     </div>
 
                     <div style={styles.inputGroup}>
                         <label style={styles.label}>Senha</label>
+                        <div style={styles.inputWrapper}>
                         <input 
                             type="password" 
                             value={password}
@@ -100,6 +128,7 @@ const Login = () => {
                             placeholder="Sua senha"
                             required
                         />
+                        </div>
                     </div>
 
                     {/* Link de Esqueci a Senha - NOVO */}
@@ -161,11 +190,9 @@ const styles = {
     subtitle: { color: '#546E7A', fontSize: '14px', margin: 0 },
     form: { display: 'flex', flexDirection: 'column', gap: '15px' },
     inputGroup: { display: 'flex', flexDirection: 'column', gap: '5px' },
-    label: { color: '#455A64', fontSize: '13px', fontWeight: '600', marginLeft: '2px' },
-    input: {
-        padding: '12px', borderRadius: '6px', border: '1px solid #CFD8DC', fontSize: '15px',
-        outline: 'none', width: '100%', boxSizing: 'border-box', transition: 'border 0.2s',
-    },
+    inputWrapper: { display: 'flex', alignItems: 'center', border: '1px solid #E2E8F0', borderRadius: '8px', backgroundColor: '#F8FAFC' },
+    label: { display: 'block', marginBottom: '8px', fontSize: '13px', fontWeight: '600', color: '#334155' },
+    input: { width: '100%', padding: '12px', border: 'none', background: 'transparent', outline: 'none', color: '#334155' },
     
     // Estilos novos para o link de esqueci senha
     forgotPasswordContainer: { textAlign: 'right', marginTop: '-5px' },
