@@ -21,7 +21,6 @@ import RevisaoDuploCego from './pages/RevisaoDuploCego';
 import Revisao from './pages/FormRevisao'; 
 import Ajuda from './pages/Ajuda';
 import Profile from './pages/Profile'; 
-import PainelComunidade from "./pages/PainelComunidade";
 
 // --- NOVA PÁGINA DE EDIÇÃO ---
 import EditarProducao from './EditarProducao';
@@ -56,7 +55,6 @@ function App() {
                 {/* Rota padrão do dashboard (Feed) */}
                 <Route index element={<MainContent />} />
 
-                <Route path="comunidade" element={<PainelComunidade />} />
                 
                 {/* Visualizações */}
                 <Route path="producao/:id" element={<DetalheProducao />} />

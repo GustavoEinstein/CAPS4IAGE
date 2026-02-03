@@ -4,6 +4,31 @@ import {
   LayoutDashboard, FilePlus2, FolderOpen, Scale, Globe, LifeBuoy, BookOpenCheck, X 
 } from 'lucide-react';
 
+// --- ÍCONE PERSONALIZADO: TEIA DE ARANHA ---
+const SpiderWebIcon = ({ size = 24, color = "currentColor" }) => (
+    <svg 
+        width={size} 
+        height={size} 
+        viewBox="0 0 24 24" 
+        fill="none" 
+        stroke={color} 
+        strokeWidth="1.5" // Linhas ligeiramente mais finas para elegância
+        strokeLinecap="round" 
+        strokeLinejoin="round"
+    >
+        {/* Eixos Radiais (A estrutura da rede) */}
+        <path d="M12 2v20" /> {/* Vertical */}
+        <path d="M2 12h20" /> {/* Horizontal */}
+        <path d="M4.93 4.93l14.14 14.14" /> {/* Diagonal 1 */}
+        <path d="M19.07 4.93L4.93 19.07" /> {/* Diagonal 2 */}
+        
+        {/* Conexões Internas (Octógono Menor) */}
+        <path d="M12 7 L15.53 8.47 L17 12 L15.53 15.53 L12 17 L8.47 15.53 L7 12 L8.47 8.47 Z" />
+        
+        {/* Conexões Externas (Octógono Maior) */}
+        <path d="M12 3 L18.36 5.64 L21 12 L18.36 18.36 L12 21 L5.64 18.36 L3 12 L5.64 5.64 Z" />
+    </svg>
+);
 function Sidebar({ isOpen, isMobile, onClose }) {
   
   const getLinkStyle = ({ isActive }) => ({
@@ -22,11 +47,11 @@ function Sidebar({ isOpen, isMobile, onClose }) {
       {/* Logo Area */}
       <div style={styles.logoContainer}>
         <div style={{display: 'flex', alignItems: 'center', gap: '12px'}}>
-            <div style={styles.logoIconBg}>
-                <BookOpenCheck size={28} color="#1565C0" />
-            </div>
+                    <div style={styles.logoCircle}>
+                        <span><SpiderWebIcon size={32} color="#1565C0" /></span>
+                    </div>
             <div>
-            <h1 style={styles.logoTitle}>CAPSIAGE</h1>
+            <h1 style={styles.logoTitle}>TEIA</h1>
             </div>
         </div>
         
@@ -45,9 +70,6 @@ function Sidebar({ isOpen, isMobile, onClose }) {
           <li><NavLink to="/dashboard/catalogar-producoes" style={getLinkStyle} onClick={isMobile ? onClose : undefined}><FilePlus2 size={20} style={styles.icon} />Catalogar Produção</NavLink></li>
           <li><NavLink to="/dashboard/minhas-producoes" style={getLinkStyle} onClick={isMobile ? onClose : undefined}><FolderOpen size={20} style={styles.icon} />Minhas Produções</NavLink></li>
           <li><NavLink to="/dashboard/revisao" style={getLinkStyle} onClick={isMobile ? onClose : undefined}><Scale size={20} style={styles.icon} />Revisão (Duplo Cego)</NavLink></li>
-          
-          <p style={styles.sectionLabel}>COMUNIDADE</p>
-          <li><NavLink to="/dashboard/comunidade" style={getLinkStyle} onClick={isMobile ? onClose : undefined}><Globe size={20} style={styles.icon} />Painel da Comunidade</NavLink></li>
         </ul>
 
         <div style={{marginTop: 'auto'}}>
@@ -59,8 +81,8 @@ function Sidebar({ isOpen, isMobile, onClose }) {
 
       <div style={styles.footer}>
         <div style={styles.proCard}>
-          <p style={{margin: '0 0 4px 0', fontWeight: 'bold'}}>Sistema CAPSIAGE</p>
-          <p style={{margin: 0, fontSize: '11px', opacity: 0.85}}>Versão Beta 1.0</p>
+          <p style={{margin: '0 0 4px 0', fontWeight: 'bold'}}>TEIA</p>
+          <p style={{margin: 0, fontSize: '11px', opacity: 0.85}}>Tecendo Educação com IA</p>
         </div>
       </div>
     </aside>

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { 
     ArrowRight, 
     Zap, 
+    Network,
     Share2, 
     Shield, 
     Cpu,
@@ -10,6 +11,31 @@ import {
     Layout
 } from 'lucide-react';
 
+// --- ÍCONE PERSONALIZADO: TEIA DE ARANHA ---
+const SpiderWebIcon = ({ size = 24, color = "currentColor" }) => (
+    <svg 
+        width={size} 
+        height={size} 
+        viewBox="0 0 24 24" 
+        fill="none" 
+        stroke={color} 
+        strokeWidth="1.5" // Linhas ligeiramente mais finas para elegância
+        strokeLinecap="round" 
+        strokeLinejoin="round"
+    >
+        {/* Eixos Radiais (A estrutura da rede) */}
+        <path d="M12 2v20" /> {/* Vertical */}
+        <path d="M2 12h20" /> {/* Horizontal */}
+        <path d="M4.93 4.93l14.14 14.14" /> {/* Diagonal 1 */}
+        <path d="M19.07 4.93L4.93 19.07" /> {/* Diagonal 2 */}
+        
+        {/* Conexões Internas (Octógono Menor) */}
+        <path d="M12 7 L15.53 8.47 L17 12 L15.53 15.53 L12 17 L8.47 15.53 L7 12 L8.47 8.47 Z" />
+        
+        {/* Conexões Externas (Octógono Maior) */}
+        <path d="M12 3 L18.36 5.64 L21 12 L18.36 18.36 L12 21 L5.64 18.36 L3 12 L5.64 5.64 Z" />
+    </svg>
+);
 const LandingPage = () => {
     const navigate = useNavigate();
 
@@ -20,8 +46,10 @@ const LandingPage = () => {
             <nav style={styles.nav}>
                 <div style={styles.navContent}>
                     <div style={styles.logoGroup}>
-                        <div style={styles.logoIcon}>📘</div>
-                        <span style={styles.logoText}>CAPSIAGE</span>
+                                            <div style={styles.logoCircle}>
+                        <span><SpiderWebIcon size={32} color="#1565C0" /></span>
+                    </div>
+                        <span style={styles.logoText}>TEIA</span>
                     </div>
                     <div style={styles.navActions}>
                         <button onClick={() => navigate('/login')} style={styles.navLink}>
@@ -47,7 +75,7 @@ const LandingPage = () => {
                             <span style={styles.textHighlight}>docência e a IA.</span>
                         </h1>
                         <p style={styles.heroSubtitle}>
-                            O CAPSIAGE não é apenas um repositório. É uma comunidade viva onde professores exploram como a Inteligência Artificial pode potencializar a sala de aula, com curadoria humana e rigor acadêmico.
+                            O TEIA não é apenas um repositório. É uma comunidade viva onde professores exploram como a Inteligência Artificial pode potencializar a sala de aula, com curadoria humana e rigor acadêmico.
                         </p>
                         <div style={styles.heroButtons}>
                             <button onClick={() => navigate('/register')} style={styles.btnPrimaryLarge}>
@@ -114,7 +142,7 @@ const LandingPage = () => {
                     <div style={styles.aboutText}>
                         <h2 style={styles.sectionTitle}>Mais que software. <br/>Uma rede de inteligência.</h2>
                         <p style={styles.paragraph}>
-                            A inserção da Inteligência Artificial na educação ainda é um terreno novo e, por vezes, intimidante. O <strong>CAPSIAGE</strong> nasceu para ser o laboratório seguro onde essa inovação acontece.
+                            A inserção da Inteligência Artificial na educação ainda é um terreno novo e, por vezes, intimidante. O <strong>TEIA</strong> nasceu para ser o laboratório seguro onde essa inovação acontece.
                         </p>
                         <p style={styles.paragraph}>
                             Ao catalogar suas produções, você não está apenas guardando arquivos. Você está treinando uma base de conhecimento coletiva, ajudando outros docentes a entenderem <em>quais prompts funcionam</em>, <em>quais IAs são melhores para cada disciplina</em> e como alinhar tudo isso à <strong>BNCC</strong>.
@@ -156,7 +184,7 @@ const LandingPage = () => {
                     <div style={styles.faqGrid}>
                         <div style={styles.faqCard}>
                             <h4 style={styles.faqQuestion}>O sistema é gratuito?</h4>
-                            <p style={styles.faqAnswer}>Sim. O CAPSIAGE é uma iniciativa voltada para o fortalecimento da educação pública e privada, sem custo para professores.</p>
+                            <p style={styles.faqAnswer}>Sim. O TEIA é uma iniciativa voltada para o fortalecimento da educação pública e privada, sem custo para professores.</p>
                         </div>
                         <div style={styles.faqCard}>
                             <h4 style={styles.faqQuestion}>Quem pode revisar as atividades?</h4>
@@ -179,7 +207,7 @@ const LandingPage = () => {
                 <div style={styles.container}>
                     <div style={styles.footerTop}>
                         <div>
-                            <span style={styles.footerLogo}>CAPSIAGE</span>
+                            <span style={styles.footerLogo}>TEIA</span>
                             <p style={styles.footerDesc}>Conectando inteligência humana e artificial.</p>
                         </div>
                         <div style={styles.footerLinks}>
@@ -189,7 +217,7 @@ const LandingPage = () => {
                         </div>
                     </div>
                     <div style={styles.footerBottom}>
-                        © 2026 Capsiage Inc. Todos os direitos reservados.
+                        © 2026 TEIA Inc. Todos os direitos reservados.
                     </div>
                 </div>
             </footer>
@@ -198,6 +226,7 @@ const LandingPage = () => {
 };
 
 const styles = {
+    
     // RESET & BASE
     wrapper: { 
         fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif", 
@@ -282,5 +311,6 @@ const styles = {
     linkFooter: { color: '#CBD5E1', fontSize: '14px', cursor: 'pointer' },
     footerBottom: { textAlign: 'center', color: '#64748B', fontSize: '13px' }
 };
+
 
 export default LandingPage;
