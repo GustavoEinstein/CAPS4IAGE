@@ -128,7 +128,6 @@ const VisualizarMinhaProducao = () => {
                                         <Calendar size={14} /> {data.data}
                                     </span>
                                     {/* --- CORREÇÃO: NOME OCULTO / GENÉRICO --- */}
-                                    {/* Para 'Minha Produção', 'Você' faz sentido. Se for visualização de terceiro, 'Prof. de X' */}
                                     <span style={styles.dateText}>
                                         <User size={14} /> Autor: Prof. de {data.disciplina}
                                     </span>
@@ -197,7 +196,7 @@ const VisualizarMinhaProducao = () => {
                                 </div>
                             )}
 
-                            {/* REJEITADO */}
+                            {/* REJEITADO (COM BOTÃO DE EDITAR) */}
                             {isRejected && (
                                 <div style={styles.statusBoxRejected}>
                                     <div style={{display:'flex', alignItems:'center', gap:'8px', marginBottom:'12px'}}>
@@ -205,7 +204,6 @@ const VisualizarMinhaProducao = () => {
                                         <span style={styles.statusTitleRejected}>CORREÇÃO SOLICITADA</span>
                                     </div>
                                     
-                                    {/* BOX DE FEEDBACK */}
                                     {rejectionMessage && (
                                         <div style={styles.feedbackBox}>
                                             <div style={styles.feedbackHeader}>
@@ -217,6 +215,29 @@ const VisualizarMinhaProducao = () => {
                                             </p>
                                         </div>
                                     )}
+
+                                    {/* --- BOTÃO DE EDITAR (NOVO) --- */}
+                                    <button 
+                                        onClick={() => navigate(`/dashboard/editar-producao/${data.id}`)}
+                                        style={{
+                                            marginTop: '15px',
+                                            width: '100%',
+                                            padding: '12px',
+                                            backgroundColor: '#C62828',
+                                            color: 'white',
+                                            border: 'none',
+                                            borderRadius: '6px',
+                                            fontWeight: 'bold',
+                                            cursor: 'pointer',
+                                            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+                                            fontSize: '14px',
+                                            boxShadow: '0 2px 5px rgba(198, 40, 40, 0.3)'
+                                        }}
+                                    >
+                                        <Wrench size={18} /> Editar e Reenviar
+                                    </button>
+                                    {/* ------------------------------- */}
+
                                 </div>
                             )}
                         </div>

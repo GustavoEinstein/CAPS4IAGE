@@ -11,34 +11,29 @@ import {
     Eye, 
     Calendar, 
     Plus,
-    Bot,
-    User
+    User,
+    Wrench
 } from 'lucide-react';
 
 const MinhasProducoes = () => {
     const navigate = useNavigate();
     const { isMobile } = useOutletContext() || { isMobile: false };
     
-    // --- ESTADOS (DADOS REAIS) ---
     const [producoes, setProducoes] = useState([]);
     const [revisoes, setRevisoes] = useState([]);
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('enviadas');
 
-    // --- BUSCA DADOS DA API ---
     useEffect(() => {
         const fetchAllData = async () => {
             try {
-                // 1. Minhas Produções (O que eu criei)
                 const resProd = await api.get('api/production/list/');
                 setProducoes(resProd.data);
 
-                // 2. Histórico (O que eu revisei)
                 try {
                     const resRev = await api.get('api/production/history/');
                     setRevisoes(resRev.data);
                 } catch (e) {
-                    console.log("Histórico vazio ou endpoint não encontrado");
                     setRevisoes([]); 
                 }
             } catch (error) {
@@ -56,7 +51,6 @@ const MinhasProducoes = () => {
         <div style={styles.fullPageWrapper}>
             <div style={styles.container}>
                 
-                {/* Header */}
                 <div style={styles.header}>
                     <div>
                         <h1 style={styles.pageTitle}>Minhas Atividades</h1>
@@ -69,7 +63,6 @@ const MinhasProducoes = () => {
                     </button>
                 </div>
 
-                {/* Abas */}
                 <div style={styles.tabsContainer}>
                     <button 
                         style={activeTab === 'enviadas' ? styles.tabActive : styles.tabInactive}
@@ -88,10 +81,7 @@ const MinhasProducoes = () => {
                     </button>
                 </div>
 
-                {/* Conteúdo */}
                 <div style={styles.contentArea}>
-                    
-                    {/* ABA 1: MINHAS PRODUÇÕES */}
                     {activeTab === 'enviadas' && (
                         <div style={styles.list}>
                             {producoes.length === 0 ? (
@@ -112,7 +102,6 @@ const MinhasProducoes = () => {
                         </div>
                     )}
 
-                    {/* ABA 2: HISTÓRICO */}
                     {activeTab === 'revisadas' && (
                         <div style={styles.list}>
                             {revisoes.length === 0 ? (
@@ -138,11 +127,7 @@ const MinhasProducoes = () => {
     );
 };
 
-// =============================================================================
-// CARD 1: PRODUÇÃO (COM VISUAL CORRIGIDO IGUAL À FOTO)
-// =============================================================================
 const CardProducao = ({ data, navigate, isMobile }) => {
-    
     const getStatusConfig = (status) => {
         const s = status ? status.toLowerCase() : '';
         if (s.includes('aprovado') || s.includes('publicado')) {
@@ -157,12 +142,11 @@ const CardProducao = ({ data, navigate, isMobile }) => {
     const config = getStatusConfig(data.status);
     const isRejected = config.label === 'Rejeitado';
 
-    // Parseia o feedback para pegar só a mensagem de erro
     const rejectionMessage = (() => {
         const raw = data.feedback_revisor || "";
         if (!raw) return null;
         if (raw.includes("SUGESTÕES DE MELHORIA:")) return raw.split("SUGESTÕES DE MELHORIA:")[1].trim();
-        if (raw.includes("PONTOS FORTES:")) return null; // Ignora se só tiver elogio
+        if (raw.includes("PONTOS FORTES:")) return null; 
         return raw;
     })();
 
@@ -178,25 +162,43 @@ const CardProducao = ({ data, navigate, isMobile }) => {
                 
                 <h3 style={styles.cardTitle}>{data.titulo}</h3>
                 
-                {/* Box de Rejeição IDÊNTICO À IMAGEM */}
                 {isRejected && rejectionMessage && (
                     <div style={styles.feedbackBox}>
                         <div style={styles.feedbackHeader}>
                             <AlertCircle size={16} style={{marginTop: '0px'}} />
                             MOTIVO DA REJEIÇÃO:
                         </div>
-                        <p style={styles.feedbackText}>
-                            "{rejectionMessage}"
-                        </p>
+                        <p style={styles.feedbackText}>"{rejectionMessage}"</p>
                     </div>
                 )}
             </div>
 
-            <div style={{...styles.cardStatusSide, borderLeft: isMobile ? 'none' : '1px solid #F0F0F0', paddingLeft: isMobile ? 0 : '20px', alignItems: isMobile ? 'flex-start' : 'flex-end', paddingTop: isMobile ? '15px' : 0}}>
+            <div style={{
+                ...styles.cardStatusSide, 
+                borderLeft: isMobile ? 'none' : '1px solid #F0F0F0', 
+                paddingLeft: isMobile ? 0 : '20px', 
+                alignItems: isMobile ? 'flex-start' : 'flex-end', 
+                paddingTop: isMobile ? '15px' : 0
+            }}>
                 <div style={{...styles.statusBadge, backgroundColor: config.bg, color: config.color, borderColor: config.border}}>
                     {config.icon} {config.label}
                 </div>
-                <div style={{marginTop: '15px'}}>
+                
+                <div style={{marginTop: '10px', display: 'flex', flexDirection: 'column', gap: '6px', width: isMobile ? '100%' : 'auto'}}>
+                    
+                    {isRejected && (
+                        <button 
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                navigate(`/dashboard/editar-producao/${data.id}`);
+                            }}
+                            // USA O ESTILO NOVO MENORZINHO
+                            style={styles.actionButtonEdit}
+                        >
+                            <Wrench size={12} /> EDITAR E REENVIAR
+                        </button>
+                    )}
+
                     <button style={styles.actionButtonSecondary}>
                         <Eye size={14} /> Visualizar
                     </button>
@@ -206,9 +208,6 @@ const CardProducao = ({ data, navigate, isMobile }) => {
     );
 };
 
-// =============================================================================
-// CARD 2: HISTÓRICO (O QUE EU REVISEI)
-// =============================================================================
 const CardHistorico = ({ data, navigate, isMobile }) => {
     const aprovou = data.meu_veredito && data.meu_veredito.toUpperCase().includes('APROVADO');
 
@@ -248,7 +247,6 @@ const CardHistorico = ({ data, navigate, isMobile }) => {
     );
 };
 
-// --- ESTILOS IDÊNTICOS ---
 const styles = {
     fullPageWrapper: { backgroundColor: '#F8F9FA', minHeight: '100vh', width: '100%', boxSizing: 'border-box', padding: '30px 20px' },
     container: { width: '100%', maxWidth: '1000px', margin: '0 auto', boxSizing: 'border-box' },
@@ -266,7 +264,6 @@ const styles = {
     list: { display: 'flex', flexDirection: 'column', gap: '15px' },
     emptyState: { padding: '60px', textAlign: 'center', backgroundColor: 'white', borderRadius: '12px', border: '1px dashed #DDD' },
 
-    // CARD PRINCIPAL
     card: {
         display: 'flex', flexDirection: 'row', flexWrap: 'wrap',
         backgroundColor: '#FFFFFF', borderRadius: '12px', border: '1px solid #E0E0E0',
@@ -278,13 +275,11 @@ const styles = {
     disciplineBadge: { backgroundColor: '#E3F2FD', color: '#1565C0', padding: '4px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase' },
     dateText: { fontSize: '12px', color: '#90A4AE', display: 'flex', alignItems: 'center' },
     
-    // Título do Card (Com Word Break para corrigir o erro "TESTETESTE")
     cardTitle: { 
         fontSize: '18px', fontWeight: '700', color: '#333', margin: '0 0 10px 0',
-        wordBreak: 'break-word', overflowWrap: 'break-word' // <--- CORREÇÃO AQUI
+        wordBreak: 'break-word', overflowWrap: 'break-word' 
     },
     
-    // --- ESTILO DO BOX DE REJEIÇÃO (IGUAL À FOTO) ---
     feedbackBox: {
         marginTop: '15px', 
         backgroundColor: '#FFEBEE', 
@@ -309,14 +304,35 @@ const styles = {
         color: '#C62828',
         margin: 0,
         lineHeight: '1.5',
-        // Garante que o texto de feedback também quebre
         wordBreak: 'break-word', 
         overflowWrap: 'break-word'
     },
 
     cardStatusSide: { display: 'flex', flexDirection: 'column', justifyContent: 'center', minWidth: '160px' },
     statusBadge: { display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: '700', border: '1px solid' },
-    actionButtonSecondary: { background: 'none', border: '1px solid #CFD8DC', color: '#546E7A', padding: '8px 14px', borderRadius: '6px', cursor: 'pointer', fontSize: '13px', fontWeight: '600', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', transition: 'all 0.2s' }
+    
+    actionButtonSecondary: { background: 'none', border: '1px solid #CFD8DC', color: '#546E7A', padding: '8px 14px', borderRadius: '6px', cursor: 'pointer', fontSize: '13px', fontWeight: '600', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', transition: 'all 0.2s', width: '100%' },
+    
+    // --- BOTÃO DE EDITAR (VERSÃO COMPACTA) ---
+    actionButtonEdit: {
+        backgroundColor: '#C62828', 
+        border: '1px solid #B71C1C', // Borda sutil para definir
+        color: 'white', 
+        // Mesmo padding e fonte do statusBadge para harmonia
+        padding: '6px 12px', 
+        borderRadius: '20px', // Arredondado igual ao badge
+        cursor: 'pointer', 
+        fontSize: '11px', 
+        fontWeight: '800', // Bem negrito
+        textTransform: 'uppercase', // Caixa alta
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'center', 
+        gap: '6px', 
+        transition: 'all 0.2s',
+        width: '100%',
+        boxShadow: 'none' // Sem sombra para ficar flat
+    }
 };
 
 export default MinhasProducoes;

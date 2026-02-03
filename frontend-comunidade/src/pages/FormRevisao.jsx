@@ -45,18 +45,20 @@ const Revisao = () => {
         setAvaliacao(prev => ({ ...prev, [campo]: valor }));
     };
 
-    // --- ENVIAR REVISÃO ---
+    // --- ENVIAR REVISÃO (ATUALIZADO) ---
     const handleSubmit = async (veredito) => {
         const notas = [
             avaliacao.notaCoerencia, avaliacao.notaQualidade, avaliacao.notaMetodologia,
             avaliacao.notaAvaliacao, avaliacao.notaInclusao, avaliacao.notaInovacao
         ];
         
+        // Validação: Todas as notas são obrigatórias
         if (!notas.every(nota => nota > 0)) {
             alert("Por favor, atribua notas para todos os 6 critérios.");
             return;
         }
 
+        // Validação: Se rejeitar, precisa explicar
         if (veredito === false && !avaliacao.pontosMelhoria.trim()) {
             alert("Para rejeitar, é OBRIGATÓRIO preencher as sugestões de melhoria.");
             return;
@@ -65,10 +67,19 @@ const Revisao = () => {
         setIsSubmitting(true);
 
         try {
+            // Envia notas e feedback para o backend
             await api.post(`api/production/${id}/review/`, { 
                 aprovado: veredito, 
                 pontos_fortes: avaliacao.pontosFortes,
-                pontos_melhoria: avaliacao.pontosMelhoria
+                pontos_melhoria: avaliacao.pontosMelhoria,
+                
+                // --- NOVOS CAMPOS ENVIADOS ---
+                nota_coerencia: avaliacao.notaCoerencia,
+                nota_qualidade: avaliacao.notaQualidade,
+                nota_metodologia: avaliacao.notaMetodologia,
+                nota_avaliacao: avaliacao.notaAvaliacao,
+                nota_inclusao: avaliacao.notaInclusao,
+                nota_inovacao: avaliacao.notaInovacao
             });
 
             alert(veredito ? "Aprovado com sucesso!" : "Devolvido para correção.");
@@ -76,7 +87,7 @@ const Revisao = () => {
 
         } catch (error) {
             console.error(error);
-            alert("Erro ao salvar revisão.");
+            alert("Erro ao salvar revisão. Tente novamente.");
         } finally {
             setIsSubmitting(false);
         }
@@ -141,7 +152,7 @@ const Revisao = () => {
                                     <span style={styles.badge}>{producaoEmRevisao.disciplina}</span>
                                     <span style={styles.levelBadge}>{producaoEmRevisao.nivel}</span>
                                 </div>
-                                {/* CORREÇÃO DE QUEBRA DE LINHA AQUI */}
+                                
                                 <h1 style={styles.materialTitle}>{producaoEmRevisao.titulo}</h1>
                                 
                                 <div style={{display: 'flex', gap: '15px', alignItems: 'center', flexWrap: 'wrap'}}>
@@ -149,7 +160,6 @@ const Revisao = () => {
                                         <Bot size={14} /> Gerado com <strong>{producaoEmRevisao.modelo_ia}</strong>
                                     </div>
                                     
-                                    {/* --- DUPLO CEGO: NOME OCULTO --- */}
                                     <div style={{fontSize: '12px', color: '#90A4AE', display: 'flex', gap: '5px', alignItems: 'center'}}>
                                         <User size={14} /> Autor: Prof. de {producaoEmRevisao.disciplina}
                                     </div>
@@ -175,19 +185,16 @@ const Revisao = () => {
 
                             <div style={styles.bnccBox}>
                                 <h4 style={styles.bnccTitle}><BookOpen size={16}/> Intencionalidade Pedagógica (BNCC)</h4>
-                                {/* CORREÇÃO DE QUEBRA DE LINHA */}
                                 <p style={styles.bnccText}>{producaoEmRevisao.bncc || "Sem alinhamento."}</p>
                             </div>
 
                             <div style={styles.sectionBox}>
                                 <h3 style={styles.sectionTitle}><Lightbulb size={20} color="#F57C00" /> Relato da Aplicação</h3>
-                                {/* CORREÇÃO DE QUEBRA DE LINHA */}
                                 <div style={styles.textBodyBox}>{producaoEmRevisao.experiencia || "Sem relato."}</div>
                             </div>
 
                             <div style={styles.sectionBox}>
                                 <h3 style={styles.sectionTitle}><Target size={20} color="#2E7D32" /> Resultados e Evidências</h3>
-                                {/* CORREÇÃO DE QUEBRA DE LINHA */}
                                 <div style={styles.resultsBox}>{producaoEmRevisao.resultados || "Sem resultados."}</div>
                             </div>
 
@@ -266,7 +273,7 @@ const Revisao = () => {
     );
 };
 
-// --- ESTILOS COM CORREÇÃO DE OVERFLOW ---
+// --- ESTILOS ---
 const styles = {
     fullPageWrapper: { backgroundColor: '#F0F2F5', minHeight: '100vh', padding: '20px', boxSizing: 'border-box' },
     container: { maxWidth: '1300px', margin: '0 auto' },
@@ -281,7 +288,6 @@ const styles = {
     badge: { backgroundColor: '#E3F2FD', color: '#1565C0', padding: '4px 10px', borderRadius: '6px', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase' },
     levelBadge: { backgroundColor: '#F5F5F5', color: '#616161', padding: '4px 10px', borderRadius: '6px', fontSize: '11px', fontWeight: '700' },
     
-    // --- CORREÇÃO: TITULO ---
     materialTitle: { 
         fontSize: '24px', fontWeight: '800', color: '#1A237E', margin: '10px 0 5px 0', lineHeight: '1.2',
         wordBreak: 'break-word', overflowWrap: 'break-word' 
@@ -297,7 +303,6 @@ const styles = {
     bnccBox: { backgroundColor: '#FFF8E1', borderLeft: '4px solid #FFC107', padding: '15px', borderRadius: '6px', marginBottom: '20px' },
     bnccTitle: { margin: '0 0 5px 0', fontSize: '12px', color: '#EF6C00', display: 'flex', alignItems: 'center', gap: '6px', fontWeight: '800' },
     
-    // --- CORREÇÃO: TEXTO BNCC ---
     bnccText: { 
         margin: 0, fontSize: '14px', color: '#3E2723', lineHeight: '1.5',
         wordBreak: 'break-word', overflowWrap: 'break-word'
@@ -306,13 +311,11 @@ const styles = {
     sectionBox: { marginBottom: '25px' },
     sectionTitle: { fontSize: '16px', fontWeight: '800', color: '#37474F', display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' },
     
-    // --- CORREÇÃO: RELATO ---
     textBodyBox: { 
         fontSize: '15px', lineHeight: '1.6', color: '#455A64', whiteSpace: 'pre-wrap',
         wordBreak: 'break-word', overflowWrap: 'break-word'
     },
     
-    // --- CORREÇÃO: RESULTADOS ---
     resultsBox: { 
         backgroundColor: '#E8F5E9', border: '1px solid #C8E6C9', padding: '15px', borderRadius: '8px', color: '#1B5E20', fontSize: '14px', fontStyle: 'italic',
         wordBreak: 'break-word', overflowWrap: 'break-word'

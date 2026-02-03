@@ -48,6 +48,7 @@ from django.utils.html import strip_tags
 from django.conf import settings
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
+from rest_framework.permissions import AllowAny, IsAuthenticated
 
 
 
@@ -2880,6 +2881,7 @@ def register(request):
 
 @csrf_exempt
 @api_view(['POST'])
+@authentication_classes([])
 @permission_classes([AllowAny])
 def api_register_user(request): 
     data = request.data
@@ -3104,34 +3106,79 @@ def api_list_review_queue(request):
 @permission_classes([IsAuthenticated])
 def api_submit_review(request, pk):
     """
-    Salva a revisão e ATRIBUI O REVISOR (usuário logado).
+    Salva a revisão (notas + feedback), define status e envia EMAIL se rejeitado.
     """
     try:
         p = Producao.objects.get(id=pk)
+        data = request.data
         
-        aprovado = request.data.get('aprovado') 
-        pontos_fortes = request.data.get('pontos_fortes', '')
-        pontos_melhoria = request.data.get('pontos_melhoria', '')
+        aprovado = data.get('aprovado') 
+        pontos_fortes = data.get('pontos_fortes', '')
+        pontos_melhoria = data.get('pontos_melhoria', '')
         
         feedback_texto = f"PONTOS FORTES:\n{pontos_fortes}\n\nSUGESTÕES DE MELHORIA:\n{pontos_melhoria}"
         
-        # --- ATUALIZAÇÃO ---
+        # --- ATUALIZAÇÃO DOS DADOS ---
         p.feedback_revisao = feedback_texto
-        p.revisor = request.user # Salva QUEM revisou (Você)
-        p.data_revisao = timezone.now() # Salva QUANDO revisou
+        p.revisor = request.user
+        p.data_revisao = timezone.now()
+
+        # Salva as notas da rubrica
+        p.nota_coerencia = data.get('nota_coerencia', 0)
+        p.nota_qualidade = data.get('nota_qualidade', 0)
+        p.nota_metodologia = data.get('nota_metodologia', 0)
+        p.nota_avaliacao = data.get('nota_avaliacao', 0)
+        p.nota_inclusao = data.get('nota_inclusao', 0)
+        p.nota_inovacao = data.get('nota_inovacao', 0)
 
         if aprovado:
             p.status = 'Aprovado'
+            msg_response = 'Revisão registrada e aprovada!'
         else:
-            p.status = 'Correção solicitada' # (Equivalente a Rejeitado)
+            p.status = 'Correção solicitada'
+            msg_response = 'Produção devolvida para correção.'
+
+            # --- ENVIO DE E-MAIL AUTOMÁTICO ---
+            try:
+                autor_email = p.user.email
+                if autor_email:
+                    assunto = f"Atenção: Correção Solicitada - {p.titulo}"
+                    
+                    # Nome formatado do autor
+                    nome_autor = p.user.first_name.split()[0].title() if p.user.first_name else "Professor(a)"
+                    
+                    mensagem = f"""
+                    Olá, {nome_autor}.
+
+                    Sua produção "{p.titulo}" passou pela revisão por pares e precisa de alguns ajustes antes de ser publicada na comunidade.
+
+                    O revisor deixou as seguintes sugestões:
+                    
+                    ------------------------------------------------
+                    {pontos_melhoria}
+                    ------------------------------------------------
+
+                    Por favor, acesse o sistema, vá em "Minhas Produções", clique na produção e selecione "Editar e Reenviar" para submeter uma nova versão.
+
+                    Atenciosamente,
+                    Equipe CAPSIAGE
+                    """
+                    
+                    send_mail(
+                        assunto,
+                        mensagem,
+                        settings.DEFAULT_FROM_EMAIL,
+                        [autor_email],
+                        fail_silently=False,
+                    )
+            except Exception as e:
+                print(f"Erro ao enviar email de rejeição: {e}")
             
         p.save()
-        
-        return Response({'mensagem': 'Revisão registrada com sucesso!'})
+        return Response({'mensagem': msg_response})
         
     except Producao.DoesNotExist:
         return Response({'erro': 'Produção não encontrada'}, status=404)
-
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -3276,3 +3323,60 @@ def api_password_reset_confirm(request, uidb64, token):
         return Response({'mensagem': 'Senha alterada com sucesso!'})
     else:
         return Response({'erro': 'Link expirado ou inválido.'}, status=400)
+    
+@api_view(['PUT'])
+@permission_classes([IsAuthenticated])
+def api_update_production(request, pk):
+    """
+    Permite ao autor editar uma produção que foi rejeitada ('Correção solicitada').
+    Ao salvar, o status volta para 'Em revisão'.
+    """
+    try:
+        # Garante que só o dono pode editar e busca pelo ID
+        p = Producao.objects.get(id=pk, user=request.user)
+        
+        # Só permite editar se estiver pedindo correção (segurança)
+        if p.status != 'Correção solicitada':
+            return Response({'erro': 'Esta produção não pode ser editada no momento.'}, status=403)
+
+        data = request.data
+
+        # Atualiza campos de texto
+        p.titulo = data.get('titulo', p.titulo)
+        p.disciplina = data.get('disciplina', p.disciplina)
+        p.nivel = data.get('nivel_ensino', p.nivel)
+        p.modelo_ia = data.get('modelo_ia', p.modelo_ia)
+        p.categoria = data.get('categoria', p.categoria)
+        p.bncc = data.get('bncc', p.bncc)
+        p.metodologia = data.get('metodologia', p.metodologia)
+        p.duracao = data.get('duracao', p.duracao)
+        p.experiencia = data.get('experiencia', p.experiencia)
+        p.resultados = data.get('resultados', p.resultados)
+
+        # Trata recursos (pode vir como lista ou string)
+        recursos_input = data.getlist('recursos') if hasattr(data, 'getlist') else data.get('recursos')
+        if recursos_input:
+            if isinstance(recursos_input, list):
+                p.recursos = ", ".join(recursos_input)
+            else:
+                p.recursos = str(recursos_input)
+
+        # Atualiza arquivo se um novo for enviado
+        novo_arquivo = request.FILES.get('arquivo')
+        if novo_arquivo:
+            p.arquivo = novo_arquivo
+
+        # --- O PULO DO GATO: RESETA O STATUS ---
+        p.status = 'Em revisão' 
+        p.feedback_revisao = None # Limpa o feedback antigo ou mantém histórico (opcional, aqui limpamos para nova rodada)
+        p.revisor = None # Reseta o revisor para cair na fila geral de novo (ou mantém se quiser o mesmo)
+        
+        p.save()
+
+        return Response({'mensagem': 'Produção atualizada e reenviada para fila de revisão!'})
+
+    except Producao.DoesNotExist:
+        return Response({'erro': 'Produção não encontrada.'}, status=404)
+    except Exception as e:
+        print(f"Erro ao atualizar: {e}")
+        return Response({'erro': 'Erro interno ao atualizar.'}, status=500)

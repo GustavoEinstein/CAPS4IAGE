@@ -391,5 +391,12 @@ class Producao(models.Model):
     feedback_revisao = models.TextField(blank=True, null=True)
     status = models.CharField(max_length=50, default='Em revisão')
 
+    nota_coerencia = models.IntegerField(default=0)
+    nota_qualidade = models.IntegerField(default=0)
+    nota_metodologia = models.IntegerField(default=0)
+    nota_avaliacao = models.IntegerField(default=0)
+    nota_inclusao = models.IntegerField(default=0)
+    nota_inovacao = models.IntegerField(default=0)
+
     def __str__(self):
         return f"{self.titulo} - {self.user.username}"

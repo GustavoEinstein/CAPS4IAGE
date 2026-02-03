@@ -23,6 +23,9 @@ import Ajuda from './pages/Ajuda';
 import Profile from './pages/Profile'; 
 import PainelComunidade from "./pages/PainelComunidade";
 
+// --- NOVA PÁGINA DE EDIÇÃO ---
+import EditarProducao from './EditarProducao';
+
 // --- COMPONENTE DE PROTEÇÃO ---
 import PrivateRoute from './components/PrivateRoute';
 
@@ -54,6 +57,7 @@ function App() {
                 <Route index element={<MainContent />} />
 
                 <Route path="comunidade" element={<PainelComunidade />} />
+                
                 {/* Visualizações */}
                 <Route path="producao/:id" element={<DetalheProducao />} />
                 <Route path="minha-producao/:id" element={<VisualizarMinhaProducao />} />
@@ -64,6 +68,9 @@ function App() {
                 <Route path="revisao" element={<RevisaoDuploCego />} />
                 <Route path="revisao/:id" element={<Revisao />} />          
                 <Route path="ajuda" element={<Ajuda />} />
+
+                {/* --- ROTA DE EDIÇÃO (NOVA) --- */}
+                <Route path="editar-producao/:id" element={<EditarProducao />} />
 
             </Route>
 
