@@ -2879,6 +2879,28 @@ def register(request):
     context = {'form':form}
     return render(request, 'register.html', context)
 
+from django.shortcuts import render
+from rest_framework.decorators import api_view, permission_classes, authentication_classes
+from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.response import Response
+from django.contrib.auth.models import User
+from django.views.decorators.csrf import csrf_exempt
+from django.core.mail import send_mail, EmailMultiAlternatives
+from django.template.loader import render_to_string
+from django.utils.html import strip_tags
+from django.utils import timezone
+from django.conf import settings
+from django.contrib.auth.tokens import default_token_generator
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.utils.encoding import force_bytes, force_str
+
+# Importe seus models e serializers aqui, caso não estejam
+# from .models import Profile, Producao
+
+# ============================================================================
+# 1. AUTENTICAÇÃO & PERFIL
+# ============================================================================
+
 @csrf_exempt
 @api_view(['POST'])
 @authentication_classes([])
@@ -3106,7 +3128,7 @@ def api_list_review_queue(request):
 @permission_classes([IsAuthenticated])
 def api_submit_review(request, pk):
     """
-    Salva a revisão (notas + feedback), define status e envia EMAIL se rejeitado.
+    Salva a revisão (notas + feedback), define status e envia EMAIL HTML se rejeitado.
     """
     try:
         p = Producao.objects.get(id=pk)
@@ -3138,38 +3160,132 @@ def api_submit_review(request, pk):
             p.status = 'Correção solicitada'
             msg_response = 'Produção devolvida para correção.'
 
-            # --- ENVIO DE E-MAIL AUTOMÁTICO ---
+            # --- ENVIO DE E-MAIL HTML (VISUAL PREMIUM) ---
             try:
                 autor_email = p.user.email
                 if autor_email:
-                    assunto = f"Atenção: Correção Solicitada - {p.titulo}"
+                    assunto = f"Ação Necessária: Sua produção '{p.titulo}' precisa de atenção"
                     
                     # Nome formatado do autor
                     nome_autor = p.user.first_name.split()[0].title() if p.user.first_name else "Professor(a)"
                     
-                    mensagem = f"""
+                    # Mensagem texto puro (fallback para e-mails antigos)
+                    mensagem_texto = f"""
                     Olá, {nome_autor}.
+                    Sua produção "{p.titulo}" tem grande potencial, mas precisa de alguns ajustes.
+                    Sugestões: {pontos_melhoria}
+                    Acesse o sistema para editar.
+                    """
 
-                    Sua produção "{p.titulo}" passou pela revisão por pares e precisa de alguns ajustes antes de ser publicada na comunidade.
+                    # Mensagem HTML Estilizada
+                    mensagem_html = f"""
+                    <!DOCTYPE html>
+                    <html lang="pt-BR">
+                    <head>
+                        <meta charset="UTF-8">
+                        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                        <style>
+                            /* Reset e Estilos Base */
+                            body {{ font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 0; background-color: #F3F4F6; color: #334155; }}
+                            .email-wrapper {{ width: 100%; background-color: #F3F4F6; padding: 40px 0; }}
+                            .container {{ max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }}
+                            
+                            /* Cabeçalho */
+                            .header {{ background-color: #0F172A; padding: 30px 20px; text-align: center; }}
+                            .logo {{ color: #ffffff; font-size: 24px; font-weight: 800; text-decoration: none; letter-spacing: 1px; display: inline-flex; align-items: center; gap: 10px; }}
+                            
+                            /* Conteúdo */
+                            .content {{ padding: 40px 30px; line-height: 1.6; font-size: 16px; }}
+                            .h1 {{ color: #1E293B; font-size: 22px; margin-top: 0; font-weight: 700; margin-bottom: 20px; }}
+                            .text-intro {{ color: #475569; margin-bottom: 25px; }}
+                            
+                            /* Caixa de Destaque (Feedback) */
+                            .feedback-box {{ 
+                                background-color: #FFFBEB; 
+                                border-left: 5px solid #F59E0B; 
+                                padding: 20px; 
+                                margin: 25px 0; 
+                                border-radius: 4px;
+                                color: #92400E; 
+                                font-style: italic;
+                                font-weight: 500;
+                            }}
+                            
+                            /* Botão */
+                            .btn-container {{ text-align: center; margin: 35px 0; }}
+                            .btn {{ 
+                                display: inline-block; 
+                                background-color: #2563EB; /* Azul vibrante */
+                                color: #ffffff !important; 
+                                padding: 14px 32px; 
+                                text-decoration: none; 
+                                border-radius: 8px; 
+                                font-weight: 700; 
+                                font-size: 16px;
+                                box-shadow: 0 4px 6px rgba(37, 99, 235, 0.2);
+                                transition: background-color 0.2s;
+                            }}
+                            .btn:hover {{ background-color: #1D4ED8; }}
+                            
+                            /* Rodapé */
+                            .footer {{ background-color: #F8FAFC; padding: 20px; text-align: center; font-size: 13px; color: #94A3B8; border-top: 1px solid #E2E8F0; }}
+                            .footer a {{ color: #64748B; text-decoration: none; }}
+                        </style>
+                    </head>
+                    <body>
+                        <div class="email-wrapper">
+                            <div class="container">
+                                <div class="header">
+                                    <span class="logo">📘 CAPSIAGE</span>
+                                </div>
 
-                    O revisor deixou as seguintes sugestões:
-                    
-                    ------------------------------------------------
-                    {pontos_melhoria}
-                    ------------------------------------------------
+                                <div class="content">
+                                    <h1 class="h1">Olá, {nome_autor}!</h1>
+                                    
+                                    <p class="text-intro">
+                                        Sua produção <strong>"{p.titulo}"</strong> tem um enorme potencial para a nossa comunidade!
+                                    </p>
+                                    
+                                    <p>
+                                        Ela passou pela nossa revisão por pares e o revisor identificou alguns pontos que, se ajustados, deixarão seu material ainda mais rico e alinhado aos nossos padrões de qualidade.
+                                    </p>
+                                    
+                                    <p><strong>Confira as observações do revisor:</strong></p>
 
-                    Por favor, acesse o sistema, vá em "Minhas Produções", clique na produção e selecione "Editar e Reenviar" para submeter uma nova versão.
+                                    <div class="feedback-box">
+                                        "{pontos_melhoria}"
+                                    </div>
 
-                    Atenciosamente,
-                    Equipe CAPSIAGE
+                                    <p>Não desanime! Esse processo de refinamento é normal e essencial para garantirmos a excelência do conteúdo. Faça os ajustes e reenvie para aprovação.</p>
+
+                                    <div class="btn-container">
+                                        <a href="http://localhost:5173/dashboard/minhas-producoes" class="btn">
+                                            Editar e Reenviar Agora
+                                        </a>
+                                    </div>
+                                    
+                                    <p style="font-size: 13px; margin-top: 30px; color: #94A3B8; text-align: center;">
+                                        Se o botão não funcionar, acesse sua conta e vá até a aba "Minhas Produções".
+                                    </p>
+                                </div>
+
+                                <div class="footer">
+                                    © 2026 CAPSIAGE - Conectando inteligência humana e artificial.<br>
+                                    Este é um e-mail automático, por favor não responda.
+                                </div>
+                            </div>
+                        </div>
+                    </body>
+                    </html>
                     """
                     
                     send_mail(
                         assunto,
-                        mensagem,
+                        mensagem_texto,
                         settings.DEFAULT_FROM_EMAIL,
                         [autor_email],
                         fail_silently=False,
+                        html_message=mensagem_html # <--- ENVIA O HTML
                     )
             except Exception as e:
                 print(f"Erro ao enviar email de rejeição: {e}")
@@ -3179,7 +3295,7 @@ def api_submit_review(request, pk):
         
     except Producao.DoesNotExist:
         return Response({'erro': 'Produção não encontrada'}, status=404)
-
+    
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def api_review_history(request):

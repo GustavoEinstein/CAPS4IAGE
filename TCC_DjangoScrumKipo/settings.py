@@ -165,7 +165,7 @@ STATIC_URL = os.path.join(BASE_DIR, 'kipo_playground/static/')
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_BACKEND = 'TCC_DjangoScrumKipo.email_backend.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 465
 EMAIL_USE_TLS = False  # Desligue o TLS
