@@ -165,11 +165,4 @@ STATIC_URL = os.path.join(BASE_DIR, 'kipo_playground/static/')
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
-EMAIL_BACKEND = 'TCC_DjangoScrumKipo.email_backend.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_PORT = 465
-EMAIL_USE_TLS = False  # Desligue o TLS
-EMAIL_USE_SSL = True   # Ligue o SSL
-EMAIL_HOST_USER = 'suporte.ianaeducacaobasica.unb@gmail.com'  # <--- Coloque seu e-mail
-EMAIL_HOST_PASSWORD = 'yfwf wnwy dsel emvm '  # <--- A Senha de App (NÃO é a senha do email)
-DEFAULT_FROM_EMAIL = 'Equipe TEIA <suporte.ianaeducacaobasica.unb@gmail.com>'
+#caso quiserem colocar envio de email smtp coloque aqui em baixo desse comentario.
