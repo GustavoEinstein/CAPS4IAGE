@@ -4,7 +4,7 @@ import { useParams, useNavigate, useOutletContext } from 'react-router-dom';
 import { 
     ArrowLeft, Calendar, Clock, Bot, BookOpen, CheckCircle2,
     XCircle, Wrench, Lightbulb, Target, Download, FileText, User, Package, Star,
-    CornerDownRight, UserCog, ThumbsUp, AlertTriangle, Send, RefreshCw, History
+    CornerDownRight, UserCog, ThumbsUp, AlertTriangle, Send, RefreshCw, History, MapPin
 } from 'lucide-react';
 
 const VisualizarMinhaProducao = () => {
@@ -37,14 +37,18 @@ const VisualizarMinhaProducao = () => {
     if (loading) return <div style={{padding: '50px', textAlign: 'center', color: '#90A4AE'}}>Carregando...</div>;
     if (!data) return null;
 
-    // --- CONFIGURAÇÃO DE STATUS ---
+    // --- LÓGICA DE ESTADOS DO RASTREIO ---
     const statusLower = data.status ? data.status.toLowerCase() : "";
-    const isRejected = statusLower.includes('rejeitado') || statusLower.includes('correção') || statusLower.includes('correcao');
+    
     const isApproved = statusLower.includes('aprovado') || statusLower.includes('publicado');
+    const isRejected = statusLower.includes('rejeitado') || statusLower.includes('correção') || statusLower.includes('correcao');
     const isPending = statusLower.includes('em revisão') || statusLower.includes('pendente');
 
-    // DETECTA SE É UM REENVIO (Está em revisão mas JÁ tem histórico de notas/data)
+    // Identifica se é um REENVIO (Está 'Em revisão' mas já tem histórico de notas/feedback anterior)
     const isResubmitted = isPending && (data.notas || data.feedback_revisor);
+
+    // O histórico de avaliação existe? (Se tem notas ou feedback)
+    const hasReviewHistory = data.notas || data.feedback_revisor;
 
     // --- PARSER DE FEEDBACK ---
     const feedbackData = (() => {
@@ -184,47 +188,50 @@ const VisualizarMinhaProducao = () => {
                                 <div style={styles.resultsBox}>{data.resultados}</div>
                             </div>
 
-                            {/* --- LINHA DO TEMPO "RASTREIO" COMPLETA --- */}
-                            {(isRejected || isApproved || data.notas || isResubmitted) && (
-                                <div style={styles.timelineSection}>
-                                    <h3 style={styles.timelineMainTitle}>Histórico de Rastreamento</h3>
-                                    
-                                    {/* 1. ENVIO ORIGINAL */}
+                            {/* --- LINHA DO TEMPO ESTILO RASTREIO --- */}
+                            <div style={styles.timelineSection}>
+                                <h3 style={styles.timelineMainTitle}>
+                                    <MapPin size={20} style={{marginRight:'8px'}}/> 
+                                    Rastreamento da Produção
+                                </h3>
+                                
+                                {/* PASSO 1: PRODUÇÃO POSTADA (ENVIO) */}
+                                <div style={styles.timelineItem}>
+                                    <div style={styles.timelineLeft}>
+                                        <div style={styles.timelineDot} />
+                                        <div style={styles.timelineLine} />
+                                    </div>
+                                    <div style={styles.timelineContent}>
+                                        <span style={styles.timelineDate}>{data.data}</span>
+                                        <h4 style={styles.timelineTitle}>Produção criada e enviada para análise</h4>
+                                        <p style={styles.timelineDesc}>Material postado pelo autor.</p>
+                                    </div>
+                                </div>
+
+                                {/* PASSO 2: AVALIAÇÃO (Sempre visível se já houve uma avaliação) */}
+                                {hasReviewHistory && (
                                     <div style={styles.timelineItem}>
                                         <div style={styles.timelineLeft}>
-                                            <div style={styles.timelineDot} />
+                                            <div style={isApproved ? styles.timelineDotApproved : styles.timelineDotRejected}>
+                                                {isApproved ? <CheckCircle2 size={14} color="white"/> : <UserCog size={14} color="white"/>}
+                                            </div>
                                             <div style={styles.timelineLine} />
                                         </div>
+                                        
                                         <div style={styles.timelineContent}>
-                                            <span style={styles.timelineDate}>{data.data}</span>
-                                            <h4 style={styles.timelineTitle}>Produção criada e enviada para fila</h4>
-                                        </div>
-                                    </div>
-
-                                    {/* 2. HISTÓRICO DA REVISÃO ANTERIOR (Sempre mostra se tiver notas) */}
-                                    {data.notas && (
-                                        <div style={styles.timelineItem}>
-                                            <div style={styles.timelineLeft}>
-                                                <div style={isApproved ? styles.timelineDotApproved : styles.timelineDotRejected}>
-                                                    {isApproved ? <CheckCircle2 size={14} color="white"/> : <UserCog size={14} color="white"/>}
-                                                </div>
-                                                <div style={styles.timelineLine} />
-                                            </div>
+                                            <span style={styles.timelineDate}>
+                                                {data.data_revisao ? `Avaliado em: ${data.data_revisao}` : "Data da Avaliação"}
+                                            </span>
                                             
-                                            <div style={styles.timelineContent}>
-                                                <span style={styles.timelineDate}>
-                                                    {data.data_revisao ? `Avaliado em: ${data.data_revisao}` : "Avaliação Realizada"}
-                                                </span>
-                                                
-                                                {/* CARD DE AVALIAÇÃO (Histórico) */}
-                                                <div style={isApproved ? styles.reviewCardApproved : styles.reviewCardRejected}>
-                                                    <div style={styles.reviewHeader}>
-                                                        <span style={isApproved ? styles.statusTitleApprovedInline : styles.statusTitleRejectedInline}>
-                                                            {isApproved ? "APROVADO PELO PARECERISTA" : "PARECER TÉCNICO (Versão Anterior)"}
-                                                        </span>
-                                                    </div>
+                                            <div style={isApproved ? styles.reviewCardApproved : styles.reviewCardRejected}>
+                                                <div style={styles.reviewHeader}>
+                                                    <span style={isApproved ? styles.statusTitleApprovedInline : styles.statusTitleRejectedInline}>
+                                                        {isApproved ? "APROVADO NA ANÁLISE TÉCNICA" : "PARECER DO REVISOR: NECESSITA AJUSTES"}
+                                                    </span>
+                                                </div>
 
-                                                    {/* Rubrica */}
+                                                {/* Rubrica */}
+                                                {data.notas && (
                                                     <div style={styles.rubricGrid}>
                                                         <div style={styles.rubricItem}><span>Coerência</span><StarRating score={data.notas.coerencia} /></div>
                                                         <div style={styles.rubricItem}><span>Didática</span><StarRating score={data.notas.qualidade} /></div>
@@ -233,108 +240,103 @@ const VisualizarMinhaProducao = () => {
                                                         <div style={styles.rubricItem}><span>Inclusão</span><StarRating score={data.notas.inclusao} /></div>
                                                         <div style={styles.rubricItem}><span>Inovação</span><StarRating score={data.notas.inovacao} /></div>
                                                     </div>
+                                                )}
 
-                                                    {/* Feedbacks */}
-                                                    {feedbackData && feedbackData.strengths && (
-                                                        <div style={styles.feedbackSectionGreen}>
-                                                            <strong style={{fontSize:'11px', color: '#1B5E20', display:'block'}}>PONTOS FORTES:</strong>
-                                                            <span style={styles.feedbackTextGreen}>"{feedbackData.strengths}"</span>
-                                                        </div>
-                                                    )}
-                                                    {feedbackData && feedbackData.improvements && (
-                                                        <div style={styles.feedbackSectionYellow}>
-                                                            <strong style={{fontSize:'11px', color: '#E65100', display:'block'}}>MELHORIAS SOLICITADAS:</strong>
-                                                            <span style={styles.feedbackTextYellow}>"{feedbackData.improvements}"</span>
-                                                        </div>
-                                                    )}
-                                                    {feedbackData && feedbackData.general && (
-                                                        <div style={styles.reviewFeedbackBox}>"{feedbackData.general}"</div>
-                                                    )}
-                                                </div>
+                                                {/* Comentários */}
+                                                {feedbackData && feedbackData.strengths && (
+                                                    <div style={styles.feedbackSectionGreen}>
+                                                        <strong style={{fontSize:'11px', color: '#1B5E20', display:'block'}}>PONTOS FORTES:</strong>
+                                                        <span style={styles.feedbackTextGreen}>"{feedbackData.strengths}"</span>
+                                                    </div>
+                                                )}
+                                                {feedbackData && feedbackData.improvements && (
+                                                    <div style={styles.feedbackSectionYellow}>
+                                                        <strong style={{fontSize:'11px', color: '#E65100', display:'block'}}>MELHORIAS SUGERIDAS:</strong>
+                                                        <span style={styles.feedbackTextYellow}>"{feedbackData.improvements}"</span>
+                                                    </div>
+                                                )}
+                                                {feedbackData && feedbackData.general && (
+                                                    <div style={styles.reviewFeedbackBox}>"{feedbackData.general}"</div>
+                                                )}
                                             </div>
                                         </div>
-                                    )}
+                                    </div>
+                                )}
 
-                                    {/* 3. EVENTO DE DEVOLUÇÃO (HISTÓRICO) */}
-                                    {/* Mostra se for rejeitado OU se já foi reenviado (para manter histórico) */}
-                                    {(isRejected || isResubmitted) && (
-                                        <div style={styles.timelineItem}>
-                                            <div style={styles.timelineLeft}>
-                                                <div style={{...styles.timelineDotRejected, backgroundColor: '#C62828', boxShadow: '0 0 0 4px #FFEBEE', zIndex: 3}}>
-                                                    <CornerDownRight size={14} color="white"/>
-                                                </div>
-                                                {/* Se foi reenviado, a linha continua */}
-                                                {isResubmitted && <div style={{...styles.timelineLine, backgroundColor: '#90CAF9'}} />}
+                                {/* PASSO 3: DEVOLUÇÃO (Aparece se foi rejeitado OU se já foi reenviado - HISTÓRICO) */}
+                                {(isRejected || isResubmitted) && (
+                                    <div style={styles.timelineItem}>
+                                        <div style={styles.timelineLeft}>
+                                            <div style={{...styles.timelineDotRejected, backgroundColor: '#C62828', zIndex: 3}}>
+                                                <CornerDownRight size={14} color="white"/>
                                             </div>
-                                            <div style={{...styles.timelineContent, paddingTop: '5px'}}>
-                                                {isResubmitted ? (
-                                                    <span style={styles.timelineDate}>Etapa Concluída</span>
-                                                ) : (
-                                                    <span style={{...styles.timelineDate, color: '#C62828'}}>Status Atual</span>
-                                                )}
-                                                
-                                                <h4 style={{...styles.timelineTitle, color: '#555', fontSize: '14px'}}>
-                                                    Devolvido ao autor para revisões
+                                            {/* Se foi reenviado, a linha continua para o próximo passo */}
+                                            {isResubmitted && <div style={{...styles.timelineLine, backgroundColor: '#90CAF9'}} />}
+                                        </div>
+                                        <div style={{...styles.timelineContent, paddingTop: '5px'}}>
+                                            <span style={{...styles.timelineDate, color: '#C62828'}}>
+                                                {data.data_revisao ? data.data_revisao : "---"}
+                                            </span>
+                                            <h4 style={{...styles.timelineTitle, color: '#C62828'}}>
+                                                Produção devolvida ao autor para correção
+                                            </h4>
+                                            <p style={styles.timelineDesc}>
+                                                A produção retornou para a caixa de entrada do autor aguardando edição.
+                                            </p>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* PASSO 4: REENVIO (Só aparece se o autor já reenviou) */}
+                                {isResubmitted && (
+                                    <div style={styles.timelineItem}>
+                                        <div style={styles.timelineLeft}>
+                                            <div style={{...styles.timelineDotApproved, backgroundColor: '#1565C0', boxShadow: '0 0 0 4px #E3F2FD'}}>
+                                                <Send size={14} color="white"/>
+                                            </div>
+                                        </div>
+                                        <div style={{...styles.timelineContent, paddingTop: '5px'}}>
+                                            <span style={{...styles.timelineDate, color: '#1565C0'}}>Em trânsito</span>
+                                            <div style={{backgroundColor: '#E3F2FD', padding: '15px', borderRadius: '8px', border: '1px solid #BBDEFB'}}>
+                                                <h4 style={{...styles.timelineTitle, color: '#0D47A1', fontSize: '15px', display:'flex', alignItems:'center', gap:'8px'}}>
+                                                    <RefreshCw size={16}/> Produção reenviada para nova análise
                                                 </h4>
-                                                <p style={styles.timelineDesc}>
-                                                    Material retornou para ajustes conforme parecer técnico.
+                                                <p style={{...styles.timelineDesc, color: '#1565C0', marginTop: '5px'}}>
+                                                    O material atualizado foi postado novamente e aguarda a avaliação de um outro professor da comunidade.
                                                 </p>
                                             </div>
                                         </div>
-                                    )}
+                                    </div>
+                                )}
 
-                                    {/* 4. EVENTO DE REENVIO (O NOVO!) */}
-                                    {isResubmitted && (
-                                        <div style={styles.timelineItem}>
-                                            <div style={styles.timelineLeft}>
-                                                <div style={{...styles.timelineDotApproved, backgroundColor: '#1565C0', boxShadow: '0 0 0 4px #E3F2FD'}}>
-                                                    <Send size={14} color="white"/>
-                                                </div>
-                                            </div>
-                                            <div style={{...styles.timelineContent, paddingTop: '5px'}}>
-                                                <span style={{...styles.timelineDate, color: '#1565C0'}}>Agora</span>
-                                                <div style={{backgroundColor: '#E3F2FD', padding: '15px', borderRadius: '8px', border: '1px solid #BBDEFB'}}>
-                                                    <h4 style={{...styles.timelineTitle, color: '#0D47A1', fontSize: '15px', display:'flex', alignItems:'center', gap:'8px'}}>
-                                                        <RefreshCw size={16}/> Produção reenviada para análise
-                                                    </h4>
-                                                    <p style={{...styles.timelineDesc, color: '#1565C0', marginTop: '5px'}}>
-                                                        O material atualizado foi encaminhado para a fila de revisão de um <strong>novo professor</strong>.
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    )}
-
-                                </div>
-                            )}
+                            </div>
                             {/* ------------------------------------------------ */}
 
                         </div>
                     </div>
 
-                    {/* --- COLUNA DIREITA: STATUS --- */}
+                    {/* --- COLUNA DIREITA: STATUS E AÇÕES --- */}
                     <div style={styles.columnSidebar}>
                         
                         <div style={styles.sidebarCard}>
-                            <h3 style={styles.sidebarTitle}>Status</h3>
+                            <h3 style={styles.sidebarTitle}>Status da Produção</h3>
 
                             {isApproved && (
                                 <div style={styles.statusBoxApproved}>
                                     <CheckCircle2 size={24} color="#2E7D32" />
                                     <div>
-                                        <span style={styles.statusTitleApproved}>PUBLICADO</span>
-                                        <p style={styles.statusDesc}>Visível na comunidade.</p>
+                                        <span style={styles.statusTitleApproved}>ENTREGUE</span>
+                                        <p style={styles.statusDesc}>Publicado na comunidade.</p>
                                     </div>
                                 </div>
                             )}
 
-                            {/* CARD AZUL DE REENVIO */}
                             {isResubmitted && (
                                 <div style={{...styles.statusBoxPending, backgroundColor: '#E3F2FD', border: '1px solid #90CAF9'}}>
-                                    <History size={24} color="#1976D2" />
+                                    <RefreshCw size={24} color="#1976D2" />
                                     <div>
                                         <span style={{...styles.statusTitlePending, color: '#1565C0'}}>REENVIADO</span>
-                                        <p style={styles.statusDesc}>Aguardando nova avaliação.</p>
+                                        <p style={styles.statusDesc}>Aguardando nova análise.</p>
                                     </div>
                                 </div>
                             )}
@@ -343,8 +345,8 @@ const VisualizarMinhaProducao = () => {
                                 <div style={styles.statusBoxPending}>
                                     <Clock size={24} color="#EF6C00" />
                                     <div>
-                                        <span style={styles.statusTitlePending}>EM REVISÃO</span>
-                                        <p style={styles.statusDesc}>Aguardando análise.</p>
+                                        <span style={styles.statusTitlePending}>EM TRÂNSITO</span>
+                                        <p style={styles.statusDesc}>Na fila de revisão.</p>
                                     </div>
                                 </div>
                             )}
@@ -353,10 +355,10 @@ const VisualizarMinhaProducao = () => {
                                 <div style={styles.statusBoxRejected}>
                                     <div style={{display:'flex', alignItems:'center', gap:'8px', marginBottom:'10px'}}>
                                         <XCircle size={20} color="#C62828" />
-                                        <span style={styles.statusTitleRejected}>AÇÃO NECESSÁRIA</span>
+                                        <span style={styles.statusTitleRejected}>DEVOLVIDO</span>
                                     </div>
                                     <p style={styles.statusDesc}>
-                                        Sua produção precisa de ajustes.
+                                        Ação necessária: Corrigir e reenviar.
                                     </p>
                                     
                                     <button 
@@ -433,7 +435,7 @@ const styles = {
 
     // --- TIMELINE STYLES ---
     timelineSection: { marginTop: '50px', borderTop: '2px dashed #E0E0E0', paddingTop: '30px' },
-    timelineMainTitle: { fontSize: '18px', fontWeight: '800', color: '#37474F', marginBottom: '25px' },
+    timelineMainTitle: { fontSize: '18px', fontWeight: '800', color: '#37474F', marginBottom: '25px', display:'flex', alignItems:'center' },
     
     timelineItem: { display: 'flex', gap: '15px', marginBottom: '20px', position: 'relative' },
     
@@ -456,11 +458,9 @@ const styles = {
     statusTitleApprovedInline: { fontSize: '12px', fontWeight: '900', color: '#2E7D32', textTransform: 'uppercase' },
     statusTitleRejectedInline: { fontSize: '12px', fontWeight: '900', color: '#C62828', textTransform: 'uppercase' },
     
-    // RUBRICA
     rubricGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '10px', marginBottom: '20px', paddingBottom: '15px', borderBottom: '1px solid rgba(0,0,0,0.05)' },
     rubricItem: { display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '11px', color: '#555', fontWeight: '600' },
     
-    // FEEDBACK SECTIONS
     feedbackSectionGreen: { backgroundColor: 'rgba(255,255,255,0.7)', padding: '12px', borderRadius: '6px', marginBottom: '10px', borderLeft: '3px solid #2E7D32' },
     feedbackTextGreen: { fontSize: '13px', color: '#1B5E20', margin: 0, fontStyle: 'italic', wordBreak: 'break-word' },
     
