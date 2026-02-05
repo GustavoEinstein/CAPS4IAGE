@@ -3,7 +3,8 @@ import api from '../services/api';
 import { useOutletContext, useParams, useNavigate } from 'react-router-dom';
 import { 
     Star, CheckCircle2, Bot, Download, ArrowLeft, Clock, Wrench, 
-    BookOpen, Target, Lightbulb, ThumbsUp, ThumbsDown, ShieldAlert, FileText, User
+    BookOpen, Target, Lightbulb, ThumbsUp, ThumbsDown, ShieldAlert, FileText, User, 
+    AlertTriangle, Lock, PenTool
 } from 'lucide-react';
 
 const Revisao = () => {
@@ -17,12 +18,20 @@ const Revisao = () => {
     const [loading, setLoading] = useState(true);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    // --- ESTADO DA RÚBRICA E FEEDBACK ---
+    // --- ESTADO DA RÚBRICA ---
     const [avaliacao, setAvaliacao] = useState({
         notaCoerencia: 0, notaQualidade: 0, notaMetodologia: 0,
         notaAvaliacao: 0, notaInclusao: 0, notaInovacao: 0,
         pontosFortes: '', pontosMelhoria: ''
     });
+
+    // --- CÁLCULOS (Lógica de cores, mas sem texto "Recomendado") ---
+    const scores = [
+        avaliacao.notaCoerencia, avaliacao.notaQualidade, avaliacao.notaMetodologia,
+        avaliacao.notaAvaliacao, avaliacao.notaInclusao, avaliacao.notaInovacao
+    ];
+    const isFormComplete = scores.every(s => s > 0);
+    const hasCriticalFail = scores.some(s => s > 0 && s <= 2);
 
     // --- CARREGAR DADOS ---
     useEffect(() => {
@@ -32,7 +41,7 @@ const Revisao = () => {
                 setProducaoEmRevisao(response.data);
             } catch (error) {
                 console.error("Erro ao carregar:", error);
-                alert("Erro ao carregar. Você pode não ter permissão.");
+                alert("Erro ao carregar detalhes.");
                 navigate('/dashboard/revisao');
             } finally {
                 setLoading(false);
@@ -45,20 +54,9 @@ const Revisao = () => {
         setAvaliacao(prev => ({ ...prev, [campo]: valor }));
     };
 
-    // --- ENVIAR REVISÃO (ATUALIZADO) ---
     const handleSubmit = async (veredito) => {
-        const notas = [
-            avaliacao.notaCoerencia, avaliacao.notaQualidade, avaliacao.notaMetodologia,
-            avaliacao.notaAvaliacao, avaliacao.notaInclusao, avaliacao.notaInovacao
-        ];
-        
-        // Validação: Todas as notas são obrigatórias
-        if (!notas.every(nota => nota > 0)) {
-            alert("Por favor, atribua notas para todos os 6 critérios.");
-            return;
-        }
+        if (!isFormComplete) return;
 
-        // Validação: Se rejeitar, precisa explicar
         if (veredito === false && !avaliacao.pontosMelhoria.trim()) {
             alert("Para rejeitar, é OBRIGATÓRIO preencher as sugestões de melhoria.");
             return;
@@ -67,13 +65,10 @@ const Revisao = () => {
         setIsSubmitting(true);
 
         try {
-            // Envia notas e feedback para o backend
             await api.post(`api/production/${id}/review/`, { 
                 aprovado: veredito, 
                 pontos_fortes: avaliacao.pontosFortes,
                 pontos_melhoria: avaliacao.pontosMelhoria,
-                
-                // --- NOVOS CAMPOS ENVIADOS ---
                 nota_coerencia: avaliacao.notaCoerencia,
                 nota_qualidade: avaliacao.notaQualidade,
                 nota_metodologia: avaliacao.notaMetodologia,
@@ -82,51 +77,43 @@ const Revisao = () => {
                 nota_inovacao: avaliacao.notaInovacao
             });
 
-            alert(veredito ? "Aprovado com sucesso!" : "Devolvido para correção.");
+            alert(veredito ? "Produção Aprovada!" : "Devolvida para correção.");
             navigate('/dashboard/revisao');
 
         } catch (error) {
             console.error(error);
-            alert("Erro ao salvar revisão. Tente novamente.");
+            alert("Erro ao salvar revisão.");
         } finally {
             setIsSubmitting(false);
         }
     };
 
-    if (loading) return <div style={{padding: '50px', textAlign: 'center', color: '#90A4AE'}}>Carregando dossiê...</div>;
+    if (loading) return <div style={{padding: '50px', textAlign: 'center', color: '#90A4AE'}}>Carregando...</div>;
     if (!producaoEmRevisao) return null;
 
-    // --- COMPONENTE DE CRITÉRIO (COMPACTO) ---
-    const CriteriaRow = ({ letter, label, questions, fieldName, value }) => (
+    // --- COMPONENTE CRITÉRIO (CARD COMPACTO PARA GRID) ---
+    const CriteriaCard = ({ label, description, fieldName, value }) => (
         <div style={styles.criteriaCard}>
             <div style={styles.criteriaHeader}>
-                <div style={styles.criteriaTitleGroup}>
-                    <div style={styles.letterBadge}>{letter}</div>
-                    <span style={styles.criteriaLabel}>{label}</span>
-                </div>
-                <span style={{fontWeight: '800', color: value > 0 ? '#1565C0' : '#E0E0E0', fontSize: '13px'}}>
-                    {value}/5
+                <span style={styles.criteriaTitle}>{label}</span>
+                <span style={{...styles.scoreBadge, color: value > 0 ? (value <= 2 ? '#D32F2F' : '#2E7D32') : '#E0E0E0'}}>
+                    {value > 0 ? value : '-'}
                 </span>
             </div>
-            
-            <ul style={styles.criteriaList}>
-                {questions.map((q, idx) => <li key={idx}>{q}</li>)}
-            </ul>
-
-            <div style={styles.starsContainer}>
+            <p style={styles.criteriaDesc}>{description}</p>
+            <div style={styles.starsWrapper}>
                 {[1, 2, 3, 4, 5].map((star) => (
                     <button 
                         key={star} 
                         onClick={() => handleScoreChange(fieldName, star)} 
                         type="button" 
-                        style={styles.starButton}
-                        title={`Nota ${star}`}
+                        style={styles.starBtn}
                     >
                         <Star 
-                            size={20} 
-                            strokeWidth={1.5} 
-                            color={star <= value ? "#FFC107" : "#CFD8DC"} 
-                            fill={star <= value ? "#FFC107" : "none"} 
+                            size={24} 
+                            fill={star <= value ? "#FFC107" : "#F5F5F5"} 
+                            color={star <= value ? "#FFB300" : "#E0E0E0"} 
+                            strokeWidth={2}
                         />
                     </button>
                 ))}
@@ -137,137 +124,119 @@ const Revisao = () => {
     return (
         <div style={styles.fullPageWrapper}>
             <div style={styles.container}>
-                <button onClick={() => navigate('/dashboard/revisao')} style={styles.backButton}>
-                    <ArrowLeft size={20} /> Voltar para Fila
-                </button>
-
-                <div style={{...styles.gridContainer, flexDirection: isMobile ? 'column' : 'row'}}>
-                    
-                    {/* --- ESQUERDA: MATERIAL --- */}
-                    <div style={{...styles.columnContent, width: isMobile ? '100%' : '55%'}}>
-                        <div style={styles.materialCard}>
-                            
-                            <div style={styles.materialHeader}>
-                                <div style={{display:'flex', gap: '8px', marginBottom: '10px'}}>
-                                    <span style={styles.badge}>{producaoEmRevisao.disciplina}</span>
-                                    <span style={styles.levelBadge}>{producaoEmRevisao.nivel}</span>
-                                </div>
-                                
-                                <h1 style={styles.materialTitle}>{producaoEmRevisao.titulo}</h1>
-                                
-                                <div style={{display: 'flex', gap: '15px', alignItems: 'center', flexWrap: 'wrap'}}>
-                                    <div style={styles.iaTag}>
-                                        <Bot size={14} /> Gerado com <strong>{producaoEmRevisao.modelo_ia}</strong>
-                                    </div>
-                                    
-                                    <div style={{fontSize: '12px', color: '#90A4AE', display: 'flex', gap: '5px', alignItems: 'center'}}>
-                                        <User size={14} /> Autor: Prof. de {producaoEmRevisao.disciplina}
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div style={styles.techSheetContainer}>
-                                <div style={styles.techItem}>
-                                    <Wrench size={16} color="#1565C0" style={{marginTop:'2px'}}/>
-                                    <div>
-                                        <span style={styles.techLabel}>Metodologia</span>
-                                        <span style={styles.techValue}>{producaoEmRevisao.metodologia || "N/A"}</span>
-                                    </div>
-                                </div>
-                                <div style={styles.techItem}>
-                                    <Clock size={16} color="#1565C0" style={{marginTop:'2px'}}/>
-                                    <div>
-                                        <span style={styles.techLabel}>Duração</span>
-                                        <span style={styles.techValue}>{producaoEmRevisao.duracao || "N/A"}</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div style={styles.bnccBox}>
-                                <h4 style={styles.bnccTitle}><BookOpen size={16}/> Intencionalidade Pedagógica (BNCC)</h4>
-                                <p style={styles.bnccText}>{producaoEmRevisao.bncc || "Sem alinhamento."}</p>
-                            </div>
-
-                            <div style={styles.sectionBox}>
-                                <h3 style={styles.sectionTitle}><Lightbulb size={20} color="#F57C00" /> Relato da Aplicação</h3>
-                                <div style={styles.textBodyBox}>{producaoEmRevisao.experiencia || "Sem relato."}</div>
-                            </div>
-
-                            <div style={styles.sectionBox}>
-                                <h3 style={styles.sectionTitle}><Target size={20} color="#2E7D32" /> Resultados e Evidências</h3>
-                                <div style={styles.resultsBox}>{producaoEmRevisao.resultados || "Sem resultados."}</div>
-                            </div>
-
-                            {producaoEmRevisao.arquivo && (
-                                <div style={styles.downloadCard}>
-                                    <div style={styles.fileIconBig}><FileText size={24} color="#1565C0" /></div>
-                                    <div style={{flex: 1}}>
-                                        <span style={styles.fileName}>{producaoEmRevisao.arquivo.split('/').pop()}</span>
-                                        <span style={styles.fileLabel}>Material Completo (PDF)</span>
-                                    </div>
-                                    <a 
-                                        href={producaoEmRevisao.arquivo} 
-                                        download target="_blank" rel="noopener noreferrer" style={{textDecoration: 'none'}}
-                                    >
-                                        <button style={styles.downloadBtn}><Download size={18} /></button>
-                                    </a>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-
-                    {/* --- DIREITA: RÚBRICA --- */}
-                    <div style={{...styles.columnSidebar, width: isMobile ? '100%' : '45%'}}>
-                        <div style={styles.formCard}>
-                            <div style={styles.formHeader}>
-                                <h2 style={styles.formTitle}>Rúbrica de Avaliação</h2>
-                                <p style={styles.formSubtitle}>Analise os 6 eixos pedagógicos.</p>
-                            </div>
-
-                            <div style={styles.scrollableRubric}>
-                                <CriteriaRow letter="A" label="Coerência Pedagógica" questions={["Objetivos claros?", "Alinhamento com a BNCC?"]} fieldName="notaCoerencia" value={avaliacao.notaCoerencia} />
-                                <CriteriaRow letter="B" label="Qualidade Didática" questions={["Linguagem adequada?", "Instruções claras?"]} fieldName="notaQualidade" value={avaliacao.notaQualidade} />
-                                <CriteriaRow letter="C" label="Metodologia Ativa" questions={["Estratégias engajam?", "Estimula pensamento?"]} fieldName="notaMetodologia" value={avaliacao.notaMetodologia} />
-                                <CriteriaRow letter="D" label="Avaliação" questions={["Critérios justos?", "Instrumentos claros?"]} fieldName="notaAvaliacao" value={avaliacao.notaAvaliacao} />
-                                <CriteriaRow letter="E" label="Inclusão" questions={["Acessível a todos?", "Material adaptável?"]} fieldName="notaInclusao" value={avaliacao.notaInclusao} />
-                                <CriteriaRow letter="F" label="Inovação/IA" questions={["Uso criativo da IA?", "Relevância tecnológica?"]} fieldName="notaInovacao" value={avaliacao.notaInovacao} />
-                            
-                                <div style={styles.feedbackSection}>
-                                    <h3 style={styles.sectionHeaderSmall}>Parecer Descritivo</h3>
-                                    
-                                    <div style={styles.inputContainerSuccess}>
-                                        <div style={styles.inputHeaderSuccess}><ThumbsUp size={14}/> Pontos Fortes</div>
-                                        <textarea 
-                                            style={styles.textareaSuccess} rows="2"
-                                            placeholder="O que se destacou?"
-                                            value={avaliacao.pontosFortes}
-                                            onChange={(e) => setAvaliacao({...avaliacao, pontosFortes: e.target.value})}
-                                        />
-                                    </div>
-
-                                    <div style={styles.inputContainerDanger}>
-                                        <div style={styles.inputHeaderDanger}><ThumbsDown size={14}/> Sugestões de Melhoria</div>
-                                        <textarea 
-                                            style={styles.textareaDanger} rows="2"
-                                            placeholder="O que precisa ser ajustado?"
-                                            value={avaliacao.pontosMelhoria}
-                                            onChange={(e) => setAvaliacao({...avaliacao, pontosMelhoria: e.target.value})}
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div style={styles.verdictSection}>
-                                <button onClick={() => handleSubmit(false)} disabled={isSubmitting} style={styles.btnReject}>
-                                    <ShieldAlert size={18} /> REJEITAR
-                                </button>
-                                <button onClick={() => handleSubmit(true)} disabled={isSubmitting} style={styles.btnApprove}>
-                                    <CheckCircle2 size={18} /> APROVAR
-                                </button>
-                            </div>
-                        </div>
+                
+                {/* HEADER DA PÁGINA */}
+                <div style={styles.topBar}>
+                    <button onClick={() => navigate('/dashboard/revisao')} style={styles.backButton}>
+                        <ArrowLeft size={20} /> Voltar
+                    </button>
+                    <div style={{textAlign: 'right'}}>
+                        <h1 style={styles.pageTitle}>Sala de Revisão</h1>
+                        <p style={styles.pageSubtitle}>Analise o conteúdo abaixo e preencha a avaliação no final.</p>
                     </div>
                 </div>
+
+                {/* --- PARTE 1: O MATERIAL (LEITURA) --- */}
+                <div style={styles.materialCard}>
+                    <div style={styles.materialHeader}>
+                        <div style={styles.badgesRow}>
+                            <span style={styles.badgeDisc}>{producaoEmRevisao.disciplina}</span>
+                            <span style={styles.badgeLevel}>{producaoEmRevisao.nivel}</span>
+                        </div>
+                        <h2 style={styles.materialTitle}>{producaoEmRevisao.titulo}</h2>
+                        <div style={styles.metaInfo}>
+                            <span style={styles.metaItem}><Bot size={14}/> {producaoEmRevisao.modelo_ia}</span>
+                            <span style={styles.metaItem}><User size={14}/> Autor Anônimo</span>
+                        </div>
+                    </div>
+
+                    <div style={styles.techSheet}>
+                        <div style={styles.techItem}><Wrench size={16} color="#1565C0"/><div><span style={styles.techLabel}>Metodologia</span><span style={styles.techValue}>{producaoEmRevisao.metodologia}</span></div></div>
+                        <div style={styles.techItem}><Clock size={16} color="#1565C0"/><div><span style={styles.techLabel}>Duração</span><span style={styles.techValue}>{producaoEmRevisao.duracao}</span></div></div>
+                    </div>
+
+                    <div style={styles.section}><h3 style={styles.sectionTitle}><BookOpen size={18}/> Alinhamento BNCC</h3><div style={styles.bnccBox}>{producaoEmRevisao.bncc}</div></div>
+                    <div style={styles.section}><h3 style={styles.sectionTitle}><Lightbulb size={18}/> Relato de Experiência</h3><p style={styles.textBody}>{producaoEmRevisao.experiencia}</p></div>
+                    <div style={styles.section}><h3 style={styles.sectionTitle}><Target size={18}/> Resultados</h3><div style={styles.resultsBox}>{producaoEmRevisao.resultados}</div></div>
+
+                    {producaoEmRevisao.arquivo && (
+                        <div style={styles.downloadContainer}>
+                            <div style={styles.fileInfoBox}>
+                                <div style={styles.fileIconSmall}><FileText size={20} color="#1565C0" /></div>
+                                <div style={{overflow: 'hidden'}}>
+                                    <span style={styles.fileName}>{decodeURIComponent(producaoEmRevisao.arquivo.split('/').pop())}</span>
+                                    <span style={styles.fileType}>Material de Apoio</span>
+                                </div>
+                            </div>
+                            <a href={producaoEmRevisao.arquivo} download target="_blank" rel="noopener noreferrer" style={{textDecoration: 'none'}}>
+                                <button style={styles.downloadBtnCompact}><Download size={16} /> Baixar</button>
+                            </a>
+                        </div>
+                    )}
+                </div>
+
+                {/* --- SEPARADOR VISUAL --- */}
+                <div style={styles.stepSeparator}>
+                    <div style={styles.stepLine}></div>
+                    <div style={styles.stepLabel}><PenTool size={16}/> Área de Avaliação</div>
+                    <div style={styles.stepLine}></div>
+                </div>
+
+                {/* --- PARTE 2: AVALIAÇÃO (RODAPÉ) --- */}
+                <div style={styles.reviewSection}>
+                    <h3 style={styles.reviewTitle}>Rúbrica de 6 Eixos</h3>
+                    
+                    {/* Grid de Critérios */}
+                    <div style={styles.criteriaGrid}>
+                        <CriteriaCard label="Coerência Pedagógica" description="Objetivos claros e alinhados?" fieldName="notaCoerencia" value={avaliacao.notaCoerencia} />
+                        <CriteriaCard label="Qualidade do Prompt" description="Uso intencional da IA?" fieldName="notaQualidade" value={avaliacao.notaQualidade} />
+                        <CriteriaCard label="Metodologia Ativa" description="Aluno protagonista?" fieldName="notaMetodologia" value={avaliacao.notaMetodologia} />
+                        <CriteriaCard label="Avaliação" description="Critérios de verificação?" fieldName="notaAvaliacao" value={avaliacao.notaAvaliacao} />
+                        <CriteriaCard label="Inclusão" description="Acessível a todos?" fieldName="notaInclusao" value={avaliacao.notaInclusao} />
+                        <CriteriaCard label="Inovação" description="Criatividade no uso?" fieldName="notaInovacao" value={avaliacao.notaInovacao} />
+                    </div>
+
+                    <div style={styles.feedbackGrid}>
+                        <div style={styles.feedbackBoxSuccess}>
+                            <label style={styles.feedbackLabelSuccess}><ThumbsUp size={14}/> Pontos Fortes</label>
+                            <textarea style={styles.textareaWhite} placeholder="O que se destacou positivamente?" value={avaliacao.pontosFortes} onChange={e => setAvaliacao({...avaliacao, pontosFortes: e.target.value})} />
+                        </div>
+                        <div style={styles.feedbackBoxDanger}>
+                            <label style={styles.feedbackLabelDanger}><AlertTriangle size={14}/> Sugestões de Melhoria</label>
+                            <textarea style={styles.textareaWhite} placeholder="O que precisa ser ajustado?" value={avaliacao.pontosMelhoria} onChange={e => setAvaliacao({...avaliacao, pontosMelhoria: e.target.value})} />
+                        </div>
+                    </div>
+
+                    {/* Botões de Ação */}
+                    <div style={styles.actionButtonsRow}>
+                        {!isFormComplete ? (
+                            <button disabled style={styles.btnDisabled}>
+                                <Lock size={16} /> Preencha todos os critérios acima para liberar a decisão
+                            </button>
+                        ) : (
+                            <>
+                                <button 
+                                    onClick={() => handleSubmit(false)} 
+                                    disabled={isSubmitting} 
+                                    // Se tiver nota ruim, o botão de rejeitar fica SÓLIDO (destaque). Se tudo for bom, fica outline (secundário).
+                                    style={hasCriticalFail ? styles.btnRejectPrimary : styles.btnRejectSecondary}
+                                >
+                                    <ShieldAlert size={18}/> Rejeitar
+                                </button>
+                                
+                                <button 
+                                    onClick={() => handleSubmit(true)} 
+                                    disabled={isSubmitting || hasCriticalFail} 
+                                    // Se não tiver nota ruim, o botão de aprovar fica SÓLIDO (destaque).
+                                    style={!hasCriticalFail ? styles.btnApprovePrimary : styles.btnApproveSecondary}
+                                >
+                                    <CheckCircle2 size={18}/> Aprovar
+                                </button>
+                            </>
+                        )}
+                    </div>
+                </div>
+
             </div>
         </div>
     );
@@ -275,96 +244,78 @@ const Revisao = () => {
 
 // --- ESTILOS ---
 const styles = {
-    fullPageWrapper: { backgroundColor: '#F0F2F5', minHeight: '100vh', padding: '20px', boxSizing: 'border-box' },
-    container: { maxWidth: '1300px', margin: '0 auto' },
-    backButton: { background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', color: '#546E7A', fontWeight: '700', marginBottom: '15px', fontSize: '14px' },
+    fullPageWrapper: { backgroundColor: '#F0F2F5', minHeight: '100vh', width: '100%', boxSizing: 'border-box', padding: '20px' },
+    container: { maxWidth: '1000px', margin: '0 auto', width: '100%', paddingBottom: '60px' },
     
-    gridContainer: { display: 'flex', gap: '15px', alignItems: 'flex-start' },
-    columnContent: { minWidth: 0 },
-    columnSidebar: { position: 'sticky', top: '20px', height: 'calc(100vh - 40px)' }, 
+    topBar: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' },
+    backButton: { display: 'flex', alignItems: 'center', gap: '8px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '14px', color: '#546E7A', fontWeight: '700' },
+    pageTitle: { fontSize: '24px', fontWeight: '800', color: '#1A237E', margin: '0 0 4px 0' },
+    pageSubtitle: { fontSize: '14px', color: '#546E7A', margin: 0 },
 
-    materialCard: { backgroundColor: '#FFFFFF', borderRadius: '12px', padding: '30px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', border: '1px solid #E0E0E0' },
-    materialHeader: { marginBottom: '20px', borderBottom: '1px solid #F0F0F0', paddingBottom: '15px' },
-    badge: { backgroundColor: '#E3F2FD', color: '#1565C0', padding: '4px 10px', borderRadius: '6px', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase' },
-    levelBadge: { backgroundColor: '#F5F5F5', color: '#616161', padding: '4px 10px', borderRadius: '6px', fontSize: '11px', fontWeight: '700' },
-    
-    materialTitle: { 
-        fontSize: '24px', fontWeight: '800', color: '#1A237E', margin: '10px 0 5px 0', lineHeight: '1.2',
-        wordBreak: 'break-word', overflowWrap: 'break-word' 
-    },
-    
-    iaTag: { display:'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: '#546E7A', backgroundColor: '#F5F5F5', padding: '4px 8px', borderRadius: '6px', width: 'fit-content' },
+    // --- CARD MATERIAL (AGORA FULL WIDTH) ---
+    materialCard: { backgroundColor: '#FFFFFF', borderRadius: '16px', padding: '40px', boxShadow: '0 2px 10px rgba(0,0,0,0.03)', border: '1px solid #E0E0E0', marginBottom: '30px' },
+    materialHeader: { marginBottom: '25px', borderBottom: '1px solid #F0F0F0', paddingBottom: '20px' },
+    badgesRow: { display: 'flex', gap: '10px', marginBottom: '12px' },
+    badgeDisc: { backgroundColor: '#E3F2FD', color: '#1565C0', padding: '5px 10px', borderRadius: '6px', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase' },
+    badgeLevel: { backgroundColor: '#F5F5F5', color: '#616161', padding: '5px 10px', borderRadius: '6px', fontSize: '11px', fontWeight: '700' },
+    materialTitle: { fontSize: '28px', fontWeight: '800', color: '#333', margin: '0 0 10px 0', lineHeight: '1.2' },
+    metaInfo: { display: 'flex', gap: '15px', color: '#78909C', fontSize: '13px' },
+    metaItem: { display: 'flex', alignItems: 'center', gap: '5px' },
 
-    techSheetContainer: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', marginBottom: '20px' },
+    techSheet: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '30px', padding: '15px', backgroundColor: '#FAFAFA', borderRadius: '10px' },
     techItem: { display: 'flex', gap: '10px', alignItems: 'flex-start' },
-    techLabel: { display: 'block', fontSize: '10px', color: '#90A4AE', textTransform: 'uppercase', fontWeight: '800' },
-    techValue: { fontSize: '13px', color: '#37474F', fontWeight: '600' },
+    techLabel: { display: 'block', fontSize: '10px', textTransform: 'uppercase', color: '#90A4AE', fontWeight: '800', marginBottom: '2px' },
+    techValue: { fontSize: '14px', color: '#37474F', fontWeight: '600' },
 
-    bnccBox: { backgroundColor: '#FFF8E1', borderLeft: '4px solid #FFC107', padding: '15px', borderRadius: '6px', marginBottom: '20px' },
-    bnccTitle: { margin: '0 0 5px 0', fontSize: '12px', color: '#EF6C00', display: 'flex', alignItems: 'center', gap: '6px', fontWeight: '800' },
-    
-    bnccText: { 
-        margin: 0, fontSize: '14px', color: '#3E2723', lineHeight: '1.5',
-        wordBreak: 'break-word', overflowWrap: 'break-word'
-    },
+    section: { marginBottom: '30px' },
+    sectionTitle: { fontSize: '16px', fontWeight: '800', color: '#37474F', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '8px' },
+    bnccBox: { backgroundColor: '#FFF8E1', borderLeft: '4px solid #FFC107', padding: '15px', borderRadius: '6px', color: '#4E342E', fontSize: '14px', lineHeight: '1.5' },
+    textBody: { fontSize: '15px', lineHeight: '1.6', color: '#455A64', whiteSpace: 'pre-wrap' },
+    resultsBox: { backgroundColor: '#E8F5E9', border: '1px solid #C8E6C9', padding: '15px', borderRadius: '8px', color: '#1B5E20', fontSize: '14px', fontStyle: 'italic' },
 
-    sectionBox: { marginBottom: '25px' },
-    sectionTitle: { fontSize: '16px', fontWeight: '800', color: '#37474F', display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' },
-    
-    textBodyBox: { 
-        fontSize: '15px', lineHeight: '1.6', color: '#455A64', whiteSpace: 'pre-wrap',
-        wordBreak: 'break-word', overflowWrap: 'break-word'
-    },
-    
-    resultsBox: { 
-        backgroundColor: '#E8F5E9', border: '1px solid #C8E6C9', padding: '15px', borderRadius: '8px', color: '#1B5E20', fontSize: '14px', fontStyle: 'italic',
-        wordBreak: 'break-word', overflowWrap: 'break-word'
-    },
+    downloadContainer: { marginTop: '25px', padding: '12px 15px', backgroundColor: '#F8F9FA', borderRadius: '10px', border: '1px solid #E0E0E0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '15px' },
+    fileInfoBox: { display: 'flex', alignItems: 'center', gap: '10px', flex: 1, minWidth: 0 },
+    fileIconSmall: { backgroundColor: 'white', padding: '6px', borderRadius: '6px', border: '1px solid #E0E0E0', display: 'flex', alignItems: 'center', justifyContent: 'center' },
+    fileName: { display: 'block', fontSize: '13px', fontWeight: '700', color: '#333', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' },
+    fileType: { fontSize: '11px', color: '#90A4AE' },
+    downloadBtnCompact: { backgroundColor: '#1565C0', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', cursor: 'pointer', fontSize: '12px', fontWeight: '700', boxShadow: '0 2px 5px rgba(21, 101, 192, 0.2)', transition: 'background 0.2s', whiteSpace: 'nowrap' },
 
-    downloadCard: { display: 'flex', alignItems: 'center', gap: '12px', padding: '15px', backgroundColor: '#E3F2FD', borderRadius: '10px', border: '1px solid #BBDEFB', marginTop: '20px' },
-    fileIconBig: { backgroundColor: 'white', padding: '8px', borderRadius: '8px' },
-    fileName: { display: 'block', fontSize: '13px', fontWeight: '700', color: '#1565C0' },
-    fileLabel: { fontSize: '11px', color: '#64B5F6' },
-    downloadBtn: { background: 'white', border: 'none', color: '#1565C0', cursor: 'pointer', width: '36px', height: '36px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 5px rgba(0,0,0,0.1)' },
+    // --- DIVISOR STEPPER ---
+    stepSeparator: { display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '30px', opacity: 0.8 },
+    stepLine: { flex: 1, height: '1px', backgroundColor: '#B0BEC5' },
+    stepLabel: { fontSize: '14px', fontWeight: '700', color: '#546E7A', textTransform: 'uppercase', letterSpacing: '1px', display: 'flex', alignItems: 'center', gap: '8px' },
 
-    formCard: { backgroundColor: '#FFFFFF', borderRadius: '12px', padding: '0', boxShadow: '0 4px 20px rgba(0,0,0,0.08)', border: '1px solid #E0E0E0', height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden' },
-    formHeader: { padding: '15px 20px', borderBottom: '1px solid #EEE', backgroundColor: '#FAFAFA' },
-    formTitle: { fontSize: '16px', fontWeight: '800', color: '#1565C0', margin: 0 },
-    formSubtitle: { fontSize: '11px', color: '#78909C', margin: '2px 0 0 0' },
+    // --- ÁREA DE REVISÃO (EM BAIXO) ---
+    reviewSection: { backgroundColor: 'white', borderRadius: '16px', padding: '40px', boxShadow: '0 4px 20px rgba(0,0,0,0.05)', border: '1px solid #E0E0E0' },
+    reviewTitle: { fontSize: '18px', fontWeight: '800', color: '#1A237E', margin: '0 0 20px 0', borderBottom: '1px solid #F5F5F5', paddingBottom: '15px' },
 
-    scrollableRubric: { flex: 1, overflowY: 'auto', padding: '15px 20px', backgroundColor: 'white' },
-
-    criteriaCard: { 
-        backgroundColor: 'white', 
-        border: '1px solid #E0E0E0', 
-        borderRadius: '8px', 
-        padding: '10px 12px', 
-        marginBottom: '10px', 
-        boxShadow: '0 1px 3px rgba(0,0,0,0.02)' 
-    },
+    criteriaGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '15px', marginBottom: '30px' },
+    criteriaCard: { border: '1px solid #E0E0E0', borderRadius: '10px', padding: '15px', backgroundColor: '#FAFAFA' },
     criteriaHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '5px' },
-    criteriaTitleGroup: { display: 'flex', alignItems: 'center', gap: '8px' },
-    letterBadge: { width: '20px', height: '20px', borderRadius: '5px', backgroundColor: '#1565C0', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', fontWeight: '900' },
-    criteriaLabel: { fontSize: '13px', fontWeight: '700', color: '#37474F' },
-    criteriaList: { paddingLeft: '20px', fontSize: '11px', color: '#607D8B', margin: '0 0 5px 0', lineHeight: '1.3' },
+    criteriaTitle: { fontSize: '13px', fontWeight: '700', color: '#37474F' },
+    criteriaDesc: { fontSize: '11px', color: '#78909C', margin: '0 0 10px 0', minHeight: '32px' }, // Altura mínima para alinhar
+    starsWrapper: { display: 'flex', justifyContent: 'center', gap: '4px', marginTop: 'auto' },
+    starBtn: { background: 'none', border: 'none', cursor: 'pointer', padding: '2px', transition: 'transform 0.1s' },
+    scoreBadge: { fontSize: '14px', fontWeight: '800', minWidth: '20px', textAlign: 'center' },
+
+    feedbackGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px', marginBottom: '30px' },
     
-    starsContainer: { display: 'flex', gap: '2px', borderTop: '1px dashed #EEE', paddingTop: '5px' },
-    starButton: { background: 'none', border: 'none', cursor: 'pointer', padding: '2px', transition: 'transform 0.1s' },
-
-    feedbackSection: { marginTop: '15px', borderTop: '2px solid #F5F5F5', paddingTop: '15px' },
-    sectionHeaderSmall: { fontSize: '11px', textTransform: 'uppercase', color: '#90A4AE', fontWeight: '800', marginBottom: '10px' },
+    feedbackBoxSuccess: { backgroundColor: '#F1F8E9', border: '1px solid #C5E1A5', borderRadius: '10px', padding: '15px' },
+    feedbackLabelSuccess: { color: '#2E7D32', fontSize: '12px', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px' },
     
-    inputContainerSuccess: { marginBottom: '10px', border: '1px solid #C8E6C9', borderRadius: '8px', overflow: 'hidden' },
-    inputHeaderSuccess: { backgroundColor: '#E8F5E9', color: '#2E7D32', padding: '6px 10px', fontSize: '11px', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '5px' },
-    textareaSuccess: { width: '100%', padding: '10px', border: 'none', fontSize: '13px', outline: 'none', resize: 'vertical', minHeight: '50px' },
+    feedbackBoxDanger: { backgroundColor: '#FFEBEE', border: '1px solid #FFCDD2', borderRadius: '10px', padding: '15px' },
+    feedbackLabelDanger: { color: '#C62828', fontSize: '12px', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px' },
 
-    inputContainerDanger: { marginBottom: '5px', border: '1px solid #FFCDD2', borderRadius: '8px', overflow: 'hidden' },
-    inputHeaderDanger: { backgroundColor: '#FFEBEE', color: '#C62828', padding: '6px 10px', fontSize: '11px', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '5px' },
-    textareaDanger: { width: '100%', padding: '10px', border: 'none', fontSize: '13px', outline: 'none', resize: 'vertical', minHeight: '50px' },
+    textareaWhite: { width: '100%', padding: '12px', border: '1px solid rgba(0,0,0,0.1)', borderRadius: '6px', fontSize: '13px', outline: 'none', resize: 'vertical', minHeight: '80px', fontFamily: 'inherit', boxSizing: 'border-box', backgroundColor: '#FFFFFF', color: '#333' },
 
-    verdictSection: { padding: '15px 20px', borderTop: '1px solid #EEE', backgroundColor: '#FAFAFA', display: 'flex', gap: '10px' },
-    btnReject: { flex: 1, padding: '10px', borderRadius: '8px', border: '1px solid #EF9A9A', backgroundColor: '#FFEBEE', color: '#C62828', fontWeight: '800', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontSize: '12px' },
-    btnApprove: { flex: 1, padding: '10px', borderRadius: '8px', border: 'none', backgroundColor: '#2E7D32', color: 'white', fontWeight: '800', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontSize: '12px', boxShadow: '0 4px 10px rgba(46, 125, 50, 0.25)' }
+    actionButtonsRow: { display: 'flex', gap: '15px', paddingTop: '20px', borderTop: '1px solid #F0F0F0' },
+    btnDisabled: { width: '100%', padding: '16px', borderRadius: '8px', border: '1px solid #E0E0E0', backgroundColor: '#F5F5F5', color: '#B0BEC5', fontWeight: '700', fontSize: '14px', cursor: 'not-allowed', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' },
+    
+    btnApprovePrimary: { flex: 1, padding: '14px', borderRadius: '8px', border: 'none', backgroundColor: '#2E7D32', color: 'white', fontWeight: '800', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontSize: '14px', boxShadow: '0 4px 12px rgba(46, 125, 50, 0.3)' },
+    btnApproveSecondary: { flex: 1, padding: '14px', borderRadius: '8px', border: '1px solid #C8E6C9', backgroundColor: '#F1F8E9', color: '#2E7D32', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontSize: '14px', opacity: 0.6 },
+
+    btnRejectPrimary: { flex: 1, padding: '14px', borderRadius: '8px', border: 'none', backgroundColor: '#C62828', color: 'white', fontWeight: '800', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontSize: '14px', boxShadow: '0 4px 12px rgba(198, 40, 40, 0.3)' },
+    btnRejectSecondary: { flex: 1, padding: '14px', borderRadius: '8px', border: '1px solid #FFCDD2', backgroundColor: '#FFEBEE', color: '#C62828', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontSize: '14px', opacity: 0.6 }
 };
 
 export default Revisao;

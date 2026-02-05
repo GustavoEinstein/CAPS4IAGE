@@ -203,21 +203,6 @@ const DetalharProducao = () => {
                             ) : (
                                 <p style={{fontSize: '13px', color: '#999', fontStyle: 'italic'}}>Nenhum arquivo anexado.</p>
                             )}
-
-                            <div style={styles.divider}></div>
-
-                            <button 
-                                onClick={() => setIsSaved(!isSaved)} 
-                                style={{
-                                    ...styles.actionIconBtn, 
-                                    color: isSaved ? '#F57C00' : '#546E7A', 
-                                    backgroundColor: isSaved ? '#FFF3E0' : '#F5F7FA', 
-                                    width: '100%'
-                                }}
-                            >
-                                <Bookmark size={20} fill={isSaved ? "#F57C00" : "none"} /> 
-                                {isSaved ? "Salvo em Favoritos" : "Salvar para depois"}
-                            </button>
                         </div>
 
                     </div>

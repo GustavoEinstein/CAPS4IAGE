@@ -119,7 +119,7 @@ const MainContent = () => {
                                 ...styles.sectionTitle, 
                                 fontSize: isMobile ? '18px' : '22px'
                             }}>
-                                Destaques da Comunidade
+                                Central da Comunidade
                             </h2>
                         </div>
                         <span style={styles.badgeCount}>{filteredProducoes.length}</span>

@@ -4,13 +4,15 @@ import { useParams, useNavigate, useOutletContext } from 'react-router-dom';
 import { 
     ArrowLeft, Calendar, Clock, Bot, BookOpen, CheckCircle2,
     XCircle, Wrench, Lightbulb, Target, Download, FileText, User, Package, Star,
-    CornerDownRight, UserCog, ThumbsUp, AlertTriangle, Send, RefreshCw, History, MapPin
+    Send, MapPin, Search, AlertCircle, RefreshCw, File, ChevronRight,
+    BarChart3, ShieldAlert, ThumbsUp, AlertTriangle // Novos ícones importados
 } from 'lucide-react';
 
 const VisualizarMinhaProducao = () => {
     const { id } = useParams();
     const navigate = useNavigate();
-    const { isMobile } = useOutletContext() || { isMobile: false };
+    const context = useOutletContext();
+    const isMobile = context ? context.isMobile : false;
 
     const [data, setData] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -21,98 +23,75 @@ const VisualizarMinhaProducao = () => {
                 const response = await api.get(`api/production/${id}/`);
                 setData(response.data);
             } catch (error) {
-                console.error("Erro ao carregar:", error);
-                alert("Erro ao carregar os detalhes da produção.");
-                navigate('/dashboard/minhas-producoes');
+                console.error("Erro ao carregar detalhes:", error);
+                alert("Não foi possível carregar os detalhes da produção.");
             } finally {
                 setLoading(false);
             }
         };
-        
-        if (id) {
-            fetchDetails();
-        }
-    }, [id, navigate]);
+        if (id) fetchDetails();
+    }, [id]);
 
-    if (loading) return <div style={{padding: '50px', textAlign: 'center', color: '#90A4AE'}}>Carregando...</div>;
+    if (loading) return <div style={{padding: '50px', textAlign: 'center', color: '#90A4AE'}}>Carregando detalhes...</div>;
     if (!data) return null;
 
-    // --- LÓGICA DE ESTADOS DO RASTREIO ---
+    // --- LÓGICA DE ESTADOS ---
     const statusLower = data.status ? data.status.toLowerCase() : "";
-    
-    const isApproved = statusLower.includes('aprovado') || statusLower.includes('publicado');
-    const isRejected = statusLower.includes('rejeitado') || statusLower.includes('correção') || statusLower.includes('correcao');
-    const isPending = statusLower.includes('em revisão') || statusLower.includes('pendente');
+    const isApproved = statusLower.includes('aprovado') || statusLower.includes('publicado') || statusLower.includes('concluído');
+    const isRejected = statusLower.includes('rejeitado') || statusLower.includes('correção');
+    const isPending = !isApproved && !isRejected;
 
-    // Identifica se é um REENVIO (Está 'Em revisão' mas já tem histórico de notas/feedback anterior)
-    const isResubmitted = isPending && (data.notas || data.feedback_revisor);
+    const theme = { main: '#1565C0', bg: '#E3F2FD' }; 
 
-    // O histórico de avaliação existe? (Se tem notas ou feedback)
-    const hasReviewHistory = data.notas || data.feedback_revisor;
+    // --- COMPONENTE: TIMELINE CARD ---
+    const TimelineCard = () => {
+        const steps = [
+            { id: 1, label: "Envio Realizado", date: data.created_at || data.data, status: "done" },
+            { id: 2, label: "Revisão por Pares", date: isPending ? "Em andamento..." : "Concluída", status: isPending ? "current" : "done" },
+            { id: 3, label: "Resultado Final", date: (isApproved || isRejected) ? (isApproved ? "Aprovado" : "Devolvido") : "Aguardando", status: (isApproved || isRejected) ? (isApproved ? "approved" : "rejected") : "waiting" }
+        ];
 
-    // --- PARSER DE FEEDBACK ---
-    const feedbackData = (() => {
-        const raw = data.feedback_revisor || "";
-        if (!raw) return null;
-
-        let strengths = "";
-        let improvements = "";
-        let general = "";
-
-        if (raw.includes("PONTOS FORTES:") && raw.includes("SUGESTÕES DE MELHORIA:")) {
-            const parts = raw.split("SUGESTÕES DE MELHORIA:");
-            strengths = parts[0].replace("PONTOS FORTES:", "").trim();
-            improvements = parts[1].trim();
-            return { strengths, improvements, general: null };
-        } else if (raw.includes("SUGESTÕES DE MELHORIA:")) {
-             improvements = raw.replace("SUGESTÕES DE MELHORIA:", "").trim();
-             return { strengths: null, improvements, general: null };
-        } else {
-            general = raw;
-            return { strengths: null, improvements: null, general };
-        }
-    })();
-
-    // Cores por Disciplina
-    const getTheme = (disciplina) => {
-        const disc = disciplina ? disciplina.trim() : "Outra";
-        const themes = {
-            'História': { main: '#7B1FA2', bg: '#F3E5F5' },
-            'Geografia': { main: '#E65100', bg: '#FFF3E0' },
-            'Filosofia': { main: '#455A64', bg: '#ECEFF1' },
-            'Sociologia': { main: '#5D4037', bg: '#EFEBE9' },
-            'Projeto de vida': { main: '#0277BD', bg: '#E1F5FE' },
-            'Pedagogia': { main: '#F9A825', bg: '#FFFDE7' },
-            'Matemática': { main: '#C2185B', bg: '#FCE4EC' },
-            'Ciências': { main: '#2E7D32', bg: '#E8F5E9' },
-            'Física': { main: '#283593', bg: '#E8EAF6' },
-            'Química': { main: '#00838F', bg: '#E0F7FA' },
-            'Biologia': { main: '#388E3C', bg: '#E8F5E9' },
-            'Português': { main: '#1565C0', bg: '#E3F2FD' },
-            'Inglês': { main: '#B71C1C', bg: '#FFEBEE' },
-            'Artes': { main: '#AD1457', bg: '#FCE4EC' },
-            'Educação Física': { main: '#F57C00', bg: '#FFF3E0' },
-            'Outra': { main: '#616161', bg: '#F5F5F5' },
-            'Default': { main: '#1565C0', bg: '#E3F2FD' }
-        };
-        return themes[disc] || themes['Default'];
-    };
-    const theme = getTheme(data.disciplina);
-
-    // Componente de Estrelas
-    const StarRating = ({ score }) => {
-        const finalScore = score || 0;
         return (
-            <div style={{display: 'flex', gap: '2px'}}>
-                {[1, 2, 3, 4, 5].map((star) => (
-                    <Star 
-                        key={star} 
-                        size={14} 
-                        fill={star <= finalScore ? "#FFC107" : "#E0E0E0"} 
-                        color={star <= finalScore ? "#FFB300" : "#BDBDBD"} 
-                        strokeWidth={star <= finalScore ? 0 : 1.5}
-                    />
-                ))}
+            <div style={styles.timelineCard}>
+                <h3 style={styles.sectionTitleSmall}>Andamento do Processo</h3>
+                <div style={styles.timelineList}>
+                    {steps.map((step, index) => {
+                        let icon = <div style={styles.dotWaiting}></div>;
+                        let lineColor = '#E0E0E0';
+                        let textColor = '#90A4AE';
+
+                        if (step.status === "done") {
+                            icon = <CheckCircle2 size={20} color="#2E7D32" fill="#E8F5E9"/>;
+                            lineColor = '#2E7D32';
+                            textColor = '#37474F';
+                        } else if (step.status === "current") {
+                            icon = <div style={styles.dotCurrent}><div style={styles.pulse}></div></div>;
+                            lineColor = '#E0E0E0';
+                            textColor = '#1565C0';
+                        } else if (step.status === "approved") {
+                            icon = <CheckCircle2 size={20} color="#2E7D32" fill="#E8F5E9"/>;
+                            textColor = '#2E7D32';
+                        } else if (step.status === "rejected") {
+                            icon = <XCircle size={20} color="#C62828" fill="#FFEBEE"/>;
+                            textColor = '#C62828';
+                        }
+
+                        const showLine = index < steps.length - 1;
+
+                        return (
+                            <div key={step.id} style={styles.timelineItem}>
+                                <div style={styles.timelineIconCol}>
+                                    {icon}
+                                    {showLine && <div style={{...styles.timelineLine, backgroundColor: step.status === 'done' ? '#2E7D32' : '#E0E0E0'}}></div>}
+                                </div>
+                                <div style={styles.timelineContent}>
+                                    <span style={{...styles.stepTitle, color: textColor}}>{step.label}</span>
+                                    <span style={styles.stepDate}>{step.date}</span>
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
             </div>
         );
     };
@@ -127,265 +106,90 @@ const VisualizarMinhaProducao = () => {
 
                 <div style={{...styles.grid, flexDirection: isMobile ? 'column' : 'row'}}>
                     
-                    {/* --- COLUNA ESQUERDA: CONTEÚDO --- */}
+                    {/* --- COLUNA ESQUERDA: CONTEÚDO PRINCIPAL --- */}
                     <div style={styles.columnContent}>
                         <div style={styles.materialCard}>
                             
                             {/* Header */}
                             <div style={styles.headerSection}>
-                                <div style={styles.badgesRow}>
-                                    <span style={{...styles.badge, backgroundColor: theme.bg, color: theme.main}}>
-                                        {data.disciplina}
-                                    </span>
-                                    <span style={styles.badgeNeutral}>{data.nivel}</span>
+                                <div>
+                                    <div style={styles.badgesRow}>
+                                        <span style={{...styles.badge, backgroundColor: theme.bg, color: theme.main}}>{data.disciplina}</span>
+                                        <span style={styles.badgeNeutral}>{data.nivel_ensino || data.nivel}</span>
+                                    </div>
+                                    <h1 style={styles.title}>{data.titulo}</h1>
                                 </div>
-                                <h1 style={styles.title}>{data.titulo}</h1>
+                                
                                 <div style={styles.metaRow}>
                                     <div style={styles.iaTag}><Bot size={14} /> {data.modelo_ia}</div>
-                                    <span style={styles.dateText}><Calendar size={14} /> {data.data}</span>
-                                    <span style={styles.dateText}><User size={14} /> Autor: Prof. de {data.disciplina}</span>
+                                    <span style={styles.dateText}><User size={14} /> Autor: {data.autor || "Você"}</span>
                                 </div>
                             </div>
 
                             {/* Detalhes Técnicos */}
                             <div style={styles.techSheet}>
                                 <div style={styles.techItem}>
-                                    <div style={styles.iconCircle}><Wrench size={18} color={theme.main} /></div>
-                                    <div style={styles.techContent}>
-                                        <span style={{...styles.techLabel, color: theme.main}}>Metodologia</span>
-                                        <span style={styles.techValue}>{data.metodologia || '-'}</span>
-                                    </div>
+                                    <span style={styles.techLabel}>Metodologia</span>
+                                    <span style={styles.techValue}>{data.metodologia || '-'}</span>
                                 </div>
                                 <div style={styles.techItem}>
-                                    <div style={styles.iconCircle}><Clock size={18} color={theme.main} /></div>
-                                    <div style={styles.techContent}>
-                                        <span style={{...styles.techLabel, color: theme.main}}>Duração</span>
-                                        <span style={styles.techValue}>{data.duracao || '-'}</span>
-                                    </div>
+                                    <span style={styles.techLabel}>Duração</span>
+                                    <span style={styles.techValue}>{data.duracao || '-'}</span>
                                 </div>
                                 <div style={styles.techItem}>
-                                    <div style={styles.iconCircle}><Package size={18} color={theme.main} /></div>
-                                    <div style={styles.techContent}>
-                                        <span style={{...styles.techLabel, color: theme.main}}>Recursos</span>
-                                        <span style={styles.techValue}>{data.recursos || '-'}</span>
-                                    </div>
+                                    <span style={styles.techLabel}>Recursos</span>
+                                    <span style={styles.techValue}>{data.recursos || '-'}</span>
                                 </div>
                             </div>
 
-                            {/* BNCC */}
-                            <div style={styles.bnccBox}>
-                                <h4 style={styles.bnccTitle}><BookOpen size={16}/> Alinhamento BNCC</h4>
-                                <p style={styles.bnccText}>{data.bncc}</p>
-                            </div>
-
-                            {/* Conteúdo */}
-                            <div style={styles.section}>
-                                <h3 style={styles.sectionTitle}><Lightbulb size={20} color="#F57C00"/> Relato de Experiência</h3>
-                                <div style={styles.textBody}>{data.experiencia}</div>
-                            </div>
-                            <div style={styles.section}>
-                                <h3 style={styles.sectionTitle}><Target size={20} color="#2E7D32"/> Resultados</h3>
-                                <div style={styles.resultsBox}>{data.resultados}</div>
-                            </div>
-
-                            {/* --- LINHA DO TEMPO ESTILO RASTREIO --- */}
-                            <div style={styles.timelineSection}>
-                                <h3 style={styles.timelineMainTitle}>
-                                    <MapPin size={20} style={{marginRight:'8px'}}/> 
-                                    Rastreamento da Produção
-                                </h3>
-                                
-                                {/* PASSO 1: PRODUÇÃO POSTADA (ENVIO) */}
-                                <div style={styles.timelineItem}>
-                                    <div style={styles.timelineLeft}>
-                                        <div style={styles.timelineDot} />
-                                        <div style={styles.timelineLine} />
-                                    </div>
-                                    <div style={styles.timelineContent}>
-                                        <span style={styles.timelineDate}>{data.data}</span>
-                                        <h4 style={styles.timelineTitle}>Produção criada e enviada para análise</h4>
-                                        <p style={styles.timelineDesc}>Material postado pelo autor.</p>
-                                    </div>
-                                </div>
-
-                                {/* PASSO 2: AVALIAÇÃO (Sempre visível se já houve uma avaliação) */}
-                                {hasReviewHistory && (
-                                    <div style={styles.timelineItem}>
-                                        <div style={styles.timelineLeft}>
-                                            <div style={isApproved ? styles.timelineDotApproved : styles.timelineDotRejected}>
-                                                {isApproved ? <CheckCircle2 size={14} color="white"/> : <UserCog size={14} color="white"/>}
-                                            </div>
-                                            <div style={styles.timelineLine} />
-                                        </div>
-                                        
-                                        <div style={styles.timelineContent}>
-                                            <span style={styles.timelineDate}>
-                                                {data.data_revisao ? `Avaliado em: ${data.data_revisao}` : "Data da Avaliação"}
-                                            </span>
-                                            
-                                            <div style={isApproved ? styles.reviewCardApproved : styles.reviewCardRejected}>
-                                                <div style={styles.reviewHeader}>
-                                                    <span style={isApproved ? styles.statusTitleApprovedInline : styles.statusTitleRejectedInline}>
-                                                        {isApproved ? "APROVADO NA ANÁLISE TÉCNICA" : "PARECER DO REVISOR: NECESSITA AJUSTES"}
-                                                    </span>
-                                                </div>
-
-                                                {/* Rubrica */}
-                                                {data.notas && (
-                                                    <div style={styles.rubricGrid}>
-                                                        <div style={styles.rubricItem}><span>Coerência</span><StarRating score={data.notas.coerencia} /></div>
-                                                        <div style={styles.rubricItem}><span>Didática</span><StarRating score={data.notas.qualidade} /></div>
-                                                        <div style={styles.rubricItem}><span>Metodologia</span><StarRating score={data.notas.metodologia} /></div>
-                                                        <div style={styles.rubricItem}><span>Avaliação</span><StarRating score={data.notas.avaliacao} /></div>
-                                                        <div style={styles.rubricItem}><span>Inclusão</span><StarRating score={data.notas.inclusao} /></div>
-                                                        <div style={styles.rubricItem}><span>Inovação</span><StarRating score={data.notas.inovacao} /></div>
-                                                    </div>
-                                                )}
-
-                                                {/* Comentários */}
-                                                {feedbackData && feedbackData.strengths && (
-                                                    <div style={styles.feedbackSectionGreen}>
-                                                        <strong style={{fontSize:'11px', color: '#1B5E20', display:'block'}}>PONTOS FORTES:</strong>
-                                                        <span style={styles.feedbackTextGreen}>"{feedbackData.strengths}"</span>
-                                                    </div>
-                                                )}
-                                                {feedbackData && feedbackData.improvements && (
-                                                    <div style={styles.feedbackSectionYellow}>
-                                                        <strong style={{fontSize:'11px', color: '#E65100', display:'block'}}>MELHORIAS SUGERIDAS:</strong>
-                                                        <span style={styles.feedbackTextYellow}>"{feedbackData.improvements}"</span>
-                                                    </div>
-                                                )}
-                                                {feedbackData && feedbackData.general && (
-                                                    <div style={styles.reviewFeedbackBox}>"{feedbackData.general}"</div>
-                                                )}
-                                            </div>
-                                        </div>
-                                    </div>
-                                )}
-
-                                {/* PASSO 3: DEVOLUÇÃO (Aparece se foi rejeitado OU se já foi reenviado - HISTÓRICO) */}
-                                {(isRejected || isResubmitted) && (
-                                    <div style={styles.timelineItem}>
-                                        <div style={styles.timelineLeft}>
-                                            <div style={{...styles.timelineDotRejected, backgroundColor: '#C62828', zIndex: 3}}>
-                                                <CornerDownRight size={14} color="white"/>
-                                            </div>
-                                            {/* Se foi reenviado, a linha continua para o próximo passo */}
-                                            {isResubmitted && <div style={{...styles.timelineLine, backgroundColor: '#90CAF9'}} />}
-                                        </div>
-                                        <div style={{...styles.timelineContent, paddingTop: '5px'}}>
-                                            <span style={{...styles.timelineDate, color: '#C62828'}}>
-                                                {data.data_revisao ? data.data_revisao : "---"}
-                                            </span>
-                                            <h4 style={{...styles.timelineTitle, color: '#C62828'}}>
-                                                Produção devolvida ao autor para correção
-                                            </h4>
-                                            <p style={styles.timelineDesc}>
-                                                A produção retornou para a caixa de entrada do autor aguardando edição.
-                                            </p>
-                                        </div>
-                                    </div>
-                                )}
-
-                                {/* PASSO 4: REENVIO (Só aparece se o autor já reenviou) */}
-                                {isResubmitted && (
-                                    <div style={styles.timelineItem}>
-                                        <div style={styles.timelineLeft}>
-                                            <div style={{...styles.timelineDotApproved, backgroundColor: '#1565C0', boxShadow: '0 0 0 4px #E3F2FD'}}>
-                                                <Send size={14} color="white"/>
-                                            </div>
-                                        </div>
-                                        <div style={{...styles.timelineContent, paddingTop: '5px'}}>
-                                            <span style={{...styles.timelineDate, color: '#1565C0'}}>Em trânsito</span>
-                                            <div style={{backgroundColor: '#E3F2FD', padding: '15px', borderRadius: '8px', border: '1px solid #BBDEFB'}}>
-                                                <h4 style={{...styles.timelineTitle, color: '#0D47A1', fontSize: '15px', display:'flex', alignItems:'center', gap:'8px'}}>
-                                                    <RefreshCw size={16}/> Produção reenviada para nova análise
-                                                </h4>
-                                                <p style={{...styles.timelineDesc, color: '#1565C0', marginTop: '5px'}}>
-                                                    O material atualizado foi postado novamente e aguarda a avaliação de um outro professor da comunidade.
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                )}
-
-                            </div>
-                            {/* ------------------------------------------------ */}
+                            <div style={styles.section}><h3 style={styles.sectionTitle}><BookOpen size={18}/> Intencionalidade (BNCC)</h3><p style={styles.textBody}>{data.bncc}</p></div>
+                            <div style={styles.section}><h3 style={styles.sectionTitle}><Lightbulb size={18}/> Relato de Experiência</h3><p style={styles.textBody}>{data.experiencia || data.relato}</p></div>
+                            <div style={styles.section}><h3 style={styles.sectionTitle}><Target size={18}/> Resultados</h3><div style={styles.resultsBox}>{data.resultados || "Sem resultados registrados."}</div></div>
+                            
+                            {/* --- PARECER TÉCNICO INSERIDO AQUI --- */}
+                            {/* Passamos o objeto inteiro 'data' pois ele já contém os campos 'notas', 'revisao_realizada' e 'feedback_texto' vindos da API */}
+                            <ParecerTecnico producao={data} />
 
                         </div>
                     </div>
 
-                    {/* --- COLUNA DIREITA: STATUS E AÇÕES --- */}
+                    {/* --- COLUNA DIREITA: TIMELINE & DOWNLOAD --- */}
                     <div style={styles.columnSidebar}>
                         
-                        <div style={styles.sidebarCard}>
-                            <h3 style={styles.sidebarTitle}>Status da Produção</h3>
+                        {/* 1. TIMELINE CARD */}
+                        <TimelineCard />
 
-                            {isApproved && (
-                                <div style={styles.statusBoxApproved}>
-                                    <CheckCircle2 size={24} color="#2E7D32" />
-                                    <div>
-                                        <span style={styles.statusTitleApproved}>ENTREGUE</span>
-                                        <p style={styles.statusDesc}>Publicado na comunidade.</p>
-                                    </div>
-                                </div>
-                            )}
+                        {/* 2. AÇÕES EXTRAS (Se rejeitado) */}
+                        {isRejected && (
+                            <button onClick={() => navigate(`/dashboard/editar-producao/${data.id}`)} style={styles.editButton}>
+                                <Wrench size={16} /> Realizar Correções
+                            </button>
+                        )}
 
-                            {isResubmitted && (
-                                <div style={{...styles.statusBoxPending, backgroundColor: '#E3F2FD', border: '1px solid #90CAF9'}}>
-                                    <RefreshCw size={24} color="#1976D2" />
-                                    <div>
-                                        <span style={{...styles.statusTitlePending, color: '#1565C0'}}>REENVIADO</span>
-                                        <p style={styles.statusDesc}>Aguardando nova análise.</p>
-                                    </div>
-                                </div>
-                            )}
-
-                            {!isApproved && !isRejected && !isResubmitted && (
-                                <div style={styles.statusBoxPending}>
-                                    <Clock size={24} color="#EF6C00" />
-                                    <div>
-                                        <span style={styles.statusTitlePending}>EM TRÂNSITO</span>
-                                        <p style={styles.statusDesc}>Na fila de revisão.</p>
-                                    </div>
-                                </div>
-                            )}
-
-                            {isRejected && (
-                                <div style={styles.statusBoxRejected}>
-                                    <div style={{display:'flex', alignItems:'center', gap:'8px', marginBottom:'10px'}}>
-                                        <XCircle size={20} color="#C62828" />
-                                        <span style={styles.statusTitleRejected}>DEVOLVIDO</span>
-                                    </div>
-                                    <p style={styles.statusDesc}>
-                                        Ação necessária: Corrigir e reenviar.
-                                    </p>
-                                    
-                                    <button 
-                                        onClick={() => navigate(`/dashboard/editar-producao/${data.id}`)}
-                                        style={styles.editButton}
-                                    >
-                                        <Wrench size={18} /> Editar e Reenviar
-                                    </button>
-                                </div>
-                            )}
-                        </div>
-
+                        {/* 3. CARD DE ARQUIVO */}
                         <div style={{...styles.sidebarCard, marginTop: '20px'}}>
                             <h3 style={styles.sidebarTitle}>Arquivo</h3>
                             {data.arquivo ? (
-                                <div style={styles.filePreview}>
-                                    <div style={styles.fileIconBig}><FileText size={24} color="#1565C0" /></div>
-                                    <div style={{flex:1, overflow:'hidden'}}>
-                                        <span style={styles.fileName}>Material Didático</span>
-                                        <span style={styles.fileMeta}>Baixar anexo</span>
+                                <div style={styles.downloadContainer}>
+                                    <div style={styles.fileInfoBox}>
+                                        <FileText size={32} color="#1565C0" style={{flexShrink: 0}} />
+                                        <div style={{overflow: 'hidden'}}>
+                                            <span style={styles.fileName}>{decodeURIComponent(data.arquivo.split('/').pop())}</span>
+                                            <span style={styles.fileType}>Documento PDF/DOCX</span>
+                                        </div>
                                     </div>
-                                    <a href={data.arquivo} download target="_blank" rel="noopener noreferrer">
-                                        <button style={styles.downloadBtn}><Download size={18} /></button>
+                                    <a href={data.arquivo} download target="_blank" rel="noopener noreferrer" style={{textDecoration: 'none'}}>
+                                        <button style={styles.downloadBtnPrimary}>
+                                            <Download size={18} />
+                                            Baixar Material
+                                        </button>
                                     </a>
                                 </div>
                             ) : (
-                                <p style={{fontSize: '13px', color: '#999', fontStyle: 'italic'}}>Nenhum arquivo.</p>
+                                <div style={styles.emptyState}>
+                                    <File size={24} color="#CFD8DC"/>
+                                    <p>Nenhum arquivo anexado.</p>
+                                </div>
                             )}
                         </div>
 
@@ -396,100 +200,182 @@ const VisualizarMinhaProducao = () => {
     );
 };
 
-// --- ESTILOS ---
+// --- COMPONENTE INTERNO DE PARECER TÉCNICO ---
+// Mantendo a identidade visual da página
+const ParecerTecnico = ({ producao }) => {
+    // 1. Verificações de segurança
+    if (!producao) return null;
+
+    // Se a API retornar 'revisao_realizada', usamos. 
+    // Senão, checamos se existe alguma nota > 0 manualmente (fallback).
+    const temRevisao = producao.revisao_realizada || (producao.notas && producao.notas.coerencia > 0) || producao.nota_coerencia > 0;
+    
+    if (!temRevisao) return null;
+
+    // 2. Normalização dos dados (caso venham da raiz ou do objeto 'notas')
+    // Ajuste conforme seu backend retorna (o exemplo anterior retornava dentro de 'notas')
+    const notas = producao.notas || {
+        coerencia: producao.nota_coerencia,
+        qualidade: producao.nota_qualidade,
+        metodologia: producao.nota_metodologia,
+        avaliacao: producao.nota_avaliacao,
+        inclusao: producao.nota_inclusao,
+        inovacao: producao.nota_inovacao
+    };
+
+    // Feedback de texto: tenta usar o campo formatado ou o bruto
+    const feedbackTexto = producao.feedback_texto || producao.feedback_revisor || producao.feedback_revisao;
+    
+    // Status visual
+    const statusLower = producao.status ? producao.status.toLowerCase() : "";
+    const isAprovado = statusLower.includes('aprovado') || statusLower.includes('concluído') || producao.is_aprovado;
+
+    // ESTILOS LOCAIS DO PARECER
+    const pStyles = {
+        container: {
+            marginTop: '40px',
+            borderTop: '1px solid #E0E0E0',
+            paddingTop: '30px'
+        },
+        headerTitle: {
+            fontSize: '18px', fontWeight: '800', color: '#37474F', marginBottom: '20px',
+            display: 'flex', alignItems: 'center', gap: '10px'
+        },
+        statusBadge: {
+            fontSize: '12px', fontWeight: '800', padding: '6px 12px', borderRadius: '20px',
+            backgroundColor: isAprovado ? '#E8F5E9' : '#FFEBEE',
+            color: isAprovado ? '#2E7D32' : '#C62828',
+            display: 'inline-flex', alignItems: 'center', gap: '6px', marginBottom: '20px'
+        },
+        grid: {
+            display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '15px 30px', marginBottom: '25px'
+        },
+        scoreRow: {
+            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+            borderBottom: '1px solid #F5F5F5', paddingBottom: '8px'
+        },
+        label: { fontSize: '13px', color: '#546E7A', fontWeight: '600' },
+        stars: { display: 'flex', alignItems: 'center' },
+        val: { fontSize: '13px', fontWeight: '800', marginLeft: '8px', minWidth: '24px', textAlign: 'right' },
+        
+        feedbackBox: {
+            backgroundColor: '#FAFAFA', borderRadius: '8px', padding: '20px', borderLeft: '4px solid #90A4AE'
+        },
+        feedbackTitle: { fontSize: '14px', fontWeight: '700', color: '#455A64', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '8px' },
+        feedbackText: { fontSize: '14px', lineHeight: '1.6', color: '#37474F', whiteSpace: 'pre-wrap' } // Importante para quebra de linha
+    };
+
+    // Componente Helper de Estrela
+    const ScoreItem = ({ label, valor }) => (
+        <div style={pStyles.scoreRow}>
+            <span style={pStyles.label}>{label}</span>
+            <div style={pStyles.stars}>
+                {[1, 2, 3, 4, 5].map(v => (
+                    <Star 
+                        key={v} size={14} 
+                        fill={v <= valor ? (valor <= 2 ? "#EF5350" : "#FFB300") : "#E0E0E0"} 
+                        color="transparent" 
+                        style={{ marginRight: 2 }}
+                    />
+                ))}
+                <span style={{...pStyles.val, color: valor <= 2 ? '#D32F2F' : '#2E7D32'}}>{valor}/5</span>
+            </div>
+        </div>
+    );
+
+    return (
+        <div style={pStyles.container}>
+            <div style={{display:'flex', justifyContent:'space-between', alignItems:'flex-start'}}>
+                <h3 style={pStyles.headerTitle}>
+                    <BarChart3 size={20} color="#1565C0" />
+                    Parecer Técnico da Curadoria
+                </h3>
+                <div style={pStyles.statusBadge}>
+                    {isAprovado ? <><CheckCircle2 size={14}/> APROVADO</> : <><ShieldAlert size={14}/> AJUSTES NECESSÁRIOS</>}
+                </div>
+            </div>
+
+            {/* Grid de Notas */}
+            <div style={pStyles.grid}>
+                <ScoreItem label="Coerência Pedagógica" valor={notas.coerencia} />
+                <ScoreItem label="Qualidade do Prompt" valor={notas.qualidade} />
+                <ScoreItem label="Metodologia Ativa" valor={notas.metodologia} />
+                <ScoreItem label="Critérios de Avaliação" valor={notas.avaliacao} />
+                <ScoreItem label="Inclusão e Acessibilidade" valor={notas.inclusao} />
+                <ScoreItem label="Grau de Inovação" valor={notas.inovacao} />
+            </div>
+
+            {/* Texto de Feedback */}
+            {feedbackTexto && (
+                <div style={pStyles.feedbackBox}>
+                    <div style={pStyles.feedbackTitle}>
+                        <FileText size={16} /> Detalhes da Análise:
+                    </div>
+                    <div style={pStyles.feedbackText}>
+                        {feedbackTexto}
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+};
+
+// --- ESTILOS GERAIS DA PÁGINA ---
 const styles = {
     fullPageWrapper: { backgroundColor: '#F0F2F5', minHeight: '100vh', width: '100%', boxSizing: 'border-box', paddingTop: '20px' },
-    container: { maxWidth: '1200px', margin: '0 auto', padding: '0 20px 40px 20px' },
+    container: { maxWidth: '1100px', margin: '0 auto', padding: '0 20px 40px 20px' },
     backButton: { display: 'flex', alignItems: 'center', gap: '6px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '14px', color: '#546E7A', fontWeight: '700', marginBottom: '15px' },
     
     grid: { display: 'flex', gap: '20px', alignItems: 'flex-start' },
     columnContent: { flex: 1, minWidth: '0' }, 
-    columnSidebar: { width: '320px', minWidth: '320px', position: 'sticky', top: '20px' },
+    columnSidebar: { width: '300px', minWidth: '300px', position: 'sticky', top: '20px' },
 
-    materialCard: { backgroundColor: '#FFFFFF', borderRadius: '12px', padding: '40px', boxShadow: '0 2px 5px rgba(0,0,0,0.05)', border: '1px solid #E0E0E0' },
+    materialCard: { backgroundColor: '#FFFFFF', borderRadius: '12px', padding: '35px', boxShadow: '0 2px 5px rgba(0,0,0,0.05)', border: '1px solid #E0E0E0' },
     
-    headerSection: { marginBottom: '20px', borderBottom: '1px solid #F0F0F0', paddingBottom: '20px' },
-    badgesRow: { display: 'flex', gap: '8px', marginBottom: '10px', flexWrap: 'wrap' },
+    headerSection: { marginBottom: '25px' },
+    badgesRow: { display: 'flex', gap: '8px', marginBottom: '8px' },
     badge: { padding: '4px 10px', borderRadius: '6px', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase' },
     badgeNeutral: { backgroundColor: '#F5F5F5', color: '#616161', padding: '4px 10px', borderRadius: '6px', fontSize: '11px', fontWeight: '700' },
-    title: { fontSize: '28px', fontWeight: '800', color: '#1A237E', margin: '0 0 10px 0', lineHeight: '1.2', wordBreak: 'break-word', overflowWrap: 'break-word' },
-    metaRow: { display: 'flex', alignItems: 'center', gap: '15px', marginTop: '10px', flexWrap: 'wrap' },
-    iaTag: { display:'flex', alignItems: 'center', gap: '5px', fontSize: '12px', color: '#546E7A', backgroundColor: '#F5F5F5', padding: '4px 8px', borderRadius: '6px' },
+    title: { fontSize: '26px', fontWeight: '800', color: '#1A237E', margin: 0, lineHeight: '1.2' },
+    metaRow: { display: 'flex', alignItems: 'center', gap: '15px', marginTop: '12px' },
+    iaTag: { display:'flex', alignItems: 'center', gap: '5px', fontSize: '12px', color: '#546E7A', backgroundColor: '#F5F5F5', padding: '4px 8px', borderRadius: '6px', fontWeight: '600' },
     dateText: { display:'flex', alignItems: 'center', gap: '5px', fontSize: '12px', color: '#90A4AE' },
 
-    techSheet: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px', marginBottom: '30px' },
-    techItem: { display: 'flex', alignItems: 'flex-start', gap: '10px' },
-    techContent: { flex: 1, minWidth: '0' },
-    iconCircle: { width: '32px', height: '32px', borderRadius: '50%', backgroundColor: '#F5F7FA', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
-    techLabel: { display: 'block', fontSize: '10px', textTransform: 'uppercase', fontWeight: '800', marginBottom: '2px' },
-    techValue: { fontSize: '13px', color: '#37474F', fontWeight: '600', wordBreak: 'break-word', overflowWrap: 'break-word' },
+    techSheet: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '15px', marginBottom: '30px', padding: '15px', backgroundColor: '#FAFAFA', borderRadius: '8px' },
+    techItem: { display: 'flex', flexDirection: 'column' },
+    techLabel: { fontSize: '10px', textTransform: 'uppercase', color: '#90A4AE', fontWeight: '700' },
+    techValue: { fontSize: '13px', color: '#37474F', fontWeight: '600' },
 
-    bnccBox: { backgroundColor: '#FFF8E1', borderLeft: '4px solid #FFC107', padding: '15px', borderRadius: '6px', marginBottom: '30px' },
-    bnccTitle: { margin: '0 0 5px 0', fontSize: '12px', color: '#EF6C00', display: 'flex', alignItems: 'center', gap: '6px', fontWeight: '800' },
-    bnccText: { margin: 0, fontSize: '14px', color: '#3E2723', lineHeight: '1.5', wordBreak: 'break-word', overflowWrap: 'break-word', whiteSpace: 'pre-wrap' },
-    
     section: { marginBottom: '30px' },
-    sectionTitle: { fontSize: '16px', fontWeight: '800', color: '#37474F', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '8px' },
-    textBody: { fontSize: '15px', lineHeight: '1.6', color: '#455A64', whiteSpace: 'pre-wrap', wordBreak: 'break-word', overflowWrap: 'break-word' },
-    resultsBox: { backgroundColor: '#E8F5E9', padding: '15px', borderRadius: '8px', border: '1px solid #C8E6C9', color: '#1B5E20', fontSize: '14px', fontStyle: 'italic', wordBreak: 'break-word', overflowWrap: 'break-word' },
+    sectionTitle: { fontSize: '16px', fontWeight: '800', color: '#37474F', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' },
+    textBody: { fontSize: '15px', lineHeight: '1.6', color: '#455A64' },
+    resultsBox: { backgroundColor: '#E8F5E9', padding: '15px', borderRadius: '8px', borderLeft: '4px solid #1565C0', color: '#333', fontSize: '14px', fontStyle: 'italic' },
 
     // --- TIMELINE STYLES ---
-    timelineSection: { marginTop: '50px', borderTop: '2px dashed #E0E0E0', paddingTop: '30px' },
-    timelineMainTitle: { fontSize: '18px', fontWeight: '800', color: '#37474F', marginBottom: '25px', display:'flex', alignItems:'center' },
-    
-    timelineItem: { display: 'flex', gap: '15px', marginBottom: '20px', position: 'relative' },
-    
-    timelineLeft: { display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: '24px' },
-    timelineDot: { width: '12px', height: '12px', borderRadius: '50%', backgroundColor: '#B0BEC5', zIndex: 2, marginTop: '2px' },
-    timelineDotRejected: { width: '24px', height: '24px', borderRadius: '50%', backgroundColor: '#C62828', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2 },
-    timelineDotApproved: { width: '24px', height: '24px', borderRadius: '50%', backgroundColor: '#2E7D32', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2 },
-    timelineLine: { width: '2px', flex: 1, backgroundColor: '#E0E0E0', marginTop: '5px', minHeight: '30px' },
-    
-    timelineContent: { flex: 1, paddingBottom: '20px', minWidth: '0' },
-    timelineDate: { fontSize: '11px', color: '#90A4AE', fontWeight: '600', display: 'block', marginBottom: '4px' },
-    timelineTitle: { fontSize: '14px', fontWeight: '700', color: '#455A64', margin: '0 0 4px 0' },
-    timelineDesc: { fontSize: '13px', color: '#546E7A', marginTop: '2px', lineHeight: '1.4' },
+    timelineCard: { backgroundColor: 'white', border: '1px solid #E0E0E0', borderRadius: '12px', padding: '20px', boxShadow: '0 2px 5px rgba(0,0,0,0.03)' },
+    sectionTitleSmall: { fontSize: '12px', textTransform: 'uppercase', color: '#90A4AE', fontWeight: '800', marginBottom: '15px' },
+    timelineList: { display: 'flex', flexDirection: 'column' },
+    timelineItem: { display: 'flex', gap: '12px', minHeight: '50px' },
+    timelineIconCol: { display: 'flex', flexDirection: 'column', alignItems: 'center', width: '24px' },
+    timelineLine: { width: '2px', flex: 1, backgroundColor: '#E0E0E0', margin: '4px 0' },
+    dotWaiting: { width: '12px', height: '12px', borderRadius: '50%', backgroundColor: '#E0E0E0', border: '2px solid #FFF', boxShadow: '0 0 0 1px #B0BEC5' },
+    dotCurrent: { width: '14px', height: '14px', borderRadius: '50%', backgroundColor: '#1565C0', border: '2px solid #E3F2FD', position: 'relative' },
+    timelineContent: { paddingBottom: '20px' },
+    stepTitle: { display: 'block', fontSize: '13px', fontWeight: '700', lineHeight: '1.2' },
+    stepDate: { fontSize: '11px', color: '#90A4AE' },
 
-    // REVIEW CARDS
-    reviewCardRejected: { backgroundColor: '#FFEBEE', border: '1px solid #FFCDD2', borderRadius: '8px', padding: '20px', marginTop: '10px' },
-    reviewCardApproved: { backgroundColor: '#E8F5E9', border: '1px solid #C8E6C9', borderRadius: '8px', padding: '20px', marginTop: '10px' },
-    
-    reviewHeader: { display: 'flex', justifyContent: 'space-between', marginBottom: '15px', alignItems: 'center' },
-    statusTitleApprovedInline: { fontSize: '12px', fontWeight: '900', color: '#2E7D32', textTransform: 'uppercase' },
-    statusTitleRejectedInline: { fontSize: '12px', fontWeight: '900', color: '#C62828', textTransform: 'uppercase' },
-    
-    rubricGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '10px', marginBottom: '20px', paddingBottom: '15px', borderBottom: '1px solid rgba(0,0,0,0.05)' },
-    rubricItem: { display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '11px', color: '#555', fontWeight: '600' },
-    
-    feedbackSectionGreen: { backgroundColor: 'rgba(255,255,255,0.7)', padding: '12px', borderRadius: '6px', marginBottom: '10px', borderLeft: '3px solid #2E7D32' },
-    feedbackTextGreen: { fontSize: '13px', color: '#1B5E20', margin: 0, fontStyle: 'italic', wordBreak: 'break-word' },
-    
-    feedbackSectionYellow: { backgroundColor: 'rgba(255,255,255,0.7)', padding: '12px', borderRadius: '6px', borderLeft: '3px solid #EF6C00' },
-    feedbackTextYellow: { fontSize: '13px', color: '#E65100', margin: 0, fontStyle: 'italic', wordBreak: 'break-word' },
+    // SIDEBAR CARDS
+    sidebarCard: { backgroundColor: 'white', border: '1px solid #E0E0E0', borderRadius: '12px', padding: '20px' },
+    sidebarTitle: { margin: '0 0 15px 0', fontSize: '12px', textTransform: 'uppercase', fontWeight: '800', color: '#90A4AE', borderBottom: '1px solid #F5F5F5', paddingBottom: '8px' },
+    editButton: { marginTop: '12px', width: '100%', padding: '10px', backgroundColor: '#C62828', color: 'white', border: 'none', borderRadius: '6px', fontWeight: '700', fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' },
 
-    reviewFeedbackBox: { backgroundColor: 'rgba(255,255,255,0.7)', padding: '12px', borderRadius: '6px', fontSize: '13px', color: '#333', lineHeight: '1.5', fontStyle: 'italic', borderLeft: '3px solid #999' },
-
-    // Sidebar
-    sidebarCard: { backgroundColor: 'white', border: '1px solid #E0E0E0', borderRadius: '12px', padding: '20px', boxShadow: '0 2px 5px rgba(0,0,0,0.05)' },
-    sidebarTitle: { margin: '0 0 15px 0', fontSize: '12px', textTransform: 'uppercase', fontWeight: '800', color: '#90A4AE', borderBottom: '1px solid #EEE', paddingBottom: '8px' },
-    
-    statusBoxApproved: { display: 'flex', alignItems: 'center', gap: '12px', padding: '15px', backgroundColor: '#E8F5E9', borderRadius: '8px', border: '1px solid #C8E6C9' },
-    statusTitleApproved: { display: 'block', fontSize: '14px', fontWeight: '900', color: '#2E7D32', marginBottom: '2px' },
-    
-    statusBoxPending: { display: 'flex', alignItems: 'center', gap: '12px', padding: '15px', backgroundColor: '#FFF3E0', borderRadius: '8px', border: '1px solid #FFE0B2' },
-    statusTitlePending: { display: 'block', fontSize: '14px', fontWeight: '900', color: '#EF6C00', marginBottom: '2px' },
-    
-    statusBoxRejected: { padding: '15px', backgroundColor: '#FFEBEE', borderRadius: '8px', border: '1px solid #FFCDD2' },
-    statusTitleRejected: { fontSize: '13px', fontWeight: '900', color: '#C62828' },
-    statusDesc: { fontSize: '11px', color: '#546E7A', margin: 0 },
-    
-    editButton: { marginTop: '15px', width: '100%', padding: '12px', backgroundColor: '#C62828', color: 'white', border: 'none', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontSize: '14px', boxShadow: '0 2px 5px rgba(198, 40, 40, 0.3)' },
-    
-    filePreview: { display: 'flex', alignItems: 'center', gap: '10px', padding: '12px', backgroundColor: '#E3F2FD', borderRadius: '8px', border: '1px solid #BBDEFB' },
-    fileIconBig: { backgroundColor: 'white', padding: '6px', borderRadius: '6px' },
-    fileName: { display: 'block', fontSize: '12px', fontWeight: '700', color: '#1565C0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' },
-    fileMeta: { fontSize: '10px', color: '#546E7A' },
-    downloadBtn: { background: 'white', border: 'none', color: '#1565C0', cursor: 'pointer', width: '32px', height: '32px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' },
+    // DOWNLOAD
+    downloadContainer: { display: 'flex', flexDirection: 'column', gap: '15px' },
+    fileInfoBox: { display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', backgroundColor: '#F8F9FA', borderRadius: '8px', border: '1px solid #E0E0E0' },
+    fileName: { display: 'block', fontSize: '13px', fontWeight: '700', color: '#333', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%' },
+    fileType: { fontSize: '11px', color: '#90A4AE' },
+    downloadBtnPrimary: { backgroundColor: '#1565C0', color: 'white', border: 'none', width: '100%', padding: '12px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', cursor: 'pointer', fontSize: '14px', fontWeight: '700', boxShadow: '0 4px 12px rgba(21, 101, 192, 0.2)', transition: 'background 0.2s' },
+    emptyState: { textAlign: 'center', padding: '15px', color: '#B0BEC5', fontSize: '13px', fontStyle: 'italic', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '5px' }
 };
 
 export default VisualizarMinhaProducao;
