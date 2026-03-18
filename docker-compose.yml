@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  teia-backend:
+    build: ./backend
+    env_file:
+      - .env
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./dados_db:/app/database
+      - ./static_files:/app/staticfiles
+      - ./media_files:/app/kipo_playground/media
+    restart: always
+
+  teia-frontend:
+    build: ./frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - teia-backend
+    restart: always
