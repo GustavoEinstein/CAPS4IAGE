@@ -13,6 +13,7 @@ import {
     Eye,
     EyeOff,
     BookOpen,
+    School,
     Users // Ícone novo para a troca de experiências
 } from 'lucide-react';
 

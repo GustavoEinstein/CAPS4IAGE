@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // Cria uma instância padrão do Axios
 const api = axios.create({
-    baseURL: 'http://teia.cic.unb.br/kipo_playground/', // Sua URL base
+    baseURL: 'http://127.0.0.1:8000/kipo_playground/', // Sua URL base
 });
 
 // 1. INTERCEPTOR DE REQUISIÇÃO (Envia o Token automaticamente)
