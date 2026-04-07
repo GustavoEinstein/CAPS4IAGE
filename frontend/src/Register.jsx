@@ -30,7 +30,10 @@ const Register = () => {
     const disciplinas = [
         'História', 'Matemática', 'Geografia', 'Português', 'Ciências',
         'Física', 'Química', 'Biologia', 'Inglês', 'Artes',
-        'Educação Física', 'Filosofia', 'Sociologia', 'Pedagogia', 'Projeto de vida',  'Outra'
+        'Educação Física', 'Filosofia', 'Sociologia', 'Pedagogia', 'Projeto de vida',  'Computação'
+    ];
+    const escolas = [
+        'Universidade de Brasília', 'CEMI-Gama'
     ];
     
     const [error, setError] = useState('');
@@ -50,21 +53,35 @@ const Register = () => {
         e.preventDefault();
         setError('');
 
-        const pwd = formData.password;
+const pwd = formData.password;
 
         // --- VALIDAÇÃO DE SEGURANÇA ---
+        
+        // 1. Mínimo de 8 caracteres
         if (pwd.length < 8) {
             setError('A senha precisa ter no mínimo 8 caracteres.');
             return;
         }
-        if (/^\d+$/.test(pwd)) {
-            setError('A senha não pode ser composta apenas por números.');
+
+        // 2. Pelo menos 1 letra maiúscula
+        if (!/[A-Z]/.test(pwd)) {
+            setError('A senha precisa ter pelo menos uma letra maiúscula.');
             return;
         }
+
+        // 3. Pelo menos 1 símbolo/caractere especial
+        // Você pode adicionar mais símbolos dentro dos colchetes se precisar
+        if (!/[!@#$%^&*(),.?":{}|<>]/.test(pwd)) {
+            setError('A senha precisa ter pelo menos um símbolo especial (ex: !@#$%^&*).');
+            return;
+        }
+
+        // 4. Confirmação de senha
         if (pwd !== formData.confirmPassword) {
             setError('As senhas não coincidem.');
             return;
         }
+
         // Validação extra: Disciplina é obrigatória
         if (!formData.disciplina) {
             setError('Por favor, selecione sua área de atuação.');
@@ -182,6 +199,27 @@ const Register = () => {
                                         required 
                                     />
                                 </div>
+                            </div>
+                        </div>
+                        {/* ESCOLA */}
+                        <div style={styles.inputGroup}>
+                            <label style={styles.label}>Sua Escola</label>
+                            <div style={styles.inputWrapper}>
+                                <School size={18} color="#64748B" />
+                                <select 
+                                    name="disciplina"
+                                    value={formData.escola} 
+                                    onChange={handleChange}
+                                    style={styles.select}
+                                    required
+                                >
+                                    <option value="" disabled>Selecione a escola onde atua</option>
+                                    {escolas.map(escola => (
+                                        <option key={escola} value={escola}>
+                                            {escola}
+                                        </option>
+                                    ))}
+                                </select>
                             </div>
                         </div>
 
