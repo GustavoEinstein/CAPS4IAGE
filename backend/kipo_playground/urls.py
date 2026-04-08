@@ -2,7 +2,7 @@
 
 from django.urls import path
 from . import views
-from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+from rest_framework_simplejwt.views import TokenRefreshView
 from django.conf import settings
 from django.conf.urls.static import static
 
@@ -13,12 +13,13 @@ urlpatterns = [
     # ============================================================================
     
     # --- AUTENTICAÇÃO ---
-    path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    # ATUALIZADO: Agora aponta para a view customizada que bloqueia contas não aprovadas
+    path('api/token/', views.CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('api/register/', views.api_register_user, name='register_user'),
 
     # --- PERFIL DO USUÁRIO ---
-    # AQUI ESTÁ A CORREÇÃO: Mantive api/user/me/ pois é o que o seu Login.jsx pede
+    # Mantive api/user/me/ pois é o que o seu Login.jsx pede
     path('api/user/me/', views.api_user_profile, name='user_profile'),
 
     # --- RECUPERAÇÃO DE SENHA ---
@@ -41,6 +42,12 @@ urlpatterns = [
 
     # --- LEGADO (API) ---
     path('api/ontology/cycles/', views.api_listar_ciclos, name='list_cycles'),
+
+    # ============================================================================
+    # 3. ROTAS DE ADMINISTRAÇÃO (APROVAÇÃO DE CONTAS) - NOVO
+    # ============================================================================
+    path('api/admin/pending-users/', views.api_list_pending_users, name='pending_users'),
+    path('api/admin/approve-user/<int:user_id>/', views.api_approve_reject_user, name='approve_user'),
 ]
 
 if settings.DEBUG:

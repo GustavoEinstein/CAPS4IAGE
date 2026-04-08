@@ -64,8 +64,16 @@ const Login = () => {
       // Salva os dados importantes no localStorage
       localStorage.setItem("user_name", userResponse.data.username)
       localStorage.setItem("user_disciplina", userResponse.data.disciplina)
+      
       if (userResponse.data.avatar) {
         localStorage.setItem("user_avatar", userResponse.data.avatar)
+      }
+
+      // NOVO: Salva no localStorage se o usuário logado é superadmin
+      if (userResponse.data.is_superuser) {
+        localStorage.setItem("is_superuser", "true")
+      } else {
+        localStorage.removeItem("is_superuser") // Garante que não fique sujo de um login anterior
       }
 
       // Dispara evento para atualizar o cabeçalho imediatamente (se houver listeners)
@@ -78,7 +86,13 @@ const Login = () => {
       if (err.code === "ERR_NETWORK") {
         setError("Erro de conexão. Verifique se o servidor está rodando.")
       } else if (err.response && err.response.status === 401) {
-        setError("Usuário ou senha incorretos.")
+        // AQUI ESTÁ A ALTERAÇÃO: Captura a mensagem customizada do backend se houver
+        const detailMessage = err.response.data.detail;
+        if (detailMessage) {
+            setError(detailMessage); // Ex: "Sua conta está em análise..."
+        } else {
+            setError("Usuário ou senha incorretos.");
+        }
       } else {
         setError("Ocorreu um erro inesperado.")
       }
@@ -131,7 +145,7 @@ const Login = () => {
             </div>
           </div>
 
-          {/* Link de Esqueci a Senha - NOVO */}
+          {/* Link de Esqueci a Senha */}
           <div style={styles.forgotPasswordContainer}>
             <Link to="/esqueceu-senha" style={styles.forgotPasswordLink}>
               Esqueceu a senha?
@@ -232,8 +246,6 @@ const styles = {
     outline: "none",
     color: "#334155",
   },
-
-  // Estilos novos para o link de esqueci senha
   forgotPasswordContainer: { textAlign: "right", marginTop: "-5px" },
   forgotPasswordLink: {
     color: "#546E7A",
@@ -241,7 +253,6 @@ const styles = {
     textDecoration: "none",
     fontWeight: "500",
   },
-
   button: {
     marginTop: "10px",
     padding: "14px",

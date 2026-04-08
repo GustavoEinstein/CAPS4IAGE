@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { User, Mail, Camera, Save, ArrowLeft, BookOpen } from 'lucide-react'; 
+import { User, Mail, Camera, Save, ArrowLeft, BookOpen, School } from 'lucide-react'; // <-- Ícone School adicionado
 import { useNavigate } from 'react-router-dom';
-
 
 const Profile = () => {
     const navigate = useNavigate();
@@ -11,6 +10,7 @@ const Profile = () => {
         username: '',
         email: '',
         disciplina: 'Outra', 
+        escola: '', // <-- Estado da escola adicionado
         avatar: null
     });
     
@@ -23,6 +23,11 @@ const Profile = () => {
         'Educação Física', 'Filosofia', 'Sociologia', 'Pedagogia', 'Outra'
     ];
 
+    // <-- Lista de escolas adicionada
+    const escolas = [
+        'Universidade de Brasília', 'CEMI-Gama'
+    ];
+
     useEffect(() => {
         fetchProfile();
     }, []);
@@ -30,7 +35,6 @@ const Profile = () => {
     const fetchProfile = async () => {
         try {
             const token = localStorage.getItem('access_token');
-            // Se não tiver token, já chuta pro login
             if (!token) {
                 navigate('/');
                 return;
@@ -39,11 +43,11 @@ const Profile = () => {
             const response = await axios.get('http://127.0.0.1:8000/kipo_playground/api/user/me/', {
                 headers: { Authorization: `Bearer ${token}` }
             });
+            // A API já vai retornar a escola e atualizar o state inteiro aqui
             setUserData(response.data);
             updateLocalStorage(response.data);
         } catch (error) {
             console.error("Erro ao carregar perfil:", error);
-            // CORREÇÃO DO 401: Se der erro de autenticação, força logout
             if (error.response && error.response.status === 401) {
                 alert("Sessão expirada. Por favor, faça login novamente.");
                 handleLogout();
@@ -56,6 +60,7 @@ const Profile = () => {
     const updateLocalStorage = (data) => {
         localStorage.setItem('user_name', data.username);
         localStorage.setItem('user_disciplina', data.disciplina);
+        localStorage.setItem('user_escola', data.escola); // <-- Escola no LocalStorage
         if(data.avatar) localStorage.setItem('user_avatar', data.avatar);
         window.dispatchEvent(new Event('storage'));
     };
@@ -79,6 +84,8 @@ const Profile = () => {
         const formData = new FormData();
         
         formData.append('disciplina', userData.disciplina);
+        formData.append('escola', userData.escola); // <-- Adiciona a escola no envio
+        
         if (newPhoto) {
             formData.append('avatar', newPhoto);
         }
@@ -96,20 +103,21 @@ const Profile = () => {
             setUserData(prev => ({ 
                 ...prev, 
                 avatar: novaFoto,
-                disciplina: response.data.disciplina 
+                disciplina: response.data.disciplina,
+                escola: response.data.escola // <-- Atualiza a escola com a resposta da API
             }));
             
             updateLocalStorage({
                 ...userData,
                 avatar: novaFoto,
-                disciplina: response.data.disciplina
+                disciplina: response.data.disciplina,
+                escola: response.data.escola
             });
 
             alert("Perfil salvo com sucesso!");
             setNewPhoto(null);
         } catch (error) {
             console.error("Erro ao salvar:", error);
-            // CORREÇÃO DO 401 NO SALVAMENTO
             if (error.response && error.response.status === 401) {
                 alert("Sessão expirada. Faça login novamente para salvar.");
                 handleLogout();
@@ -123,7 +131,6 @@ const Profile = () => {
 
     return (
         <div style={styles.container}>
-            {/* Força as opções do select a terem fundo branco e texto escuro */}
             <style>{`
                 select option {
                     background-color: white;
@@ -162,7 +169,6 @@ const Profile = () => {
                         <label style={styles.label}>Nome (Somente Leitura)</label>
                         <div style={styles.readOnlyInput}>
                             <User size={18} style={{marginRight:'10px', color:'#555'}}/>
-                            {/* Texto escuro forçado */}
                             <span style={{color: '#101828', fontWeight: '600'}}>
                                 {userData.username || "Carregando..."}
                             </span>
@@ -179,6 +185,24 @@ const Profile = () => {
                         </div>
                     </div>
 
+                    {/* CAMPO DE ESCOLA ADICIONADO AQUI */}
+                    <div style={styles.inputGroup}>
+                        <label style={styles.label}>Sua Escola</label>
+                        <div style={{ position: 'relative' }}>
+                            <School size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#555', pointerEvents: 'none' }} />
+                            <select 
+                                name="escola"
+                                value={userData.escola || ""} 
+                                onChange={(e) => setUserData({...userData, escola: e.target.value})}
+                                style={styles.select}
+                            >
+                                <option value="" disabled>Selecione sua escola</option>
+                                {escolas.map(esc => (
+                                    <option key={esc} value={esc}>{esc}</option>
+                                ))}
+                            </select>
+                        </div>
+                    </div>
 
                     <button type="submit" style={styles.saveButton}>
                         <Save size={18} style={{marginRight:'8px'}} /> Salvar Dados
@@ -203,7 +227,6 @@ const styles = {
     inputGroup: { display: 'flex', flexDirection: 'column', gap: '5px' },
     label: { fontSize: '13px', fontWeight: '600', color: '#37474F' },
     
-    // CORRIGIDO: Cores escuras para leitura
     readOnlyInput: { 
         padding: '12px', 
         backgroundColor: '#F7F9FC', 
@@ -212,7 +235,7 @@ const styles = {
         display: 'flex', 
         alignItems: 'center', 
         fontSize: '14px',
-        color: '#101828' // Texto quase preto
+        color: '#101828' 
     },
     
     select: { 
@@ -222,7 +245,7 @@ const styles = {
         border: '1px solid #CFD8DC', 
         fontSize: '14px', 
         backgroundColor: 'white', 
-        color: '#101828', // Texto escuro
+        color: '#101828', 
         cursor: 'pointer',
         appearance: 'none', 
         backgroundImage: `url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23007CB2%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E")`,

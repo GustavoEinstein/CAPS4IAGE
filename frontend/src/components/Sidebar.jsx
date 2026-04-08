@@ -8,6 +8,7 @@ import {
   Globe,
   LifeBuoy,
   BookOpenCheck,
+  UserCheck, // <--- NOVO ÍCONE ADICIONADO AQUI
   X,
 } from "lucide-react"
 
@@ -34,7 +35,11 @@ const SpiderWebIcon = ({ size = 24, color = "currentColor" }) => (
     <path d="M12 3 L18.36 5.64 L21 12 L18.36 18.36 L12 21 L5.64 18.36 L3 12 L5.64 5.64 Z" />
   </svg>
 )
+
 function Sidebar({ isOpen, isMobile, onClose }) {
+  // VERIFICA SE O USUÁRIO LOGADO É SUPERADMIN
+  const isSuperUser = localStorage.getItem("is_superuser") === "true";
+
   const getLinkStyle = ({ isActive }) => ({
     ...styles.link,
     ...(isActive ? styles.linkActive : {}),
@@ -117,6 +122,25 @@ function Sidebar({ isOpen, isMobile, onClose }) {
           </li>
         </ul>
 
+        {/* --- ÁREA EXCLUSIVA PARA O SUPERADMIN --- */}
+        {isSuperUser && (
+          <>
+            <p style={styles.sectionLabel}>ADMINISTRAÇÃO</p>
+            <ul style={styles.ul}>
+              <li>
+                <NavLink
+                  to="/dashboard/aprovacoes"
+                  style={getLinkStyle}
+                  onClick={isMobile ? onClose : undefined}
+                >
+                  <UserCheck size={20} style={styles.icon} />
+                  Aprovação de Contas
+                </NavLink>
+              </li>
+            </ul>
+          </>
+        )}
+
         <div style={{ marginTop: "auto" }}>
           <ul style={styles.ul}>
             <li>
@@ -156,13 +180,13 @@ const styles = {
     top: 0,
     left: 0,
     zIndex: 1000,
-    transition: "transform 0.3s ease-in-out", // Animação de deslizar
+    transition: "transform 0.3s ease-in-out", 
   },
   logoContainer: {
     padding: "20px",
     display: "flex",
     alignItems: "center",
-    justifyContent: "space-between", // Para separar logo do botão X
+    justifyContent: "space-between", 
     borderBottom: "1px solid #F5F5F5",
   },
   logoIconBg: {
@@ -173,6 +197,15 @@ const styles = {
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
+  },
+  logoCircle: {
+    width: "40px",
+    height: "40px",
+    backgroundColor: "#E3F2FD",
+    borderRadius: "50%",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
   },
   logoTitle: {
     fontSize: "18px",

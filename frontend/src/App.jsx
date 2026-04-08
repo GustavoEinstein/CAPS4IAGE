@@ -21,6 +21,7 @@ import RevisaoDuploCego from './pages/RevisaoDuploCego';
 import Revisao from './pages/FormRevisao'; 
 import Ajuda from './pages/Ajuda';
 import Profile from './pages/Profile'; 
+import AprovacaoContas from './pages/AprovacaoContas'; // Importação da página de aprovação
 
 // --- NOVA PÁGINA DE EDIÇÃO ---
 import EditarProducao from './EditarProducao';
@@ -69,6 +70,9 @@ function App() {
 
                 {/* --- ROTA DE EDIÇÃO (NOVA) --- */}
                 <Route path="editar-producao/:id" element={<EditarProducao />} />
+
+                {/* --- ROTA DE ADMINISTRAÇÃO (APROVAÇÃO) --- */}
+                <Route path="aprovacoes" element={<AprovacaoContas />} />
 
             </Route>
 

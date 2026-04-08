@@ -27,7 +27,7 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'chave-insegura-apenas-para-dev-local'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DEBUG', 'True') == 'True'
-ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost').split(',')
+ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 
 CKEDITOR_BASEPATH = "/staticfiles/ckeditor/ckeditor/"
 

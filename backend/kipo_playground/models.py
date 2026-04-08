@@ -39,9 +39,17 @@ class Profile(models.Model):
         ('Outra', 'Outra'),
     )
 
+    STATUS_CHOICES = (
+        ('Em análise', 'Em análise'),
+        ('Aprovado', 'Aprovado'),
+        ('Rejeitado', 'Rejeitado'),
+    )
+
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
     avatar = models.ImageField(upload_to='avatars/', null=True, blank=True)
     disciplina = models.CharField(max_length=50, choices=DISCIPLINAS_CHOICES,)
+    escola = models.CharField(max_length=150, null=True, blank=True)
+    status_conta = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Em análise')
 
     def __str__(self):
         return f'{self.user.username} - {self.disciplina}'
@@ -86,6 +94,7 @@ class Producao(models.Model):
     nota_avaliacao = models.IntegerField(default=0)
     nota_inclusao = models.IntegerField(default=0)
     nota_inovacao = models.IntegerField(default=0)
+    escola = models.CharField(max_length=149, null=True, blank=True)
 
     def __str__(self):
         return f"{self.titulo} - {self.user.username}"

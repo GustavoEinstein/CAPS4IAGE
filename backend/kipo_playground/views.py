@@ -18,7 +18,7 @@ from django.core.files.storage import FileSystemStorage
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.contrib import messages
-from owlready2 import *         # https://pypi.org/project/Owlready2/
+from owlready2 import * # https://pypi.org/project/Owlready2/
 from os.path import exists
 import os
 import shutil
@@ -48,7 +48,10 @@ from django.views.decorators.csrf import csrf_exempt
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 
-
+# Importações do JWT adicionadas para customizar o login
+from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from rest_framework.exceptions import AuthenticationFailed
 
 # Comandos básicos
 # source venv/bin/activate
@@ -112,23 +115,36 @@ def register(request):
     context = {'form':form}
     return render(request, 'register.html', context)
 
-from django.shortcuts import render
-from rest_framework.decorators import api_view, permission_classes, authentication_classes
-from rest_framework.permissions import IsAuthenticated, AllowAny
-from rest_framework.response import Response
-from django.contrib.auth.models import User
-from django.views.decorators.csrf import csrf_exempt
-from django.core.mail import send_mail, EmailMultiAlternatives
-from django.template.loader import render_to_string
-from django.utils.html import strip_tags
-from django.utils import timezone
-from django.conf import settings
-from django.contrib.auth.tokens import default_token_generator
-from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
-from django.utils.encoding import force_bytes, force_str
 
-# Importe seus models e serializers aqui, caso não estejam
-# from .models import Profile, Producao
+# ============================================================================
+# LOGIN CUSTOMIZADO (VERIFICA APROVAÇÃO)
+# ============================================================================
+class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+    def validate(self, attrs):
+        data = super().validate(attrs)
+        
+        # Pega o usuário que tentou logar
+        user = self.user
+        
+        # Superusuário sempre passa
+        if user.is_superuser:
+            return data
+            
+        # Verifica o status no perfil
+        try:
+            profile = user.profile
+            if profile.status_conta == 'Em análise':
+                raise AuthenticationFailed('Sua conta está em análise. Aguarde a aprovação do administrador.')
+            elif profile.status_conta == 'Rejeitado':
+                raise AuthenticationFailed('Sua conta foi rejeitada e não tem acesso ao sistema.')
+        except Profile.DoesNotExist:
+            pass # Se não tem perfil, deixa passar 
+            
+        return data
+
+class CustomTokenObtainPairView(TokenObtainPairView):
+    serializer_class = CustomTokenObtainPairSerializer
+
 
 # ============================================================================
 # 1. AUTENTICAÇÃO & PERFIL
@@ -146,6 +162,9 @@ def api_register_user(request):
     password = data.get('password')
     name = data.get('name')
     disciplina = data.get('disciplina', 'Outra')
+    
+    # PEGA A ESCOLA DO REQUEST (com fallback para vazio)
+    escola = data.get('escola', '') 
 
     if not username or not password or not email:
         return Response({'erro': 'Preencha todos os campos obrigatórios.'}, status=400)
@@ -166,9 +185,13 @@ def api_register_user(request):
         
         profile, created = Profile.objects.get_or_create(user=user)
         profile.disciplina = disciplina
+        
+        # SALVA A ESCOLA NO PERFIL
+        profile.escola = escola 
+        # O status_conta vai como 'Em análise' por padrão conforme o models.py
         profile.save()
         
-        return Response({'mensagem': 'Conta criada com sucesso!'}, status=201)
+        return Response({'mensagem': 'Conta criada com sucesso! Aguarde aprovação.'}, status=201)
         
     except Exception as e:
         print("Erro ao criar user:", e)
@@ -196,7 +219,9 @@ def api_user_profile(request):
             'username': nome_exibicao,
             'email': user.email,
             'disciplina': profile.disciplina,
-            'avatar': avatar_url
+            'escola': profile.escola, 
+            'avatar': avatar_url,
+            'is_superuser': user.is_superuser # Útil para o frontend saber se mostra o menu de admin
         })
 
     elif request.method == 'PUT':
@@ -204,6 +229,9 @@ def api_user_profile(request):
         
         if 'disciplina' in data:
             profile.disciplina = data['disciplina']
+            
+        if 'escola' in data:
+            profile.escola = data['escola']
 
         file = request.FILES.get('avatar')
         if file:
@@ -222,7 +250,8 @@ def api_user_profile(request):
             'mensagem': 'Perfil atualizado com sucesso!',
             'username': nome_exibicao,
             'avatar': avatar_url,
-            'disciplina': profile.disciplina
+            'disciplina': profile.disciplina,
+            'escola': profile.escola 
         })
 
 
@@ -315,17 +344,9 @@ def api_get_production_details(request, pk):
             'status': p.status,
             'autor': p.user.first_name or p.user.username,
             
-            # --- DADOS DA REVISÃO ---
-            # 1. Flag para saber se mostra o painel (Se nota > 0, tem revisão)
             'revisao_realizada': p.nota_coerencia > 0, 
-            
-            # 2. Verifica se foi aprovado para mudar a cor do card
             'is_aprovado': p.status == 'Aprovado' or p.status == 'Concluído',
-
-            # 3. O texto concatenado (Pontos fortes + Melhoria)
             'feedback_texto': p.feedback_revisao, 
-            
-            # 4. As notas individuais (Já estava no seu código, mantive igual)
             'notas': {
                 'coerencia': p.nota_coerencia,
                 'qualidade': p.nota_qualidade,
@@ -391,12 +412,10 @@ def api_submit_review(request, pk):
         
         feedback_texto = f"PONTOS FORTES:\n{pontos_fortes}\n\nSUGESTÕES DE MELHORIA:\n{pontos_melhoria}"
         
-        # --- ATUALIZAÇÃO DOS DADOS ---
         p.feedback_revisao = feedback_texto
         p.revisor = request.user
         p.data_revisao = timezone.now()
 
-        # Salva as notas da rubrica
         p.nota_coerencia = data.get('nota_coerencia', 0)
         p.nota_qualidade = data.get('nota_qualidade', 0)
         p.nota_metodologia = data.get('nota_metodologia', 0)
@@ -411,16 +430,13 @@ def api_submit_review(request, pk):
             p.status = 'Correção solicitada'
             msg_response = 'Produção devolvida para correção.'
 
-            # --- ENVIO DE E-MAIL HTML (VISUAL PREMIUM) ---
             try:
                 autor_email = p.user.email
                 if autor_email:
                     assunto = f"Ação Necessária: Sua produção '{p.titulo}' precisa de atenção"
                     
-                    # Nome formatado do autor
                     nome_autor = p.user.first_name.split()[0].title() if p.user.first_name else "Professor(a)"
                     
-                    # Mensagem texto puro (fallback para e-mails antigos)
                     mensagem_texto = f"""
                     Olá, {nome_autor}.
                     Sua produção "{p.titulo}" tem grande potencial, mas precisa de alguns ajustes.
@@ -428,7 +444,6 @@ def api_submit_review(request, pk):
                     Acesse o sistema para editar.
                     """
 
-                    # Mensagem HTML Estilizada
                     mensagem_html = f"""
                     <!DOCTYPE html>
                     <html lang="pt-BR">
@@ -436,51 +451,19 @@ def api_submit_review(request, pk):
                         <meta charset="UTF-8">
                         <meta name="viewport" content="width=device-width, initial-scale=1.0">
                         <style>
-                            /* Reset e Estilos Base */
                             body {{ font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 0; background-color: #F3F4F6; color: #334155; }}
                             .email-wrapper {{ width: 100%; background-color: #F3F4F6; padding: 40px 0; }}
                             .container {{ max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }}
-                            
-                            /* Cabeçalho */
                             .header {{ background-color: #0F172A; padding: 30px 20px; text-align: center; }}
                             .logo {{ color: #ffffff; font-size: 24px; font-weight: 800; text-decoration: none; letter-spacing: 1px; display: inline-flex; align-items: center; gap: 10px; }}
-                            
-                            /* Conteúdo */
                             .content {{ padding: 40px 30px; line-height: 1.6; font-size: 16px; }}
                             .h1 {{ color: #1E293B; font-size: 22px; margin-top: 0; font-weight: 700; margin-bottom: 20px; }}
                             .text-intro {{ color: #475569; margin-bottom: 25px; }}
-                            
-                            /* Caixa de Destaque (Feedback) */
-                            .feedback-box {{ 
-                                background-color: #FFFBEB; 
-                                border-left: 5px solid #F59E0B; 
-                                padding: 20px; 
-                                margin: 25px 0; 
-                                border-radius: 4px;
-                                color: #92400E; 
-                                font-style: italic;
-                                font-weight: 500;
-                            }}
-                            
-                            /* Botão */
+                            .feedback-box {{ background-color: #FFFBEB; border-left: 5px solid #F59E0B; padding: 20px; margin: 25px 0; border-radius: 4px; color: #92400E; font-style: italic; font-weight: 500; }}
                             .btn-container {{ text-align: center; margin: 35px 0; }}
-                            .btn {{ 
-                                display: inline-block; 
-                                background-color: #2563EB; /* Azul vibrante */
-                                color: #ffffff !important; 
-                                padding: 14px 32px; 
-                                text-decoration: none; 
-                                border-radius: 8px; 
-                                font-weight: 700; 
-                                font-size: 16px;
-                                box-shadow: 0 4px 6px rgba(37, 99, 235, 0.2);
-                                transition: background-color 0.2s;
-                            }}
+                            .btn {{ display: inline-block; background-color: #2563EB; color: #ffffff !important; padding: 14px 32px; text-decoration: none; border-radius: 8px; font-weight: 700; font-size: 16px; box-shadow: 0 4px 6px rgba(37, 99, 235, 0.2); transition: background-color 0.2s; }}
                             .btn:hover {{ background-color: #1D4ED8; }}
-                            
-                            /* Rodapé */
                             .footer {{ background-color: #F8FAFC; padding: 20px; text-align: center; font-size: 13px; color: #94A3B8; border-top: 1px solid #E2E8F0; }}
-                            .footer a {{ color: #64748B; text-decoration: none; }}
                         </style>
                     </head>
                     <body>
@@ -489,41 +472,19 @@ def api_submit_review(request, pk):
                                 <div class="header">
                                     <span class="logo">📘 CAPSIAGE</span>
                                 </div>
-
                                 <div class="content">
                                     <h1 class="h1">Olá, {nome_autor}!</h1>
-                                    
-                                    <p class="text-intro">
-                                        Sua produção <strong>"{p.titulo}"</strong> tem um enorme potencial para a nossa comunidade!
-                                    </p>
-                                    
-                                    <p>
-                                        Ela passou pela nossa revisão por pares e o revisor identificou alguns pontos que, se ajustados, deixarão seu material ainda mais rico e alinhado aos nossos padrões de qualidade.
-                                    </p>
-                                    
+                                    <p class="text-intro">Sua produção <strong>"{p.titulo}"</strong> tem um enorme potencial para a nossa comunidade!</p>
+                                    <p>Ela passou pela nossa revisão por pares e o revisor identificou alguns pontos que, se ajustados, deixarão seu material ainda mais rico e alinhado aos nossos padrões de qualidade.</p>
                                     <p><strong>Confira as observações do revisor:</strong></p>
-
-                                    <div class="feedback-box">
-                                        "{pontos_melhoria}"
-                                    </div>
-
+                                    <div class="feedback-box">"{pontos_melhoria}"</div>
                                     <p>Não desanime! Esse processo de refinamento é normal e essencial para garantirmos a excelência do conteúdo. Faça os ajustes e reenvie para aprovação.</p>
-
                                     <div class="btn-container">
-                                        <a href="http://localhost:5173/dashboard/minhas-producoes" class="btn">
-                                            Editar e Reenviar Agora
-                                        </a>
+                                        <a href="http://localhost:5173/dashboard/minhas-producoes" class="btn">Editar e Reenviar Agora</a>
                                     </div>
-                                    
-                                    <p style="font-size: 13px; margin-top: 30px; color: #94A3B8; text-align: center;">
-                                        Se o botão não funcionar, acesse sua conta e vá até a aba "Minhas Produções".
-                                    </p>
+                                    <p style="font-size: 13px; margin-top: 30px; color: #94A3B8; text-align: center;">Se o botão não funcionar, acesse sua conta e vá até a aba "Minhas Produções".</p>
                                 </div>
-
-                                <div class="footer">
-                                    © 2026 CAPSIAGE - Conectando inteligência humana e artificial.<br>
-                                    Este é um e-mail automático, por favor não responda.
-                                </div>
+                                <div class="footer">© 2026 CAPSIAGE - Conectando inteligência humana e artificial.<br>Este é um e-mail automático, por favor não responda.</div>
                             </div>
                         </div>
                     </body>
@@ -536,7 +497,7 @@ def api_submit_review(request, pk):
                         settings.DEFAULT_FROM_EMAIL,
                         [autor_email],
                         fail_silently=False,
-                        html_message=mensagem_html # <--- ENVIA O HTML
+                        html_message=mensagem_html
                     )
             except Exception as e:
                 print(f"Erro ao enviar email de rejeição: {e}")
@@ -550,19 +511,12 @@ def api_submit_review(request, pk):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def api_review_history(request):
-    """
-    Lista todas as produções que o usuário atual JÁ revisou.
-    """
     user = request.user
-    
-    # Busca produções onde o campo 'revisor' é o usuário logado
     revisoes = Producao.objects.filter(revisor=user).order_by('-data_revisao')
     
     lista = []
     for p in revisoes:
-        # Define se o veredito foi positivo ou negativo baseado no status
         veredito_final = "APROVADO" if "Aprovado" in p.status else "REJEITADO"
-        
         lista.append({
             'id': p.id,
             'titulo': p.titulo,
@@ -607,12 +561,9 @@ def api_listar_ciclos(request):
 # ============================================================================
 @csrf_exempt
 @api_view(['POST'])
-@authentication_classes([]) # Remove a autenticação por sessão para evitar erro CSRF
+@authentication_classes([]) 
 @permission_classes([AllowAny])
 def api_password_reset_request(request):
-    """
-    Recebe o e-mail, gera o token e envia o e-mail com template HTML.
-    """
     email = request.data.get('email')
     if not email:
         return Response({'erro': 'E-mail é obrigatório.'}, status=400)
@@ -620,29 +571,20 @@ def api_password_reset_request(request):
     try:
         user = User.objects.get(email=email)
     except User.DoesNotExist:
-        # Por segurança, não dizemos que o usuário não existe
         return Response({'mensagem': 'Se o e-mail existir, um link foi enviado.'})
 
-    # 1. Gerar Tokens
     token = default_token_generator.make_token(user)
     uid = urlsafe_base64_encode(force_bytes(user.pk))
-
-    # 2. Criar o Link
     reset_link = f"http://localhost:5173/reset-password/{uid}/{token}"
 
-    # 3. Preparar o E-mail
     subject = "Redefinição de Senha - Comunidade IA"
     from_email = settings.DEFAULT_FROM_EMAIL
     to = [email]
 
-    # Ajuste do Nome
     raw_name = user.first_name or user.username
     first_name = raw_name.split()[0].title()
 
-    context = {
-        'nome': first_name,
-        'link': reset_link
-    }
+    context = {'nome': first_name, 'link': reset_link}
 
     try:
         try:
@@ -667,12 +609,9 @@ def api_password_reset_request(request):
 
 @csrf_exempt
 @api_view(['POST'])
-@authentication_classes([]) # Remove a autenticação por sessão aqui também
+@authentication_classes([]) 
 @permission_classes([AllowAny])
 def api_password_reset_confirm(request, uidb64, token):
-    """
-    Recebe o token e a nova senha para efetivar a troca.
-    """
     new_password = request.data.get('password')
     
     if not new_password:
@@ -694,21 +633,13 @@ def api_password_reset_confirm(request, uidb64, token):
 @api_view(['PUT'])
 @permission_classes([IsAuthenticated])
 def api_update_production(request, pk):
-    """
-    Permite ao autor editar uma produção que foi rejeitada ('Correção solicitada').
-    Ao salvar, o status volta para 'Em revisão'.
-    """
     try:
-        # Garante que só o dono pode editar e busca pelo ID
         p = Producao.objects.get(id=pk, user=request.user)
         
-        # Só permite editar se estiver pedindo correção (segurança)
         if p.status != 'Correção solicitada':
             return Response({'erro': 'Esta produção não pode ser editada no momento.'}, status=403)
 
         data = request.data
-
-        # Atualiza campos de texto
         p.titulo = data.get('titulo', p.titulo)
         p.disciplina = data.get('disciplina', p.disciplina)
         p.nivel = data.get('nivel_ensino', p.nivel)
@@ -720,7 +651,6 @@ def api_update_production(request, pk):
         p.experiencia = data.get('experiencia', p.experiencia)
         p.resultados = data.get('resultados', p.resultados)
 
-        # Trata recursos (pode vir como lista ou string)
         recursos_input = data.getlist('recursos') if hasattr(data, 'getlist') else data.get('recursos')
         if recursos_input:
             if isinstance(recursos_input, list):
@@ -728,18 +658,15 @@ def api_update_production(request, pk):
             else:
                 p.recursos = str(recursos_input)
 
-        # Atualiza arquivo se um novo for enviado
         novo_arquivo = request.FILES.get('arquivo')
         if novo_arquivo:
             p.arquivo = novo_arquivo
 
-        # --- O PULO DO GATO: RESETA O STATUS ---
         p.status = 'Em revisão' 
-        p.feedback_revisao = None # Limpa o feedback antigo ou mantém histórico (opcional, aqui limpamos para nova rodada)
-        p.revisor = None # Reseta o revisor para cair na fila geral de novo (ou mantém se quiser o mesmo)
+        p.feedback_revisao = None 
+        p.revisor = None 
         
         p.save()
-
         return Response({'mensagem': 'Produção atualizada e reenviada para fila de revisão!'})
 
     except Producao.DoesNotExist:
@@ -747,3 +674,49 @@ def api_update_production(request, pk):
     except Exception as e:
         print(f"Erro ao atualizar: {e}")
         return Response({'erro': 'Erro interno ao atualizar.'}, status=500)
+
+
+# ============================================================================
+# 5. ADMINISTRAÇÃO (APROVAÇÃO DE CONTAS)
+# ============================================================================
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def api_list_pending_users(request):
+    """Lista usuários que estão 'Em análise' (Só superadmin)."""
+    if not request.user.is_superuser:
+        return Response({'erro': 'Acesso negado'}, status=403)
+        
+    profiles = Profile.objects.filter(status_conta='Em análise').select_related('user')
+    lista = []
+    for p in profiles:
+        lista.append({
+            'id': p.user.id,
+            'nome': p.user.first_name or p.user.username,
+            'email': p.user.email,
+            'escola': p.escola,
+            'disciplina': p.disciplina,
+            'data_cadastro': p.user.date_joined.strftime('%d/%m/%Y')
+        })
+    return Response(lista)
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def api_approve_reject_user(request, user_id):
+    """Aprova ou Rejeita um usuário (Só superadmin)."""
+    if not request.user.is_superuser:
+        return Response({'erro': 'Acesso negado'}, status=403)
+        
+    acao = request.data.get('acao') # Deve ser 'Aprovado' ou 'Rejeitado'
+    if acao not in ['Aprovado', 'Rejeitado']:
+        return Response({'erro': 'Ação inválida'}, status=400)
+        
+    try:
+        user_target = User.objects.get(id=user_id)
+        profile = user_target.profile
+        profile.status_conta = acao
+        profile.save()
+        
+        mensagem = f"Usuário {user_target.username} foi {acao.lower()} com sucesso."
+        return Response({'mensagem': mensagem})
+    except User.DoesNotExist:
+        return Response({'erro': 'Usuário não encontrado'}, status=404)

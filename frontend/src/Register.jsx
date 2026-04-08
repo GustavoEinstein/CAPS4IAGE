@@ -14,18 +14,18 @@ import {
     EyeOff,
     BookOpen,
     School,
-    Users // Ícone novo para a troca de experiências
+    Users 
 } from 'lucide-react';
 
 const Register = () => {
-    // 1. INICIALIZAÇÃO CORRETA DO ESTADO
     const [formData, setFormData] = useState({
         name: '', 
         username: '',
         email: '',
         password: '',
         confirmPassword: '',
-        disciplina: '' 
+        disciplina: '',
+        escola: '' 
     });
 
     const disciplinas = [
@@ -54,36 +54,29 @@ const Register = () => {
         e.preventDefault();
         setError('');
 
-const pwd = formData.password;
+        const pwd = formData.password;
 
         // --- VALIDAÇÃO DE SEGURANÇA ---
-        
-        // 1. Mínimo de 8 caracteres
         if (pwd.length < 8) {
             setError('A senha precisa ter no mínimo 8 caracteres.');
             return;
         }
 
-        // 2. Pelo menos 1 letra maiúscula
         if (!/[A-Z]/.test(pwd)) {
             setError('A senha precisa ter pelo menos uma letra maiúscula.');
             return;
         }
 
-        // 3. Pelo menos 1 símbolo/caractere especial
-        // Você pode adicionar mais símbolos dentro dos colchetes se precisar
         if (!/[!@#$%^&*(),.?":{}|<>]/.test(pwd)) {
             setError('A senha precisa ter pelo menos um símbolo especial (ex: !@#$%^&*).');
             return;
         }
 
-        // 4. Confirmação de senha
         if (pwd !== formData.confirmPassword) {
             setError('As senhas não coincidem.');
             return;
         }
 
-        // Validação extra: Disciplina é obrigatória
         if (!formData.disciplina) {
             setError('Por favor, selecione sua área de atuação.');
             return;
@@ -92,16 +85,15 @@ const pwd = formData.password;
         setIsLoading(true);
 
         try {
-            // 2. ENVIO DOS DADOS COMPLETOS PARA O BACKEND
             await api.post('api/register/', {
                 name: formData.name,
                 username: formData.username,
                 email: formData.email,
                 password: formData.password,
-                disciplina: formData.disciplina 
+                disciplina: formData.disciplina,
+                escola: formData.escola
             });
 
-            // Sucesso
             alert('Conta criada com sucesso! Redirecionando para o login...');
             navigate('/login'); 
 
@@ -130,12 +122,10 @@ const pwd = formData.password;
                         Cataloge práticas, use IA e receba feedback de professores de todo o Distrito Federal.
                     </p>
                     
-                    {/* ITEM ALTERADO AQUI */}
                     <div style={styles.featureItem}>
                         <Users size={18} color="#BBDEFB" /> 
                         <span>Troca de Experiências Reais</span>
                     </div>
-                    {/* ------------------ */}
 
                     <div style={styles.featureItem}>
                         <CheckCircle2 size={18} color="#BBDEFB" /> 
@@ -202,13 +192,14 @@ const pwd = formData.password;
                                 </div>
                             </div>
                         </div>
+
                         {/* ESCOLA */}
                         <div style={styles.inputGroup}>
                             <label style={styles.label}>Sua Escola</label>
                             <div style={styles.inputWrapper}>
                                 <School size={18} color="#64748B" />
                                 <select 
-                                    name="disciplina"
+                                    name="escola" // <--- CORRIGIDO AQUI: estava "disciplina"
                                     value={formData.escola} 
                                     onChange={handleChange}
                                     style={styles.select}
