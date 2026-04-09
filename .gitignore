@@ -58,7 +58,8 @@ dist-ssr
 .env.production.local
 
 #Cache
-kipo_playground/__pycache__
-kipo_playground/migrations/__pycache__
-TCC_DjangoScrumKipo/__pycache__
+backend/kipo_playground/__pycache__
+backend/kipo_playground/migrations/__pycache__
+backend/TCC_DjangoScrumKipo/__pycache__
 db.sqlite3
+venv
