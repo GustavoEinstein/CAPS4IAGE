@@ -51,7 +51,9 @@ INSTALLED_APPS = [
     'corsheaders',
 ]
 
+# MIDDLEWARES LIMPOS E ORGANIZADOS (CORS sempre no topo!)
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -59,16 +61,24 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
-    'django.middleware.security.SecurityMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
 ]
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
-    )
+    ),
+    # --- CONFIGURAÇÃO DE SEGURANÇA: THROTTLING (CONTRA FORÇA BRUTA) ---
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle',
+        'rest_framework.throttling.ScopedRateThrottle',
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '100/day',            # Requisições gerais por IP não logado
+        'user': '1000/day',           # Requisições gerais por utilizador logado
+        'login_attempts': '5/minute', # Limite rigoroso de 5 tentativas de login por minuto!
+    }
+    # ------------------------------------------------------------------
 }
 
 CORS_ALLOW_ALL_ORIGINS = True

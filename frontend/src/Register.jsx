@@ -33,6 +33,7 @@ const Register = () => {
         'Física', 'Química', 'Biologia', 'Inglês', 'Artes',
         'Educação Física', 'Filosofia', 'Sociologia', 'Pedagogia', 'Projeto de vida',  'Computação'
     ];
+    
     const escolas = [
         'Universidade de Brasília', 'CEMI-Gama'
     ];
@@ -56,7 +57,7 @@ const Register = () => {
 
         const pwd = formData.password;
 
-        // --- VALIDAÇÃO DE SEGURANÇA ---
+        // --- VALIDAÇÃO DE SEGURANÇA (FRONTEND) ---
         if (pwd.length < 8) {
             setError('A senha precisa ter no mínimo 8 caracteres.');
             return;
@@ -77,6 +78,11 @@ const Register = () => {
             return;
         }
 
+        if (!formData.escola) {
+            setError('Por favor, selecione sua escola.');
+            return;
+        }
+
         if (!formData.disciplina) {
             setError('Por favor, selecione sua área de atuação.');
             return;
@@ -94,7 +100,7 @@ const Register = () => {
                 escola: formData.escola
             });
 
-            alert('Conta criada com sucesso! Redirecionando para o login...');
+            alert('Conta criada com sucesso! Aguarde a aprovação do administrador.');
             navigate('/login'); 
 
         } catch (err) {
@@ -199,7 +205,7 @@ const Register = () => {
                             <div style={styles.inputWrapper}>
                                 <School size={18} color="#64748B" />
                                 <select 
-                                    name="escola" // <--- CORRIGIDO AQUI: estava "disciplina"
+                                    name="escola"
                                     value={formData.escola} 
                                     onChange={handleChange}
                                     style={styles.select}

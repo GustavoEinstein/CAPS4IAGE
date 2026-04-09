@@ -1,6 +1,6 @@
 import React, { useState } from "react"
 import api from "./services/api" // <--- USANDO A CONFIGURAÇÃO CENTRAL (URL Base automática)
-import { useNavigate, Link } from "react-router-dom"
+import { Link } from "react-router-dom"
 
 const SpiderWebIcon = ({ size = 24, color = "currentColor" }) => (
   <svg
@@ -32,8 +32,6 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState(false)
   const [hover, setHover] = useState(false)
 
-  const navigate = useNavigate()
-
   const handleLogin = async (e) => {
     e.preventDefault()
     setError("")
@@ -61,9 +59,9 @@ const Login = () => {
         headers: { Authorization: `Bearer ${token}` },
       })
 
-      // Salva os dados importantes no localStorage
-      localStorage.setItem("user_name", userResponse.data.username)
-      localStorage.setItem("user_disciplina", userResponse.data.disciplina)
+      // Salva os dados importantes no localStorage (com fallbacks)
+      localStorage.setItem("user_name", userResponse.data.username || "Admin")
+      localStorage.setItem("user_disciplina", userResponse.data.disciplina || "Geral")
       
       if (userResponse.data.avatar) {
         localStorage.setItem("user_avatar", userResponse.data.avatar)
@@ -79,17 +77,21 @@ const Login = () => {
       // Dispara evento para atualizar o cabeçalho imediatamente (se houver listeners)
       window.dispatchEvent(new Event("storage"))
 
-      // 3. Redireciona
-      navigate("/dashboard")
+      // 3. Redireciona e FORÇA O REFRESH (Para a Sidebar ler o novo is_superuser)
+      window.location.href = "/dashboard"
+      
     } catch (err) {
       console.error(err)
       if (err.code === "ERR_NETWORK") {
         setError("Erro de conexão. Verifique se o servidor está rodando.")
+      } else if (err.response && err.response.status === 429) {
+        // --- PROTEÇÃO CONTRA FORÇA BRUTA (THROTTLING) ---
+        setError("Muitas tentativas falhadas. Por favor, aguarde 1 minuto e tente novamente.");
       } else if (err.response && err.response.status === 401) {
-        // AQUI ESTÁ A ALTERAÇÃO: Captura a mensagem customizada do backend se houver
+        // Captura a mensagem customizada do backend se houver (Conta não aprovada)
         const detailMessage = err.response.data.detail;
         if (detailMessage) {
-            setError(detailMessage); // Ex: "Sua conta está em análise..."
+            setError(detailMessage); 
         } else {
             setError("Usuário ou senha incorretos.");
         }
