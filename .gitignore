@@ -56,6 +56,7 @@ dist-ssr
 .env.development.local
 .env.test.local
 .env.production.local
+.env
 
 #Cache
 backend/kipo_playground/__pycache__

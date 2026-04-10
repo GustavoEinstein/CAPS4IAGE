@@ -171,5 +171,18 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'kipo_playground/media/')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# =========================================================
+# CONFIGURAÇÃO DE E-MAIL
+# =========================================================
 
-#caso quiserem colocar envio de email smtp coloque aqui em baixo desse comentario.
+EMAIL_BACKEND = 'TCC_DjangoScrumKipo.email_backend.EmailBackend'
+
+# Com o 'smtp.gmail.com' aqui, ele NUNCA vai ficar vazio (evitando o erro connect first)
+EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp.gmail.com')
+EMAIL_PORT = int(os.environ.get('EMAIL_PORT', 587))
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', 'suporte.ianaeducacaobasica.unb@gmail.com')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '') # Se estiver vazio, vai dar erro de login, mas não erro 500!
+EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'True') == 'True'
+EMAIL_USE_SSL = False 
+
+DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', f"TEIA <{EMAIL_HOST_USER}>")
