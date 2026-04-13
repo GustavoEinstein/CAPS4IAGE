@@ -87,9 +87,11 @@ CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
     "http://localhost:3000",
+    "https://teia.cic.unb.br",
+    "https://teia.cic.unb.br/kipo_playground/"
 ]
 
-CSRF_TRUSTED_ORIGINS = os.environ.get('CSRF_TRUSTED_ORIGINS', 'http://localhost:8000').split(',')
+CSRF_TRUSTED_ORIGINS = os.environ.get('CSRF_TRUSTED_ORIGINS', 'https://teia.cic.unb.br')
 
 ROOT_URLCONF = 'TCC_DjangoScrumKipo.urls'
 
