@@ -1,8 +1,9 @@
 import axios from 'axios';
 
+
 // Cria uma instância padrão do Axios
 const api = axios.create({
-    baseURL: 'http://localhost:8000/kipo_playground/', // Sua URL base
+    baseURL: import.meta.env.VITE_API_URL, // Sua URL base
 });
 
 // 1. INTERCEPTOR DE REQUISIÇÃO (Envia o Token automaticamente)
