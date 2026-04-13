@@ -1,6 +1,8 @@
-import React, { useState } from "react"
+import React, { useEffect, useState } from "react"
 import api from "../services/api"
 import { useNavigate, useOutletContext } from "react-router-dom"
+import { useSpeechRecognition } from "../hooks/useSpeechRecognition"
+import { processTranscript } from "../services/aiProcessing"
 import {
   ArrowLeft,
   Save,
@@ -27,6 +29,7 @@ import {
 
 const CatalogarProducoes = () => {
   const [mode, setMode] = useState("selecao")
+  const [voiceDraft, setVoiceDraft] = useState(null)
   const navigate = useNavigate()
   const { isMobile } = useOutletContext() || { isMobile: false }
 
@@ -44,13 +47,17 @@ const CatalogarProducoes = () => {
         onBack={() => setMode("selecao")}
         navigate={navigate}
         isMobile={isMobile}
+        initialData={voiceDraft}
       />
     )
   if (mode === "voz")
     return (
       <VoiceFormV2
         onBack={() => setMode("selecao")}
-        navigate={navigate}
+        onUseDraft={(draft) => {
+          setVoiceDraft(draft)
+          setMode("manual")
+        }}
         isMobile={isMobile}
       />
     )
@@ -89,9 +96,15 @@ const SelectionScreen = ({ onSelect, isMobile, navigate }) => {
           </div>
           <div style={styles.selectionCardAi} onClick={() => onSelect("voz")}>
             <div style={styles.iconCirclePurple}>
-              <Wrench size={32} color="#7B1FA2" />
+              <Mic size={32} color="#7B1FA2" />
             </div>
-            <h3 style={styles.cardTitle}>Área em construção</h3>
+            <h3 style={styles.cardTitle}>Catalogar por Voz</h3>
+            <p style={styles.cardDesc}>
+              Fale sua prática e preencha o formulário automaticamente para revisar.
+            </p>
+            <span style={{ ...styles.fakeLink, color: "#7B1FA2" }}>
+              Iniciar gravação &rarr;
+            </span>
           </div>
         </div>
       </div>
@@ -100,9 +113,9 @@ const SelectionScreen = ({ onSelect, isMobile, navigate }) => {
 }
 
 // --- 2. FORMULÁRIO MANUAL (CORRIGIDO) ---
-const ManualFormSplit = ({ onBack, navigate, isMobile }) => {
+const ManualFormSplit = ({ onBack, navigate, isMobile, initialData }) => {
   const storedDisc = localStorage.getItem("user_disciplina") || "Geral"
-  const [formData, setFormData] = useState({
+  const getInitialFormData = () => ({
     titulo: "",
     disciplina: storedDisc !== "Outra" ? storedDisc : "Geral",
     nivel: "",
@@ -116,8 +129,26 @@ const ManualFormSplit = ({ onBack, navigate, isMobile }) => {
     resultados: "",
     arquivo: null,
   })
+
+  const [formData, setFormData] = useState(getInitialFormData)
   const [customResource, setCustomResource] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
+
+  useEffect(() => {
+    if (!initialData) return
+    setFormData((prev) => ({
+      ...prev,
+      ...initialData,
+      disciplina:
+        initialData.disciplina && initialData.disciplina !== "Outra"
+          ? initialData.disciplina
+          : prev.disciplina,
+      recursos: Array.isArray(initialData.recursos)
+        ? initialData.recursos
+        : prev.recursos,
+      arquivo: null,
+    }))
+  }, [initialData])
 
   const RECURSOS_COMUNS = [
     "Projetor / Datashow",
@@ -526,13 +557,46 @@ const ManualFormSplit = ({ onBack, navigate, isMobile }) => {
 }
 
 // --- 3. TELA DE VOZ ---
-const VoiceFormV2 = ({ onBack, navigate }) => {
-  const [isListening, setIsListening] = useState(false)
-  const [transcript, setTranscript] = useState("")
-  const toggleListening = () => {
-    setIsListening(!isListening)
-    if (!isListening) setTranscript("Ouvindo...")
+const VoiceFormV2 = ({ onBack, onUseDraft }) => {
+  const {
+    isListening,
+    transcript,
+    interimTranscript,
+    isSupported,
+    error,
+    browserWarning,
+    toggleListening,
+    resetTranscript,
+  } = useSpeechRecognition({ lang: "pt-BR", continuous: true, interimResults: true })
+
+  const [isProcessing, setIsProcessing] = useState(false)
+  const [processedData, setProcessedData] = useState(null)
+  const [aiError, setAiError] = useState("")
+
+  const processWithAI = async () => {
+    const full = `${transcript} ${interimTranscript}`.trim()
+    if (!full) {
+      setAiError("Grave algo antes de processar.")
+      return
+    }
+
+    setAiError("")
+    setIsProcessing(true)
+    try {
+      const storedDisc = localStorage.getItem("user_disciplina") || "Geral"
+      const processed = await processTranscript(full, {
+        disciplina: storedDisc !== "Outra" ? storedDisc : "Geral",
+      })
+      setProcessedData(processed)
+    } catch (e) {
+      setAiError(e.message || "Falha ao processar transcricao.")
+    } finally {
+      setIsProcessing(false)
+    }
   }
+
+  const fullTranscript = `${transcript}${interimTranscript}`
+
   return (
     <div style={styles.container}>
       <div style={styles.card}>
@@ -561,37 +625,108 @@ const VoiceFormV2 = ({ onBack, navigate }) => {
               margin: "0 auto 20px auto",
             }}
           >
-            Clique no microfone e descreva sua atividade.
+            Clique no microfone e descreva sua pratica. Depois processe e aplique no formulario manual.
           </p>
+
+          <div style={styles.talkingPoints}>
+            <p style={{ margin: 0, color: "#7B1FA2", fontWeight: "700" }}>
+              Dicas para melhorar o reconhecimento de voz:
+            </p>
+            <ul style={styles.talkingList}>
+              <li>Fale pausado e em frases curtas.</li>
+              <li>Dite siglas por extenso: "I A" e tambem "inteligencia artificial".</li>
+              <li>Fale os campos em ordem: titulo, nivel, categoria, metodologia, resultados.</li>
+              <li>Repita termos-chave importantes (ex.: BNCC, ChatGPT, rubrica) duas vezes.</li>
+              <li>Se errar uma frase, pare e repita do inicio da frase.</li>
+            </ul>
+          </div>
+
+          {!isSupported && (
+            <div style={styles.errorBox}>
+              Seu navegador nao suporta reconhecimento de voz. Use Chrome, Edge ou Safari.
+            </div>
+          )}
+
+          {!!browserWarning && <div style={styles.warningBox}>{browserWarning}</div>}
+
+          {(error || aiError) && <div style={styles.errorBox}>{error || aiError}</div>}
+
           <div style={styles.micWrapper}>
             <button
               onClick={toggleListening}
+              disabled={!isSupported || isProcessing}
               style={{
                 ...styles.micButton,
                 backgroundColor: isListening ? "#FFEBEE" : "#F3E5F5",
                 borderColor: isListening ? "#EF5350" : "#E1BEE7",
                 transform: isListening ? "scale(1.1)" : "scale(1)",
+                opacity: !isSupported || isProcessing ? 0.5 : 1,
               }}
             >
               <Mic size={48} color={isListening ? "#D32F2F" : "#7B1FA2"} />
             </button>
             <p style={styles.micStatus}>
-              {isListening ? "Gravando..." : "Toque para falar"}
+              {isListening ? (
+                <span style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                  <Volume2 size={18} /> Gravando... (toque para parar)
+                </span>
+              ) : (
+                "Toque para falar"
+              )}
             </p>
           </div>
           <div style={styles.transcriptionBox}>
-            {transcript ? (
-              <p>{transcript}</p>
+            {fullTranscript ? (
+              <p style={{ margin: 0, lineHeight: 1.6 }}>
+                {transcript}
+                {interimTranscript && (
+                  <span style={{ color: "#999", fontStyle: "italic" }}>
+                    {interimTranscript}
+                  </span>
+                )}
+              </p>
             ) : (
               <p style={{ color: "#999" }}>Sua transcrição aparecerá aqui...</p>
             )}
           </div>
+
+          {!!transcript && !isListening && (
+            <button onClick={resetTranscript} style={styles.clearButton}>
+              <Trash2 size={16} style={{ marginRight: "6px" }} /> Limpar transcricao
+            </button>
+          )}
+
+          {processedData && (
+            <div style={styles.reviewBox}>
+              <h4 style={{ margin: "0 0 10px", color: "#37474F" }}>
+                Dados extraidos
+              </h4>
+              <p style={styles.reviewLine}><strong>Titulo:</strong> {processedData.titulo}</p>
+              <p style={styles.reviewLine}><strong>Nivel:</strong> {processedData.nivel || "-"}</p>
+              <p style={styles.reviewLine}><strong>Categoria:</strong> {processedData.categoria || "-"}</p>
+              <p style={styles.reviewLine}><strong>Metodologia:</strong> {processedData.metodologia || "-"}</p>
+              <p style={styles.reviewLine}><strong>Modelo IA:</strong> {processedData.modelo_ia || "-"}</p>
+              <button
+                style={{ ...styles.button, backgroundColor: "#2E7D32", marginTop: "12px" }}
+                onClick={() => onUseDraft(processedData)}
+              >
+                <Check size={18} style={{ marginRight: "8px" }} />
+                Aplicar no formulario
+              </button>
+            </div>
+          )}
+
           <div style={styles.footerActions}>
             <button style={styles.buttonCancel} onClick={onBack}>
               Cancelar
             </button>
-            <button style={{ ...styles.button, backgroundColor: "#7B1FA2" }}>
-              Processar
+            <button
+              style={{ ...styles.button, backgroundColor: "#7B1FA2", opacity: !transcript || isListening || isProcessing ? 0.5 : 1 }}
+              onClick={processWithAI}
+              disabled={!transcript || isListening || isProcessing}
+            >
+              <Sparkles size={18} style={{ marginRight: "8px" }} />
+              {isProcessing ? "Processando..." : "Processar"}
             </button>
           </div>
         </div>
@@ -1019,6 +1154,42 @@ const styles = {
     padding: "20px",
     overflowY: "auto",
     marginBottom: "30px",
+  },
+  errorBox: {
+    width: "100%",
+    maxWidth: "700px",
+    backgroundColor: "#FFEBEE",
+    border: "1px solid #FFCDD2",
+    color: "#C62828",
+    borderRadius: "10px",
+    padding: "10px 12px",
+    margin: "8px 0 16px",
+    fontSize: "14px",
+  },
+  warningBox: {
+    width: "100%",
+    maxWidth: "700px",
+    backgroundColor: "#FFF8E1",
+    border: "1px solid #FFE082",
+    color: "#8D6E00",
+    borderRadius: "10px",
+    padding: "10px 12px",
+    margin: "8px 0 8px",
+    fontSize: "14px",
+  },
+  reviewBox: {
+    width: "100%",
+    maxWidth: "700px",
+    backgroundColor: "#F4F9FF",
+    border: "1px solid #D6E8FF",
+    borderRadius: "12px",
+    padding: "16px",
+    marginBottom: "18px",
+  },
+  reviewLine: {
+    margin: "4px 0",
+    color: "#455A64",
+    fontSize: "14px",
   },
   talkingPoints: {
     width: "100%",
