@@ -12,13 +12,10 @@ https://docs.djangoproject.com/en/4.0/ref/settings/
 
 from pathlib import Path
 import os
-from dotenv import load_dotenv
-from datetime import timedelta
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-load_dotenv(os.path.join(BASE_DIR, '.env'))
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.0/howto/deployment/checklist/
@@ -28,7 +25,7 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'chave-insegura-apenas-para-dev-local'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DEBUG', 'True') == 'True'
-ALLOWED_HOSTS = ['localhost', '127.0.0.1']
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost').split(',')
 
 CKEDITOR_BASEPATH = "/staticfiles/ckeditor/ckeditor/"
 
@@ -52,9 +49,7 @@ INSTALLED_APPS = [
     'corsheaders',
 ]
 
-# MIDDLEWARES LIMPOS E ORGANIZADOS (CORS sempre no topo!)
 MIDDLEWARE = [
-    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -62,24 +57,16 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.security.SecurityMiddleware',
+    'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.common.CommonMiddleware',
 ]
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
-    ),
-    # --- CONFIGURAÇÃO DE SEGURANÇA: THROTTLING (CONTRA FORÇA BRUTA) ---
-    'DEFAULT_THROTTLE_CLASSES': [
-        'rest_framework.throttling.AnonRateThrottle',
-        'rest_framework.throttling.UserRateThrottle',
-        'rest_framework.throttling.ScopedRateThrottle',
-    ],
-    'DEFAULT_THROTTLE_RATES': {
-        'anon': '100/day',            # Requisições gerais por IP não logado
-        'user': '1000/day',           # Requisições gerais por utilizador logado
-        'login_attempts': '5/minute', # Limite rigoroso de 5 tentativas de login por minuto!
-    }
-    # ------------------------------------------------------------------
+    )
 }
 
 CORS_ALLOW_ALL_ORIGINS = True
@@ -118,7 +105,7 @@ WSGI_APPLICATION = 'TCC_DjangoScrumKipo.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'NAME': BASE_DIR / 'database' / 'db.sqlite3',
     }
 }
 
@@ -172,24 +159,5 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'kipo_playground/media/')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# =========================================================
-# CONFIGURAÇÃO DE E-MAIL
-# =========================================================
 
-EMAIL_BACKEND = 'TCC_DjangoScrumKipo.email_backend.EmailBackend'
-
-# Com o 'smtp.gmail.com' aqui, ele NUNCA vai ficar vazio (evitando o erro connect first)
-EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp.gmail.com')
-EMAIL_PORT = int(os.environ.get('EMAIL_PORT', 587))
-EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', 'suporte.ianaeducacaobasica.unb@gmail.com')
-EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '') # Se estiver vazio, vai dar erro de login, mas não erro 500!
-EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'True') == 'True'
-EMAIL_USE_SSL = False 
-
-DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', f"TEIA <{EMAIL_HOST_USER}>")
-
-SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=30),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
-    'ROTATE_REFRESH_TOKENS': True, # Issues a new refresh token on every use
-}
+#caso quiserem colocar envio de email smtp coloque aqui em baixo desse comentario.
