@@ -94,6 +94,7 @@ const SelectionScreen = ({ onSelect, isMobile, navigate }) => {
             </p>
             <span style={styles.fakeLink}>Ir para formulário &rarr;</span>
           </div>
+          {/** --- CARTÃO DE VOZ Destativado ---
           <div style={styles.selectionCardAi} onClick={() => onSelect("voz")}>
             <div style={styles.iconCirclePurple}>
               <Mic size={32} color="#7B1FA2" />
@@ -105,7 +106,8 @@ const SelectionScreen = ({ onSelect, isMobile, navigate }) => {
             <span style={{ ...styles.fakeLink, color: "#7B1FA2" }}>
               Iniciar gravação &rarr;
             </span>
-          </div>
+          </div> 
+          */}
         </div>
       </div>
     </div>
