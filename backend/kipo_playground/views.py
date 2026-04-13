@@ -24,11 +24,12 @@ import os
 import shutil
 import json 
 import sys 
+import re 
 from random import randint
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from .models import Profile  # Importante importar o Model aqui
+from .models import Profile  
 
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
@@ -48,44 +49,31 @@ from django.views.decorators.csrf import csrf_exempt
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 
-# Importações do JWT adicionadas para customizar o login
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework.exceptions import AuthenticationFailed
+from rest_framework.throttling import ScopedRateThrottle 
 
-# Comandos básicos
-# source venv/bin/activate
-# python3 manage.py runserver 
+# --- CONFIGURAÇÃO GLOBAL DE SEGURANÇA DE ARQUIVOS ---
+ALLOWED_EXTENSIONS = [
+    '.pdf', '.doc', '.docx', '.txt', 
+    '.ppt', '.pptx', '.xls', '.xlsx', 
+    '.jpg', '.jpeg', '.png'
+]
+# ----------------------------------------------------
 
 def logout_user(request):
-    """ Faz logout e redireciona para página de registro.
-        
-        :param request: HTTP Request. 
-    
-        :return: Redirect. 
-    """
-    
     logout(request)
     return redirect('register')
 
 def login_page(request):
-    """ Página de login.
-        
-        :param request: HTTP Request. 
-    
-        :return: Redirect ou mensagem de erro no login se usuário e senha não existem ou não batem. 
-    """
-    
     if request.method == 'POST':
-
         username = request.POST.get('username')
         password = request.POST.get('password')
-
         user = authenticate(request, username=username, password=password)
 
         if user is not None:
             login(request, user)
-            # messages.sucess(request, 'Welcome!')
             return redirect('/kipo_playground/welcome/')
         else:
             messages.info(request, 'bad login!')
@@ -94,22 +82,11 @@ def login_page(request):
     return render(request, 'login.html', context)
 
 def register(request):
-    """ Página de registro de usuário.
-        
-        :param request: HTTP Request. 
-    
-        :return: Redirect para início do sistema se registro foi criaod com sucesso ou mostra de página de registro. 
-    """
-
     form = CreateUser()
-
     if request.method == 'POST':
         form = CreateUser(request.POST)
         if form.is_valid():
             form.save()
-
-            # messages.sucess(request, 'Acccount created!')
-
             return redirect('/kipo_playground/welcome/')
 
     context = {'form':form}
@@ -122,28 +99,27 @@ def register(request):
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     def validate(self, attrs):
         data = super().validate(attrs)
-        
-        # Pega o usuário que tentou logar
         user = self.user
         
-        # Superusuário sempre passa
         if user.is_superuser:
             return data
             
-        # Verifica o status no perfil
-        try:
-            profile = user.profile
-            if profile.status_conta == 'Em análise':
-                raise AuthenticationFailed('Sua conta está em análise. Aguarde a aprovação do administrador.')
-            elif profile.status_conta == 'Rejeitado':
-                raise AuthenticationFailed('Sua conta foi rejeitada e não tem acesso ao sistema.')
-        except Profile.DoesNotExist:
-            pass # Se não tem perfil, deixa passar 
+        # --- CORREÇÃO DE SEGURANÇA: BLOQUEIO RÍGIDO DE PERFIL ---
+        if not hasattr(user, 'profile'):
+            raise AuthenticationFailed('Perfil não encontrado. Acesso negado.')
+            
+        if user.profile.status_conta == 'Em análise':
+            raise AuthenticationFailed('Sua conta está em análise. Aguarde a aprovação do administrador.')
+        elif user.profile.status_conta == 'Rejeitado':
+            raise AuthenticationFailed('Sua conta foi rejeitada e não tem acesso ao sistema.')
+        # --------------------------------------------------------
             
         return data
 
 class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = 'login_attempts'
 
 
 # ============================================================================
@@ -162,8 +138,6 @@ def api_register_user(request):
     password = data.get('password')
     name = data.get('name')
     disciplina = data.get('disciplina', 'Outra')
-    
-    # PEGA A ESCOLA DO REQUEST (com fallback para vazio)
     escola = data.get('escola', '') 
 
     if not username or not password or not email:
@@ -175,6 +149,15 @@ def api_register_user(request):
     if User.objects.filter(email=email).exists():
         return Response({'erro': 'Este e-mail já possui uma conta cadastrada.'}, status=400)
 
+    if len(password) < 8:
+        return Response({'erro': 'A senha precisa ter no mínimo 8 caracteres.'}, status=400)
+
+    if not re.search(r'[A-Z]', password):
+        return Response({'erro': 'A senha precisa ter pelo menos uma letra maiúscula.'}, status=400)
+
+    if not re.search(r'[!@#$%^&*(),.?":{}|<>]', password):
+        return Response({'erro': 'A senha precisa ter pelo menos um símbolo especial.'}, status=400)
+
     try:
         user = User.objects.create_user(
             username=username,
@@ -185,10 +168,8 @@ def api_register_user(request):
         
         profile, created = Profile.objects.get_or_create(user=user)
         profile.disciplina = disciplina
-        
-        # SALVA A ESCOLA NO PERFIL
         profile.escola = escola 
-        # O status_conta vai como 'Em análise' por padrão conforme o models.py
+        profile.status_conta = 'Em análise' # <--- CORREÇÃO: FORÇAR STATUS DE ANÁLISE!
         profile.save()
         
         return Response({'mensagem': 'Conta criada com sucesso! Aguarde aprovação.'}, status=201)
@@ -221,7 +202,7 @@ def api_user_profile(request):
             'disciplina': profile.disciplina,
             'escola': profile.escola, 
             'avatar': avatar_url,
-            'is_superuser': user.is_superuser # Útil para o frontend saber se mostra o menu de admin
+            'is_superuser': user.is_superuser
         })
 
     elif request.method == 'PUT':
@@ -264,6 +245,12 @@ def api_user_profile(request):
 def api_create_production(request):
     user = request.user
     data = request.data
+    arquivo = request.FILES.get('arquivo')
+
+    if arquivo:
+        extensao = os.path.splitext(arquivo.name)[1].lower()
+        if extensao not in ALLOWED_EXTENSIONS:
+            return Response({'erro': f'Formato de arquivo inválido ({extensao}). Formatos permitidos: PDF, Imagens ou Documentos Office.'}, status=400)
     
     try:
         recursos_input = data.getlist('recursos') if hasattr(data, 'getlist') else data.get('recursos', '')
@@ -286,7 +273,7 @@ def api_create_production(request):
             recursos=recursos_str,
             experiencia=data.get('experiencia'), 
             resultados=data.get('resultados'),
-            arquivo=request.FILES.get('arquivo')
+            arquivo=arquivo 
         )
         return Response({'mensagem': 'Produção criada com sucesso!', 'id': nova_producao.id}, status=201)
     
@@ -321,6 +308,17 @@ def api_list_my_productions(request):
 def api_get_production_details(request, pk):
     try:
         p = Producao.objects.get(id=pk)
+
+        is_dono = p.user == request.user
+        is_admin = request.user.is_superuser
+        is_aprovado = p.status in ['Aprovado', 'Concluído']
+        is_revisor = p.revisor == request.user
+        
+        minha_disciplina = request.user.profile.disciplina if hasattr(request.user, 'profile') else 'Outra'
+        is_potencial_revisor = (p.status == 'Em revisão' and p.disciplina == minha_disciplina and not is_dono)
+
+        if not (is_dono or is_admin or is_aprovado or is_revisor or is_potencial_revisor):
+            return Response({'erro': 'Acesso negado. Esta produção é privada ou ainda está em avaliação.'}, status=403)
         
         arquivo_url = None
         if p.arquivo:
@@ -360,6 +358,55 @@ def api_get_production_details(request, pk):
     except Producao.DoesNotExist:
         return Response({'erro': 'Produção não encontrada'}, status=404)
 
+
+@api_view(['PUT'])
+@permission_classes([IsAuthenticated])
+def api_update_production(request, pk):
+    try:
+        p = Producao.objects.get(id=pk, user=request.user)
+        
+        if p.status != 'Correção solicitada':
+            return Response({'erro': 'Esta produção não pode ser editada no momento.'}, status=403)
+
+        data = request.data
+        p.titulo = data.get('titulo', p.titulo)
+        p.disciplina = data.get('disciplina', p.disciplina)
+        p.nivel = data.get('nivel_ensino', p.nivel)
+        p.modelo_ia = data.get('modelo_ia', p.modelo_ia)
+        p.categoria = data.get('categoria', p.categoria)
+        p.bncc = data.get('bncc', p.bncc)
+        p.metodologia = data.get('metodologia', p.metodologia)
+        p.duracao = data.get('duracao', p.duracao)
+        p.experiencia = data.get('experiencia', p.experiencia)
+        p.resultados = data.get('resultados', p.resultados)
+
+        recursos_input = data.getlist('recursos') if hasattr(data, 'getlist') else data.get('recursos')
+        if recursos_input:
+            if isinstance(recursos_input, list):
+                p.recursos = ", ".join(recursos_input)
+            else:
+                p.recursos = str(recursos_input)
+
+        novo_arquivo = request.FILES.get('arquivo')
+        if novo_arquivo:
+            extensao = os.path.splitext(novo_arquivo.name)[1].lower()
+            if extensao not in ALLOWED_EXTENSIONS:
+                return Response({'erro': f'Formato de arquivo inválido ({extensao}). Formatos permitidos: PDF, Imagens ou Documentos Office.'}, status=400)
+            p.arquivo = novo_arquivo
+
+        p.status = 'Em revisão' 
+        p.feedback_revisao = None 
+        p.revisor = None 
+        
+        p.save()
+        return Response({'mensagem': 'Produção atualizada e reenviada para fila de revisão!'})
+
+    except Producao.DoesNotExist:
+        return Response({'erro': 'Produção não encontrada.'}, status=404)
+    except Exception as e:
+        print(f"Erro ao atualizar: {e}")
+        return Response({'erro': 'Erro interno ao atualizar.'}, status=500)
+
 # ============================================================================
 # 3. SISTEMA DE REVISÃO (DUPLO CEGO & HISTÓRICO)
 # ============================================================================
@@ -367,9 +414,6 @@ def api_get_production_details(request, pk):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def api_list_review_queue(request):
-    """
-    Lista produções pendentes.
-    """
     user = request.user
     
     try:
@@ -399,11 +443,15 @@ def api_list_review_queue(request):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def api_submit_review(request, pk):
-    """
-    Salva a revisão (notas + feedback), define status e envia EMAIL HTML se rejeitado.
-    """
     try:
         p = Producao.objects.get(id=pk)
+        
+        if p.user == request.user:
+            return Response({'erro': 'Não pode avaliar a sua própria produção.'}, status=403)
+            
+        if p.status != 'Em revisão':
+            return Response({'erro': 'Esta produção não está disponível para avaliação.'}, status=400)
+        
         data = request.data
         
         aprovado = data.get('aprovado') 
@@ -629,51 +677,6 @@ def api_password_reset_confirm(request, uidb64, token):
         return Response({'mensagem': 'Senha alterada com sucesso!'})
     else:
         return Response({'erro': 'Link expirado ou inválido.'}, status=400)
-    
-@api_view(['PUT'])
-@permission_classes([IsAuthenticated])
-def api_update_production(request, pk):
-    try:
-        p = Producao.objects.get(id=pk, user=request.user)
-        
-        if p.status != 'Correção solicitada':
-            return Response({'erro': 'Esta produção não pode ser editada no momento.'}, status=403)
-
-        data = request.data
-        p.titulo = data.get('titulo', p.titulo)
-        p.disciplina = data.get('disciplina', p.disciplina)
-        p.nivel = data.get('nivel_ensino', p.nivel)
-        p.modelo_ia = data.get('modelo_ia', p.modelo_ia)
-        p.categoria = data.get('categoria', p.categoria)
-        p.bncc = data.get('bncc', p.bncc)
-        p.metodologia = data.get('metodologia', p.metodologia)
-        p.duracao = data.get('duracao', p.duracao)
-        p.experiencia = data.get('experiencia', p.experiencia)
-        p.resultados = data.get('resultados', p.resultados)
-
-        recursos_input = data.getlist('recursos') if hasattr(data, 'getlist') else data.get('recursos')
-        if recursos_input:
-            if isinstance(recursos_input, list):
-                p.recursos = ", ".join(recursos_input)
-            else:
-                p.recursos = str(recursos_input)
-
-        novo_arquivo = request.FILES.get('arquivo')
-        if novo_arquivo:
-            p.arquivo = novo_arquivo
-
-        p.status = 'Em revisão' 
-        p.feedback_revisao = None 
-        p.revisor = None 
-        
-        p.save()
-        return Response({'mensagem': 'Produção atualizada e reenviada para fila de revisão!'})
-
-    except Producao.DoesNotExist:
-        return Response({'erro': 'Produção não encontrada.'}, status=404)
-    except Exception as e:
-        print(f"Erro ao atualizar: {e}")
-        return Response({'erro': 'Erro interno ao atualizar.'}, status=500)
 
 
 # ============================================================================
@@ -682,7 +685,6 @@ def api_update_production(request, pk):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def api_list_pending_users(request):
-    """Lista usuários que estão 'Em análise' (Só superadmin)."""
     if not request.user.is_superuser:
         return Response({'erro': 'Acesso negado'}, status=403)
         
@@ -702,11 +704,10 @@ def api_list_pending_users(request):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def api_approve_reject_user(request, user_id):
-    """Aprova ou Rejeita um usuário (Só superadmin)."""
     if not request.user.is_superuser:
         return Response({'erro': 'Acesso negado'}, status=403)
         
-    acao = request.data.get('acao') # Deve ser 'Aprovado' ou 'Rejeitado'
+    acao = request.data.get('acao')
     if acao not in ['Aprovado', 'Rejeitado']:
         return Response({'erro': 'Ação inválida'}, status=400)
         

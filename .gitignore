@@ -40,6 +40,7 @@ __pycache__/
 .env.development.local
 .env.test.local
 .env.production.local
+.env
 
 # Project data / databases
 db.sqlite3
@@ -55,3 +56,10 @@ backend/**/*.pyd
 kipo_playground/__pycache__
 kipo_playground/migrations/__pycache__
 TCC_DjangoScrumKipo/__pycache__
+# Cache from the backend tree
+backend/kipo_playground/__pycache__
+backend/kipo_playground/migrations/__pycache__
+backend/TCC_DjangoScrumKipo/__pycache__
+
+# Legacy environment alias
+venv
