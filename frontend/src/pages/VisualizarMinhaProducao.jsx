@@ -9,23 +9,31 @@ import {
 } from 'lucide-react';
 
 const handleDownload = async () => {
+  if (!data.arquivo) return;
+
   try {
-    // Remove a parte repetida da URL para o Axios não se confundir
-    const urlLimpa = data.arquivo.replace('https://teia.cic.unb.br/kipo_playground/', '');
+    // 1. Removemos o domínio da URL para o Axios não duplicar a base
+    const urlRelativa = data.arquivo.replace('https://teia.cic.unb.br/kipo_playground/', '');
     
-    const response = await api.get(urlLimpa, {
-      responseType: 'blob', // Necessário para arquivos binários
+    // 2. Fazemos a requisição via Axios para enviar o Token JWT automaticamente
+    const response = await api.get(urlRelativa, {
+      responseType: 'blob', // Essencial para baixar PDFs/Imagens
     });
 
-    const url = window.URL.createObjectURL(new Blob([response.data]));
+    // 3. Criamos o link de download temporário
+    const urlBlob = window.URL.createObjectURL(new Blob([response.data]));
     const link = document.createElement('a');
-    link.href = url;
-    link.setAttribute('download', `material-${data.id}.pdf`);
+    link.href = urlBlob;
+    link.setAttribute('download', `producao-${data.id}.pdf`);
     document.body.appendChild(link);
     link.click();
+    
+    // Limpeza de memória
     link.remove();
+    window.URL.revokeObjectURL(urlBlob);
   } catch (error) {
-    console.error("Erro ao baixar:", error);
+    console.error("Erro no download:", error);
+    // O seu interceptador no api.js vai te deslogar se o erro for 401
   }
 };
 
