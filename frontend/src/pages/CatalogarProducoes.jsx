@@ -388,6 +388,10 @@ const ManualFormSplit = ({ onBack, navigate, isMobile, initialData }) => {
                       )}
                     </label>
                   </div>
+                  <p style={{ fontSize: '11px', color: '#78909C', marginTop: '8px', lineHeight: '1.4' }}>
+    <strong>Formatos aceitos:</strong> PDF, Word, PowerPoint, Excel, Imagens (JPG/PNG) e TXT.<br />
+    <strong>Tamanho máximo:</strong> 60MB.
+  </p>
                 </div>
               </div>
 
