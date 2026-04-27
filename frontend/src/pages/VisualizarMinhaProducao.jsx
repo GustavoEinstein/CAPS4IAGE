@@ -10,24 +10,22 @@ import {
 
 const handleDownload = async () => {
   try {
-    const response = await api.get(data.arquivo, {
-      responseType: 'blob', // Importante para arquivos!
+    // Remove a parte repetida da URL para o Axios não se confundir
+    const urlLimpa = data.arquivo.replace('https://teia.cic.unb.br/kipo_playground/', '');
+    
+    const response = await api.get(urlLimpa, {
+      responseType: 'blob', // Necessário para arquivos binários
     });
 
-    // Cria um link temporário na memória do navegador
     const url = window.URL.createObjectURL(new Blob([response.data]));
     const link = document.createElement('a');
     link.href = url;
-    
-    // Define um nome para o arquivo (pode ser dinâmico)
-    link.setAttribute('download', `material-${data.id}.pdf`); 
-    
+    link.setAttribute('download', `material-${data.id}.pdf`);
     document.body.appendChild(link);
     link.click();
     link.remove();
   } catch (error) {
-    console.error("Erro ao baixar arquivo:", error);
-    alert("Não foi possível baixar o arquivo. Verifique se você tem permissão.");
+    console.error("Erro ao baixar:", error);
   }
 };
 
