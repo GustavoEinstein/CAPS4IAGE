@@ -6,18 +6,15 @@ const api = axios.create({
 });
 
 // 1. INTERCEPTOR DE REQUISIÇÃO (Envia o Token automaticamente)
-api.interceptors.response.use(
-    (response) => response,
-    (error) => {
-        if (error.response && error.response.status === 401) {
-            // Se o erro vier de um arquivo de mídia, não desloga o usuário
-            if (error.config.url.includes('/media/')) {
-                return Promise.reject(error);
-            }
-            
-            localStorage.clear();
-            window.location.href = '/';
+api.interceptors.request.use(
+    (config) => {
+        const token = localStorage.getItem('access_token');
+        if (token) {
+            config.headers.Authorization = `Bearer ${token}`;
         }
+        return config;
+    },
+    (error) => {
         return Promise.reject(error);
     }
 );
