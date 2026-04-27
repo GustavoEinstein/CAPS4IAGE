@@ -21,6 +21,29 @@ import {
   Package, // <--- ADICIONADO AQUI!
 } from "lucide-react"
 
+const handleDownload = async () => {
+  try {
+    const response = await api.get(data.arquivo, {
+      responseType: 'blob', // Importante para arquivos!
+    });
+
+    // Cria um link temporário na memória do navegador
+    const url = window.URL.createObjectURL(new Blob([response.data]));
+    const link = document.createElement('a');
+    link.href = url;
+    
+    // Define um nome para o arquivo (pode ser dinâmico)
+    link.setAttribute('download', `material-${data.id}.pdf`); 
+    
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+  } catch (error) {
+    console.error("Erro ao baixar arquivo:", error);
+    alert("Não foi possível baixar o arquivo. Verifique se você tem permissão.");
+  }
+};
+
 const DetalharProducao = () => {
   const { id } = useParams()
   const navigate = useNavigate()
@@ -265,17 +288,9 @@ const DetalharProducao = () => {
                       <span style={styles.fileMeta}>Baixar arquivo</span>
                     </div>
                   </div>
-                  <a
-                    href={data.arquivo}
-                    download
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{ textDecoration: "none" }}
-                  >
-                    <button style={styles.downloadBtn}>
-                      <Download size={18} /> Baixar Roteiro
-                    </button>
-                  </a>
+<button onClick={handleDownload} style={styles.downloadBtn}>
+  <Download size={18} /> Baixar Roteiro
+</button>
                 </>
               ) : (
                 <p
