@@ -384,10 +384,19 @@ const ManualFormSplit = ({ onBack, navigate, isMobile, initialData }) => {
                           <span style={styles.uploadTextMain}>
                             Carregar Arquivo
                           </span>
-                              <p style={{ fontSize: '11px', color: '#78909C', marginTop: '8px', lineHeight: '1.4' }}>
-    <strong>Formatos aceitos:</strong> PDF, Word, PowerPoint, Excel, Imagens e TXT.<br />
-    <strong>Tamanho máximo:</strong> 60MB.
-  </p>
+                          <p
+                            style={{
+                              fontSize: "11px",
+                              color: "#78909C",
+                              marginTop: "8px",
+                              lineHeight: "1.4",
+                            }}
+                          >
+                            <strong>Formatos aceitos:</strong> PDF, Word,
+                            PowerPoint, Excel, Imagens e TXT.
+                            <br />
+                            <strong>Tamanho máximo:</strong> 60MB.
+                          </p>
                         </>
                       )}
                     </label>
@@ -573,7 +582,11 @@ const VoiceFormV2 = ({ onBack, onUseDraft }) => {
     browserWarning,
     toggleListening,
     resetTranscript,
-  } = useSpeechRecognition({ lang: "pt-BR", continuous: true, interimResults: true })
+  } = useSpeechRecognition({
+    lang: "pt-BR",
+    continuous: true,
+    interimResults: true,
+  })
 
   const [isProcessing, setIsProcessing] = useState(false)
   const [processedData, setProcessedData] = useState(null)
@@ -631,7 +644,8 @@ const VoiceFormV2 = ({ onBack, onUseDraft }) => {
               margin: "0 auto 20px auto",
             }}
           >
-            Clique no microfone e descreva sua pratica. Depois processe e aplique no formulario manual.
+            Clique no microfone e descreva sua pratica. Depois processe e
+            aplique no formulario manual.
           </p>
 
           <div style={styles.talkingPoints}>
@@ -640,22 +654,36 @@ const VoiceFormV2 = ({ onBack, onUseDraft }) => {
             </p>
             <ul style={styles.talkingList}>
               <li>Fale pausado e em frases curtas.</li>
-              <li>Dite siglas por extenso: "I A" e tambem "inteligencia artificial".</li>
-              <li>Fale os campos em ordem: titulo, nivel, categoria, metodologia, resultados.</li>
-              <li>Repita termos-chave importantes (ex.: BNCC, ChatGPT, rubrica) duas vezes.</li>
+              <li>
+                Dite siglas por extenso: "I A" e tambem "inteligencia
+                artificial".
+              </li>
+              <li>
+                Fale os campos em ordem: titulo, nivel, categoria, metodologia,
+                resultados.
+              </li>
+              <li>
+                Repita termos-chave importantes (ex.: BNCC, ChatGPT, rubrica)
+                duas vezes.
+              </li>
               <li>Se errar uma frase, pare e repita do inicio da frase.</li>
             </ul>
           </div>
 
           {!isSupported && (
             <div style={styles.errorBox}>
-              Seu navegador nao suporta reconhecimento de voz. Use Chrome, Edge ou Safari.
+              Seu navegador nao suporta reconhecimento de voz. Use Chrome, Edge
+              ou Safari.
             </div>
           )}
 
-          {!!browserWarning && <div style={styles.warningBox}>{browserWarning}</div>}
+          {!!browserWarning && (
+            <div style={styles.warningBox}>{browserWarning}</div>
+          )}
 
-          {(error || aiError) && <div style={styles.errorBox}>{error || aiError}</div>}
+          {(error || aiError) && (
+            <div style={styles.errorBox}>{error || aiError}</div>
+          )}
 
           <div style={styles.micWrapper}>
             <button
@@ -673,7 +701,9 @@ const VoiceFormV2 = ({ onBack, onUseDraft }) => {
             </button>
             <p style={styles.micStatus}>
               {isListening ? (
-                <span style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <span
+                  style={{ display: "flex", alignItems: "center", gap: "8px" }}
+                >
                   <Volume2 size={18} /> Gravando... (toque para parar)
                 </span>
               ) : (
@@ -698,7 +728,8 @@ const VoiceFormV2 = ({ onBack, onUseDraft }) => {
 
           {!!transcript && !isListening && (
             <button onClick={resetTranscript} style={styles.clearButton}>
-              <Trash2 size={16} style={{ marginRight: "6px" }} /> Limpar transcricao
+              <Trash2 size={16} style={{ marginRight: "6px" }} /> Limpar
+              transcricao
             </button>
           )}
 
@@ -707,13 +738,27 @@ const VoiceFormV2 = ({ onBack, onUseDraft }) => {
               <h4 style={{ margin: "0 0 10px", color: "#37474F" }}>
                 Dados extraidos
               </h4>
-              <p style={styles.reviewLine}><strong>Titulo:</strong> {processedData.titulo}</p>
-              <p style={styles.reviewLine}><strong>Nivel:</strong> {processedData.nivel || "-"}</p>
-              <p style={styles.reviewLine}><strong>Categoria:</strong> {processedData.categoria || "-"}</p>
-              <p style={styles.reviewLine}><strong>Metodologia:</strong> {processedData.metodologia || "-"}</p>
-              <p style={styles.reviewLine}><strong>Modelo IA:</strong> {processedData.modelo_ia || "-"}</p>
+              <p style={styles.reviewLine}>
+                <strong>Titulo:</strong> {processedData.titulo}
+              </p>
+              <p style={styles.reviewLine}>
+                <strong>Nivel:</strong> {processedData.nivel || "-"}
+              </p>
+              <p style={styles.reviewLine}>
+                <strong>Categoria:</strong> {processedData.categoria || "-"}
+              </p>
+              <p style={styles.reviewLine}>
+                <strong>Metodologia:</strong> {processedData.metodologia || "-"}
+              </p>
+              <p style={styles.reviewLine}>
+                <strong>Modelo IA:</strong> {processedData.modelo_ia || "-"}
+              </p>
               <button
-                style={{ ...styles.button, backgroundColor: "#2E7D32", marginTop: "12px" }}
+                style={{
+                  ...styles.button,
+                  backgroundColor: "#2E7D32",
+                  marginTop: "12px",
+                }}
                 onClick={() => onUseDraft(processedData)}
               >
                 <Check size={18} style={{ marginRight: "8px" }} />
@@ -727,7 +772,11 @@ const VoiceFormV2 = ({ onBack, onUseDraft }) => {
               Cancelar
             </button>
             <button
-              style={{ ...styles.button, backgroundColor: "#7B1FA2", opacity: !transcript || isListening || isProcessing ? 0.5 : 1 }}
+              style={{
+                ...styles.button,
+                backgroundColor: "#7B1FA2",
+                opacity: !transcript || isListening || isProcessing ? 0.5 : 1,
+              }}
               onClick={processWithAI}
               disabled={!transcript || isListening || isProcessing}
             >
