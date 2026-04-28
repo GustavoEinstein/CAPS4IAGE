@@ -48,6 +48,12 @@ urlpatterns = [
     # ============================================================================
     path('api/admin/pending-users/', views.api_list_pending_users, name='pending_users'),
     path('api/admin/approve-user/<int:user_id>/', views.api_approve_reject_user, name='approve_user'),
+
+
+# --- FÓRUM ---
+    path('api/forum/topicos/', views.api_forum_topicos, name='forum_topicos'),
+    path('api/forum/topicos/<int:pk>/', views.api_forum_detalhe_comentarios, name='forum_detalhes'),
+
 ]
 
 if settings.DEBUG:

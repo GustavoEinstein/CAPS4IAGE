@@ -8,7 +8,8 @@ import {
   Globe,
   LifeBuoy,
   BookOpenCheck,
-  UserCheck, // <--- NOVO ÍCONE ADICIONADO AQUI
+  UserCheck, 
+  MessageSquare, // <--- NOVO ÍCONE PARA O FÓRUM ADICIONADO AQUI
   X,
 } from "lucide-react"
 
@@ -20,18 +21,15 @@ const SpiderWebIcon = ({ size = 24, color = "currentColor" }) => (
     viewBox="0 0 24 24"
     fill="none"
     stroke={color}
-    strokeWidth="1.5" // Linhas ligeiramente mais finas para elegância
+    strokeWidth="1.5" 
     strokeLinecap="round"
     strokeLinejoin="round"
   >
-    {/* Eixos Radiais (A estrutura da rede) */}
-    <path d="M12 2v20" /> {/* Vertical */}
-    <path d="M2 12h20" /> {/* Horizontal */}
-    <path d="M4.93 4.93l14.14 14.14" /> {/* Diagonal 1 */}
-    <path d="M19.07 4.93L4.93 19.07" /> {/* Diagonal 2 */}
-    {/* Conexões Internas (Octógono Menor) */}
+    <path d="M12 2v20" /> 
+    <path d="M2 12h20" /> 
+    <path d="M4.93 4.93l14.14 14.14" /> 
+    <path d="M19.07 4.93L4.93 19.07" /> 
     <path d="M12 7 L15.53 8.47 L17 12 L15.53 15.53 L12 17 L8.47 15.53 L7 12 L8.47 8.47 Z" />
-    {/* Conexões Externas (Octógono Maior) */}
     <path d="M12 3 L18.36 5.64 L21 12 L18.36 18.36 L12 21 L5.64 18.36 L3 12 L5.64 5.64 Z" />
   </svg>
 )
@@ -49,9 +47,8 @@ function Sidebar({ isOpen, isMobile, onClose }) {
     <aside
       style={{
         ...styles.sidebar,
-        // Lógica de visualização Responsiva
         transform: isOpen ? "translateX(0)" : "translateX(-100%)",
-        position: "fixed", // Sempre fixed para garantir overlay no mobile
+        position: "fixed", 
         boxShadow: isOpen ? "4px 0 10px rgba(0,0,0,0.1)" : "none",
       }}
     >
@@ -118,6 +115,18 @@ function Sidebar({ isOpen, isMobile, onClose }) {
             >
               <Scale size={20} style={styles.icon} />
               Revisão (Duplo Cego)
+            </NavLink>
+          </li>
+          
+          {/* --- NOVO LINK PARA O FÓRUM --- */}
+          <li>
+            <NavLink
+              to="/dashboard/forum"
+              style={getLinkStyle}
+              onClick={isMobile ? onClose : undefined}
+            >
+              <MessageSquare size={20} style={styles.icon} />
+              Fórum de Rascunhos
             </NavLink>
           </li>
         </ul>

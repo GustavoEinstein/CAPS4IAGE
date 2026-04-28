@@ -1,41 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import api from '../services/api'; 
 import { useParams, useNavigate, useOutletContext } from 'react-router-dom';
+import { Alert } from '../utils/alerts'; // <--- IMPORTAÇÃO DO ALERTA
 import { 
     ArrowLeft, Calendar, Clock, Bot, BookOpen, CheckCircle2,
     XCircle, Wrench, Lightbulb, Target, Download, FileText, User, Package, Star,
     Send, MapPin, Search, AlertCircle, RefreshCw, File, ChevronRight,
-    BarChart3, ShieldAlert, ThumbsUp, AlertTriangle // Novos ícones importados
+    BarChart3, ShieldAlert, ThumbsUp, AlertTriangle 
 } from 'lucide-react';
-
-const handleDownload = async () => {
-  if (!data.arquivo) return;
-
-  try {
-    // 1. Removemos o domínio da URL para o Axios não duplicar a base
-    const urlRelativa = data.arquivo.replace('https://teia.cic.unb.br/kipo_playground/', '');
-    
-    // 2. Fazemos a requisição via Axios para enviar o Token JWT automaticamente
-    const response = await api.get(urlRelativa, {
-      responseType: 'blob', // Essencial para baixar PDFs/Imagens
-    });
-
-    // 3. Criamos o link de download temporário
-    const urlBlob = window.URL.createObjectURL(new Blob([response.data]));
-    const link = document.createElement('a');
-    link.href = urlBlob;
-    link.setAttribute('download', `producao-${data.id}.pdf`);
-    document.body.appendChild(link);
-    link.click();
-    
-    // Limpeza de memória
-    link.remove();
-    window.URL.revokeObjectURL(urlBlob);
-  } catch (error) {
-    console.error("Erro no download:", error);
-    // O seu interceptador no api.js vai te deslogar se o erro for 401
-  }
-};
 
 const VisualizarMinhaProducao = () => {
     const { id } = useParams();
@@ -46,6 +18,27 @@ const VisualizarMinhaProducao = () => {
     const [data, setData] = useState(null);
     const [loading, setLoading] = useState(true);
 
+    const handleDownload = async () => {
+        if (!data || !data.arquivo) return;
+
+        try {
+            const urlRelativa = data.arquivo.replace('https://teia.cic.unb.br/kipo_playground/', '');
+            const response = await api.get(urlRelativa, { responseType: 'blob' });
+            const urlBlob = window.URL.createObjectURL(new Blob([response.data]));
+            const link = document.createElement('a');
+            link.href = urlBlob;
+            link.setAttribute('download', `producao-${data.id}.pdf`);
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            window.URL.revokeObjectURL(urlBlob);
+        } catch (error) {
+            console.error("Erro no download:", error);
+            // --- POP-UP DE ERRO AQUI ---
+            Alert.erro("Download Falhou", "Não foi possível baixar o arquivo. Verifique sua conexão.");
+        }
+    };
+
     useEffect(() => {
         const fetchDetails = async () => {
             try {
@@ -53,7 +46,8 @@ const VisualizarMinhaProducao = () => {
                 setData(response.data);
             } catch (error) {
                 console.error("Erro ao carregar detalhes:", error);
-                alert("Não foi possível carregar os detalhes da produção.");
+                // --- POP-UP DE ERRO AQUI ---
+                Alert.erro("Erro de Carregamento", "Não foi possível carregar os detalhes da produção.");
             } finally {
                 setLoading(false);
             }
@@ -64,7 +58,6 @@ const VisualizarMinhaProducao = () => {
     if (loading) return <div style={{padding: '50px', textAlign: 'center', color: '#90A4AE'}}>Carregando detalhes...</div>;
     if (!data) return null;
 
-    // --- LÓGICA DE ESTADOS ---
     const statusLower = data.status ? data.status.toLowerCase() : "";
     const isApproved = statusLower.includes('aprovado') || statusLower.includes('publicado') || statusLower.includes('concluído');
     const isRejected = statusLower.includes('rejeitado') || statusLower.includes('correção');
@@ -72,7 +65,6 @@ const VisualizarMinhaProducao = () => {
 
     const theme = { main: '#1565C0', bg: '#E3F2FD' }; 
 
-    // --- COMPONENTE: TIMELINE CARD ---
     const TimelineCard = () => {
         const steps = [
             { id: 1, label: "Envio Realizado", date: data.created_at || data.data, status: "done" },
@@ -135,11 +127,9 @@ const VisualizarMinhaProducao = () => {
 
                 <div style={{...styles.grid, flexDirection: isMobile ? 'column' : 'row'}}>
                     
-                    {/* --- COLUNA ESQUERDA: CONTEÚDO PRINCIPAL --- */}
                     <div style={styles.columnContent}>
                         <div style={styles.materialCard}>
                             
-                            {/* Header */}
                             <div style={styles.headerSection}>
                                 <div>
                                     <div style={styles.badgesRow}>
@@ -155,7 +145,6 @@ const VisualizarMinhaProducao = () => {
                                 </div>
                             </div>
 
-                            {/* Detalhes Técnicos */}
                             <div style={styles.techSheet}>
                                 <div style={styles.techItem}>
                                     <span style={styles.techLabel}>Metodologia</span>
@@ -175,27 +164,21 @@ const VisualizarMinhaProducao = () => {
                             <div style={styles.section}><h3 style={styles.sectionTitle}><Lightbulb size={18}/> Relato de Experiência</h3><p style={styles.textBody}>{data.experiencia || data.relato}</p></div>
                             <div style={styles.section}><h3 style={styles.sectionTitle}><Target size={18}/> Resultados</h3><div style={styles.resultsBox}>{data.resultados || "Sem resultados registrados."}</div></div>
                             
-                            {/* --- PARECER TÉCNICO INSERIDO AQUI --- */}
-                            {/* Passamos o objeto inteiro 'data' pois ele já contém os campos 'notas', 'revisao_realizada' e 'feedback_texto' vindos da API */}
                             <ParecerTecnico producao={data} />
 
                         </div>
                     </div>
 
-                    {/* --- COLUNA DIREITA: TIMELINE & DOWNLOAD --- */}
                     <div style={styles.columnSidebar}>
                         
-                        {/* 1. TIMELINE CARD */}
                         <TimelineCard />
 
-                        {/* 2. AÇÕES EXTRAS (Se rejeitado) */}
                         {isRejected && (
                             <button onClick={() => navigate(`/dashboard/editar-producao/${data.id}`)} style={styles.editButton}>
                                 <Wrench size={16} /> Realizar Correções
                             </button>
                         )}
 
-                        {/* 3. CARD DE ARQUIVO */}
                         <div style={{...styles.sidebarCard, marginTop: '20px'}}>
                             <h3 style={styles.sidebarTitle}>Arquivo</h3>
                             {data.arquivo ? (
@@ -207,9 +190,9 @@ const VisualizarMinhaProducao = () => {
                                             <span style={styles.fileType}>Documento PDF/DOCX</span>
                                         </div>
                                     </div>
-<button onClick={handleDownload} style={styles.downloadBtn}>
-  <Download size={18} /> Baixar Roteiro
-</button>
+                                    <button onClick={handleDownload} style={styles.downloadBtnPrimary}>
+                                        <Download size={18} /> Baixar Roteiro
+                                    </button>
                                 </div>
                             ) : (
                                 <div style={styles.emptyState}>
@@ -226,20 +209,13 @@ const VisualizarMinhaProducao = () => {
     );
 };
 
-// --- COMPONENTE INTERNO DE PARECER TÉCNICO ---
-// Mantendo a identidade visual da página
 const ParecerTecnico = ({ producao }) => {
-    // 1. Verificações de segurança
     if (!producao) return null;
 
-    // Se a API retornar 'revisao_realizada', usamos. 
-    // Senão, checamos se existe alguma nota > 0 manualmente (fallback).
     const temRevisao = producao.revisao_realizada || (producao.notas && producao.notas.coerencia > 0) || producao.nota_coerencia > 0;
     
     if (!temRevisao) return null;
 
-    // 2. Normalização dos dados (caso venham da raiz ou do objeto 'notas')
-    // Ajuste conforme seu backend retorna (o exemplo anterior retornava dentro de 'notas')
     const notas = producao.notas || {
         coerencia: producao.nota_coerencia,
         qualidade: producao.nota_qualidade,
@@ -249,14 +225,11 @@ const ParecerTecnico = ({ producao }) => {
         inovacao: producao.nota_inovacao
     };
 
-    // Feedback de texto: tenta usar o campo formatado ou o bruto
     const feedbackTexto = producao.feedback_texto || producao.feedback_revisor || producao.feedback_revisao;
     
-    // Status visual
     const statusLower = producao.status ? producao.status.toLowerCase() : "";
     const isAprovado = statusLower.includes('aprovado') || statusLower.includes('concluído') || producao.is_aprovado;
 
-    // ESTILOS LOCAIS DO PARECER
     const pStyles = {
         container: {
             marginTop: '40px',
@@ -288,10 +261,9 @@ const ParecerTecnico = ({ producao }) => {
             backgroundColor: '#FAFAFA', borderRadius: '8px', padding: '20px', borderLeft: '4px solid #90A4AE'
         },
         feedbackTitle: { fontSize: '14px', fontWeight: '700', color: '#455A64', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '8px' },
-        feedbackText: { fontSize: '14px', lineHeight: '1.6', color: '#37474F', whiteSpace: 'pre-wrap' } // Importante para quebra de linha
+        feedbackText: { fontSize: '14px', lineHeight: '1.6', color: '#37474F', whiteSpace: 'pre-wrap' } 
     };
 
-    // Componente Helper de Estrela
     const ScoreItem = ({ label, valor }) => (
         <div style={pStyles.scoreRow}>
             <span style={pStyles.label}>{label}</span>
@@ -321,7 +293,6 @@ const ParecerTecnico = ({ producao }) => {
                 </div>
             </div>
 
-            {/* Grid de Notas */}
             <div style={pStyles.grid}>
                 <ScoreItem label="Coerência Pedagógica" valor={notas.coerencia} />
                 <ScoreItem label="Qualidade do Prompt" valor={notas.qualidade} />
@@ -331,7 +302,6 @@ const ParecerTecnico = ({ producao }) => {
                 <ScoreItem label="Grau de Inovação" valor={notas.inovacao} />
             </div>
 
-            {/* Texto de Feedback */}
             {feedbackTexto && (
                 <div style={pStyles.feedbackBox}>
                     <div style={pStyles.feedbackTitle}>
@@ -346,7 +316,6 @@ const ParecerTecnico = ({ producao }) => {
     );
 };
 
-// --- ESTILOS GERAIS DA PÁGINA ---
 const styles = {
     fullPageWrapper: { backgroundColor: '#F0F2F5', minHeight: '100vh', width: '100%', boxSizing: 'border-box', paddingTop: '20px' },
     container: { maxWidth: '1100px', margin: '0 auto', padding: '0 20px 40px 20px' },
@@ -377,7 +346,6 @@ const styles = {
     textBody: { fontSize: '15px', lineHeight: '1.6', color: '#455A64' },
     resultsBox: { backgroundColor: '#E8F5E9', padding: '15px', borderRadius: '8px', borderLeft: '4px solid #1565C0', color: '#333', fontSize: '14px', fontStyle: 'italic' },
 
-    // --- TIMELINE STYLES ---
     timelineCard: { backgroundColor: 'white', border: '1px solid #E0E0E0', borderRadius: '12px', padding: '20px', boxShadow: '0 2px 5px rgba(0,0,0,0.03)' },
     sectionTitleSmall: { fontSize: '12px', textTransform: 'uppercase', color: '#90A4AE', fontWeight: '800', marginBottom: '15px' },
     timelineList: { display: 'flex', flexDirection: 'column' },
@@ -390,12 +358,10 @@ const styles = {
     stepTitle: { display: 'block', fontSize: '13px', fontWeight: '700', lineHeight: '1.2' },
     stepDate: { fontSize: '11px', color: '#90A4AE' },
 
-    // SIDEBAR CARDS
     sidebarCard: { backgroundColor: 'white', border: '1px solid #E0E0E0', borderRadius: '12px', padding: '20px' },
     sidebarTitle: { margin: '0 0 15px 0', fontSize: '12px', textTransform: 'uppercase', fontWeight: '800', color: '#90A4AE', borderBottom: '1px solid #F5F5F5', paddingBottom: '8px' },
     editButton: { marginTop: '12px', width: '100%', padding: '10px', backgroundColor: '#C62828', color: 'white', border: 'none', borderRadius: '6px', fontWeight: '700', fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' },
 
-    // DOWNLOAD
     downloadContainer: { display: 'flex', flexDirection: 'column', gap: '15px' },
     fileInfoBox: { display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', backgroundColor: '#F8F9FA', borderRadius: '8px', border: '1px solid #E0E0E0' },
     fileName: { display: 'block', fontSize: '13px', fontWeight: '700', color: '#333', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%' },

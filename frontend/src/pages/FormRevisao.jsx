@@ -1,40 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import api from '../services/api'; 
 import { useOutletContext, useParams, useNavigate } from 'react-router-dom';
+import { Alert } from '../utils/alerts'; // Se já estiver usando o Alerts
 import { 
     Star, CheckCircle2, Bot, Download, ArrowLeft, Clock, Wrench, 
     BookOpen, Target, Lightbulb, ThumbsUp, ThumbsDown, ShieldAlert, FileText, User, 
-    AlertTriangle, Lock, PenTool
+    AlertTriangle, Lock, PenTool, Eye // Adicionado o Eye
 } from 'lucide-react';
-
-const handleDownload = async () => {
-  if (!data.arquivo) return;
-
-  try {
-    // 1. Removemos o domínio da URL para o Axios não duplicar a base
-    const urlRelativa = data.arquivo.replace('https://teia.cic.unb.br/kipo_playground/', '');
-    
-    // 2. Fazemos a requisição via Axios para enviar o Token JWT automaticamente
-    const response = await api.get(urlRelativa, {
-      responseType: 'blob', // Essencial para baixar PDFs/Imagens
-    });
-
-    // 3. Criamos o link de download temporário
-    const urlBlob = window.URL.createObjectURL(new Blob([response.data]));
-    const link = document.createElement('a');
-    link.href = urlBlob;
-    link.setAttribute('download', `producao-${data.id}.pdf`);
-    document.body.appendChild(link);
-    link.click();
-    
-    // Limpeza de memória
-    link.remove();
-    window.URL.revokeObjectURL(urlBlob);
-  } catch (error) {
-    console.error("Erro no download:", error);
-    // O seu interceptador no api.js vai te deslogar se o erro for 401
-  }
-};
 
 const Revisao = () => {
     const { id } = useParams();
@@ -42,19 +14,16 @@ const Revisao = () => {
     const context = useOutletContext();
     const isMobile = context ? context.isMobile : false;
 
-    // --- ESTADOS ---
     const [producaoEmRevisao, setProducaoEmRevisao] = useState(null);
     const [loading, setLoading] = useState(true);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    // --- ESTADO DA RÚBRICA ---
     const [avaliacao, setAvaliacao] = useState({
         notaCoerencia: 0, notaQualidade: 0, notaMetodologia: 0,
         notaAvaliacao: 0, notaInclusao: 0, notaInovacao: 0,
         pontosFortes: '', pontosMelhoria: ''
     });
 
-    // --- CÁLCULOS (Lógica de cores, mas sem texto "Recomendado") ---
     const scores = [
         avaliacao.notaCoerencia, avaliacao.notaQualidade, avaliacao.notaMetodologia,
         avaliacao.notaAvaliacao, avaliacao.notaInclusao, avaliacao.notaInovacao
@@ -62,7 +31,24 @@ const Revisao = () => {
     const isFormComplete = scores.every(s => s > 0);
     const hasCriticalFail = scores.some(s => s > 0 && s <= 2);
 
-    // --- CARREGAR DADOS ---
+    const handleDownload = async () => {
+        if (!producaoEmRevisao || !producaoEmRevisao.arquivo) return;
+        try {
+            const urlRelativa = producaoEmRevisao.arquivo.replace('https://teia.cic.unb.br/kipo_playground/', '');
+            const response = await api.get(urlRelativa, { responseType: 'blob' });
+            const urlBlob = window.URL.createObjectURL(new Blob([response.data]));
+            const link = document.createElement('a');
+            link.href = urlBlob;
+            link.setAttribute('download', `producao-${producaoEmRevisao.id}.pdf`);
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            window.URL.revokeObjectURL(urlBlob);
+        } catch (error) {
+            console.error("Erro no download:", error);
+        }
+    };
+
     useEffect(() => {
         const fetchDetails = async () => {
             try {
@@ -85,14 +71,12 @@ const Revisao = () => {
 
     const handleSubmit = async (veredito) => {
         if (!isFormComplete) return;
-
         if (veredito === false && !avaliacao.pontosMelhoria.trim()) {
             alert("Para rejeitar, é OBRIGATÓRIO preencher as sugestões de melhoria.");
             return;
         }
 
         setIsSubmitting(true);
-
         try {
             await api.post(`api/production/${id}/review/`, { 
                 aprovado: veredito, 
@@ -105,12 +89,9 @@ const Revisao = () => {
                 nota_inclusao: avaliacao.notaInclusao,
                 nota_inovacao: avaliacao.notaInovacao
             });
-
             alert(veredito ? "Produção Aprovada!" : "Devolvida para correção.");
             navigate('/dashboard/revisao');
-
         } catch (error) {
-            console.error(error);
             alert("Erro ao salvar revisão.");
         } finally {
             setIsSubmitting(false);
@@ -120,7 +101,6 @@ const Revisao = () => {
     if (loading) return <div style={{padding: '50px', textAlign: 'center', color: '#90A4AE'}}>Carregando...</div>;
     if (!producaoEmRevisao) return null;
 
-    // --- COMPONENTE CRITÉRIO (CARD COMPACTO PARA GRID) ---
     const CriteriaCard = ({ label, description, fieldName, value }) => (
         <div style={styles.criteriaCard}>
             <div style={styles.criteriaHeader}>
@@ -132,18 +112,8 @@ const Revisao = () => {
             <p style={styles.criteriaDesc}>{description}</p>
             <div style={styles.starsWrapper}>
                 {[1, 2, 3, 4, 5].map((star) => (
-                    <button 
-                        key={star} 
-                        onClick={() => handleScoreChange(fieldName, star)} 
-                        type="button" 
-                        style={styles.starBtn}
-                    >
-                        <Star 
-                            size={24} 
-                            fill={star <= value ? "#FFC107" : "#F5F5F5"} 
-                            color={star <= value ? "#FFB300" : "#E0E0E0"} 
-                            strokeWidth={2}
-                        />
+                    <button key={star} onClick={() => handleScoreChange(fieldName, star)} type="button" style={styles.starBtn}>
+                        <Star size={24} fill={star <= value ? "#FFC107" : "#F5F5F5"} color={star <= value ? "#FFB300" : "#E0E0E0"} strokeWidth={2} />
                     </button>
                 ))}
             </div>
@@ -154,7 +124,6 @@ const Revisao = () => {
         <div style={styles.fullPageWrapper}>
             <div style={styles.container}>
                 
-                {/* HEADER DA PÁGINA */}
                 <div style={styles.topBar}>
                     <button onClick={() => navigate('/dashboard/revisao')} style={styles.backButton}>
                         <ArrowLeft size={20} /> Voltar
@@ -165,7 +134,6 @@ const Revisao = () => {
                     </div>
                 </div>
 
-                {/* --- PARTE 1: O MATERIAL (LEITURA) --- */}
                 <div style={styles.materialCard}>
                     <div style={styles.materialHeader}>
                         <div style={styles.badgesRow}>
@@ -197,25 +165,45 @@ const Revisao = () => {
                                     <span style={styles.fileType}>Material de Apoio</span>
                                 </div>
                             </div>
-<button onClick={handleDownload} style={styles.downloadBtn}>
-  <Download size={18} /> Baixar Roteiro
-</button>
+                            <button onClick={handleDownload} style={styles.downloadBtnCompact}>
+                                <Download size={18} /> Baixar Roteiro
+                            </button>
+                        </div>
+                    )}
+
+                    {/* --- NOVO: EXIBE AS NOTAS DO 1º REVISOR SE HOUVER --- */}
+                    {producaoEmRevisao.total_avaliacoes === 1 && producaoEmRevisao.notas && (
+                        <div style={styles.firstReviewerBox}>
+                            <h3 style={styles.firstReviewerTitle}><Eye size={18}/> Parecer do 1º Revisor</h3>
+                            <p style={{fontSize: '13px', color: '#546E7A', marginTop: '-10px', marginBottom: '15px'}}>
+                                Esta produção já possui uma aprovação. Use as notas abaixo como referência.
+                            </p>
+                            
+                            <div style={styles.firstReviewerGrid}>
+                                <div style={styles.scoreItem}>Coerência: <strong>{producaoEmRevisao.notas.coerencia}/5</strong></div>
+                                <div style={styles.scoreItem}>Prompt: <strong>{producaoEmRevisao.notas.qualidade}/5</strong></div>
+                                <div style={styles.scoreItem}>Metodologia: <strong>{producaoEmRevisao.notas.metodologia}/5</strong></div>
+                                <div style={styles.scoreItem}>Avaliação: <strong>{producaoEmRevisao.notas.avaliacao}/5</strong></div>
+                                <div style={styles.scoreItem}>Inclusão: <strong>{producaoEmRevisao.notas.inclusao}/5</strong></div>
+                                <div style={styles.scoreItem}>Inovação: <strong>{producaoEmRevisao.notas.inovacao}/5</strong></div>
+                            </div>
+                            <div style={styles.firstReviewerFeedback}>
+                                <strong style={{color: '#1565C0'}}>Comentários Deixados:</strong>
+                                <p style={{whiteSpace: 'pre-wrap', marginTop: '5px', margin: 0}}>{producaoEmRevisao.feedback_texto}</p>
+                            </div>
                         </div>
                     )}
                 </div>
 
-                {/* --- SEPARADOR VISUAL --- */}
                 <div style={styles.stepSeparator}>
                     <div style={styles.stepLine}></div>
                     <div style={styles.stepLabel}><PenTool size={16}/> Área de Avaliação</div>
                     <div style={styles.stepLine}></div>
                 </div>
 
-                {/* --- PARTE 2: AVALIAÇÃO (RODAPÉ) --- */}
                 <div style={styles.reviewSection}>
                     <h3 style={styles.reviewTitle}>Rúbrica de 6 Eixos</h3>
                     
-                    {/* Grid de Critérios */}
                     <div style={styles.criteriaGrid}>
                         <CriteriaCard label="Coerência Pedagógica" description="Objetivos claros e alinhados?" fieldName="notaCoerencia" value={avaliacao.notaCoerencia} />
                         <CriteriaCard label="Qualidade do Prompt" description="Uso intencional da IA?" fieldName="notaQualidade" value={avaliacao.notaQualidade} />
@@ -236,7 +224,6 @@ const Revisao = () => {
                         </div>
                     </div>
 
-                    {/* Botões de Ação */}
                     <div style={styles.actionButtonsRow}>
                         {!isFormComplete ? (
                             <button disabled style={styles.btnDisabled}>
@@ -244,21 +231,10 @@ const Revisao = () => {
                             </button>
                         ) : (
                             <>
-                                <button 
-                                    onClick={() => handleSubmit(false)} 
-                                    disabled={isSubmitting} 
-                                    // Se tiver nota ruim, o botão de rejeitar fica SÓLIDO (destaque). Se tudo for bom, fica outline (secundário).
-                                    style={hasCriticalFail ? styles.btnRejectPrimary : styles.btnRejectSecondary}
-                                >
+                                <button onClick={() => handleSubmit(false)} disabled={isSubmitting} style={hasCriticalFail ? styles.btnRejectPrimary : styles.btnRejectSecondary}>
                                     <ShieldAlert size={18}/> Rejeitar
                                 </button>
-                                
-                                <button 
-                                    onClick={() => handleSubmit(true)} 
-                                    disabled={isSubmitting || hasCriticalFail} 
-                                    // Se não tiver nota ruim, o botão de aprovar fica SÓLIDO (destaque).
-                                    style={!hasCriticalFail ? styles.btnApprovePrimary : styles.btnApproveSecondary}
-                                >
+                                <button onClick={() => handleSubmit(true)} disabled={isSubmitting || hasCriticalFail} style={!hasCriticalFail ? styles.btnApprovePrimary : styles.btnApproveSecondary}>
                                     <CheckCircle2 size={18}/> Aprovar
                                 </button>
                             </>
@@ -271,17 +247,14 @@ const Revisao = () => {
     );
 };
 
-// --- ESTILOS ---
 const styles = {
     fullPageWrapper: { backgroundColor: '#F0F2F5', minHeight: '100vh', width: '100%', boxSizing: 'border-box', padding: '20px' },
     container: { maxWidth: '1000px', margin: '0 auto', width: '100%', paddingBottom: '60px' },
-    
     topBar: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' },
     backButton: { display: 'flex', alignItems: 'center', gap: '8px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '14px', color: '#546E7A', fontWeight: '700' },
     pageTitle: { fontSize: '24px', fontWeight: '800', color: '#1A237E', margin: '0 0 4px 0' },
     pageSubtitle: { fontSize: '14px', color: '#546E7A', margin: 0 },
 
-    // --- CARD MATERIAL (AGORA FULL WIDTH) ---
     materialCard: { backgroundColor: '#FFFFFF', borderRadius: '16px', padding: '40px', boxShadow: '0 2px 10px rgba(0,0,0,0.03)', border: '1px solid #E0E0E0', marginBottom: '30px' },
     materialHeader: { marginBottom: '25px', borderBottom: '1px solid #F0F0F0', paddingBottom: '20px' },
     badgesRow: { display: 'flex', gap: '10px', marginBottom: '12px' },
@@ -309,12 +282,17 @@ const styles = {
     fileType: { fontSize: '11px', color: '#90A4AE' },
     downloadBtnCompact: { backgroundColor: '#1565C0', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', cursor: 'pointer', fontSize: '12px', fontWeight: '700', boxShadow: '0 2px 5px rgba(21, 101, 192, 0.2)', transition: 'background 0.2s', whiteSpace: 'nowrap' },
 
-    // --- DIVISOR STEPPER ---
+    // --- ESTILOS DO PARECER DO 1º REVISOR ---
+    firstReviewerBox: { backgroundColor: '#F8FBFF', border: '1px solid #BBDEFB', borderRadius: '12px', padding: '20px', marginTop: '30px' },
+    firstReviewerTitle: { fontSize: '15px', fontWeight: '800', color: '#1565C0', margin: '0 0 15px 0', display: 'flex', alignItems: 'center', gap: '8px' },
+    firstReviewerGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '10px', marginBottom: '15px' },
+    scoreItem: { backgroundColor: '#FFFFFF', padding: '8px 12px', borderRadius: '6px', border: '1px solid #E3F2FD', fontSize: '12px', color: '#455A64', display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
+    firstReviewerFeedback: { backgroundColor: '#FFFFFF', padding: '15px', borderRadius: '8px', border: '1px solid #E3F2FD', fontSize: '13px', color: '#37474F' },
+
     stepSeparator: { display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '30px', opacity: 0.8 },
     stepLine: { flex: 1, height: '1px', backgroundColor: '#B0BEC5' },
     stepLabel: { fontSize: '14px', fontWeight: '700', color: '#546E7A', textTransform: 'uppercase', letterSpacing: '1px', display: 'flex', alignItems: 'center', gap: '8px' },
 
-    // --- ÁREA DE REVISÃO (EM BAIXO) ---
     reviewSection: { backgroundColor: 'white', borderRadius: '16px', padding: '40px', boxShadow: '0 4px 20px rgba(0,0,0,0.05)', border: '1px solid #E0E0E0' },
     reviewTitle: { fontSize: '18px', fontWeight: '800', color: '#1A237E', margin: '0 0 20px 0', borderBottom: '1px solid #F5F5F5', paddingBottom: '15px' },
 
@@ -322,7 +300,7 @@ const styles = {
     criteriaCard: { border: '1px solid #E0E0E0', borderRadius: '10px', padding: '15px', backgroundColor: '#FAFAFA' },
     criteriaHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '5px' },
     criteriaTitle: { fontSize: '13px', fontWeight: '700', color: '#37474F' },
-    criteriaDesc: { fontSize: '11px', color: '#78909C', margin: '0 0 10px 0', minHeight: '32px' }, // Altura mínima para alinhar
+    criteriaDesc: { fontSize: '11px', color: '#78909C', margin: '0 0 10px 0', minHeight: '32px' },
     starsWrapper: { display: 'flex', justifyContent: 'center', gap: '4px', marginTop: 'auto' },
     starBtn: { background: 'none', border: 'none', cursor: 'pointer', padding: '2px', transition: 'transform 0.1s' },
     scoreBadge: { fontSize: '14px', fontWeight: '800', minWidth: '20px', textAlign: 'center' },

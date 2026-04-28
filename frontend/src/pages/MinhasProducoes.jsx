@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import api from '../services/api'; 
 import { useNavigate, useOutletContext } from 'react-router-dom';
+import { Alert } from '../utils/alerts'; // <--- IMPORTAÇÃO DO ALERTA
 import { 
     FileText, 
     ClipboardCheck, 
@@ -38,6 +39,8 @@ const MinhasProducoes = () => {
                 }
             } catch (error) {
                 console.error("Erro ao carregar dados:", error);
+                // --- POP-UP DE ERRO AQUI ---
+                Alert.erro("Erro de Conexão", "Não foi possível carregar a sua lista de produções.");
             } finally {
                 setLoading(false);
             }
@@ -192,7 +195,6 @@ const CardProducao = ({ data, navigate, isMobile }) => {
                                 e.stopPropagation();
                                 navigate(`/dashboard/editar-producao/${data.id}`);
                             }}
-                            // USA O ESTILO NOVO MENORZINHO
                             style={styles.actionButtonEdit}
                         >
                             <Wrench size={12} /> EDITAR E REENVIAR
@@ -313,25 +315,23 @@ const styles = {
     
     actionButtonSecondary: { background: 'none', border: '1px solid #CFD8DC', color: '#546E7A', padding: '8px 14px', borderRadius: '6px', cursor: 'pointer', fontSize: '13px', fontWeight: '600', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', transition: 'all 0.2s', width: '100%' },
     
-    // --- BOTÃO DE EDITAR (VERSÃO COMPACTA) ---
     actionButtonEdit: {
         backgroundColor: '#C62828', 
-        border: '1px solid #B71C1C', // Borda sutil para definir
+        border: '1px solid #B71C1C', 
         color: 'white', 
-        // Mesmo padding e fonte do statusBadge para harmonia
         padding: '6px 12px', 
-        borderRadius: '20px', // Arredondado igual ao badge
+        borderRadius: '20px', 
         cursor: 'pointer', 
         fontSize: '11px', 
-        fontWeight: '800', // Bem negrito
-        textTransform: 'uppercase', // Caixa alta
+        fontWeight: '800', 
+        textTransform: 'uppercase', 
         display: 'flex', 
         alignItems: 'center', 
         justifyContent: 'center', 
         gap: '6px', 
         transition: 'all 0.2s',
         width: '100%',
-        boxShadow: 'none' // Sem sombra para ficar flat
+        boxShadow: 'none' 
     }
 };
 

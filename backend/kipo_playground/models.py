@@ -1,41 +1,26 @@
-"""Módulo de Models de kipo_playground
-
-Define modelos de dados para gerar os formulários usados na interação básica com o Sistema Calliandra.
-
-Foi feito um modelo para uma nova instância de Sprint (campos 'nome' e 'observação'), para inserir uma nova instância (campos 'nome', 'classe' e 'observação') e para recuperar uma instância baseada em tipo (campo 'busca', com a listagem de possíveis classes).
-"""
+"""Módulo de Models de kipo_playground"""
 
 from django.db import models
-from ckeditor.fields import RichTextField
-import random
-from datetime import date
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-from django.utils import timezone
+import random
 
 def random_string():
     return str(random.randint(1000000, 99999999))
 
-# Create your models here.
-
-# !-- MODELO DO PERFIL (PROFILE) --
+# ============================================================================
+# 1. PERFIL DO USUÁRIO
+# ============================================================================
 class Profile(models.Model):
     DISCIPLINAS_CHOICES = (
-        ('História', 'História'),
-        ('Matemática', 'Matemática'),
-        ('Geografia', 'Geografia'),
-        ('Português', 'Português'),
-        ('Ciências', 'Ciências'),
-        ('Física', 'Física'),
-        ('Química', 'Química'),
-        ('Biologia', 'Biologia'),
-        ('Inglês', 'Inglês'),
-        ('Artes', 'Artes'),
-        ('Educação Física', 'Educação Física'),
-        ('Filosofia', 'Filosofia'),
-        ('Sociologia', 'Sociologia'),
-        ('Pedagogia', 'Pedagogia'),
+        ('História', 'História'), ('Matemática', 'Matemática'),
+        ('Geografia', 'Geografia'), ('Português', 'Português'),
+        ('Ciências', 'Ciências'), ('Física', 'Física'),
+        ('Química', 'Química'), ('Biologia', 'Biologia'),
+        ('Inglês', 'Inglês'), ('Artes', 'Artes'),
+        ('Educação Física', 'Educação Física'), ('Filosofia', 'Filosofia'),
+        ('Sociologia', 'Sociologia'), ('Pedagogia', 'Pedagogia'),
         ('Outra', 'Outra'),
     )
 
@@ -47,14 +32,13 @@ class Profile(models.Model):
 
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
     avatar = models.ImageField(upload_to='avatars/', null=True, blank=True)
-    disciplina = models.CharField(max_length=50, choices=DISCIPLINAS_CHOICES,)
+    disciplina = models.CharField(max_length=50, choices=DISCIPLINAS_CHOICES)
     escola = models.CharField(max_length=150, null=True, blank=True)
     status_conta = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Em análise')
 
     def __str__(self):
         return f'{self.user.username} - {self.disciplina}'
 
-# Sinais para criar/atualizar o Profile automaticamente
 @receiver(post_save, sender=User)
 def create_user_profile(sender, instance, created, **kwargs):
     if created:
@@ -64,11 +48,16 @@ def create_user_profile(sender, instance, created, **kwargs):
 def save_user_profile(sender, instance, **kwargs):
     instance.profile.save()
 
-# !-- MODELO DE PRODUÇÃO DIDÁTICA (NOVO) --
+
+# ============================================================================
+# 2. PRODUÇÕES DIDÁTICAS
+# ============================================================================
 class Producao(models.Model):
+    # Autor e Localização
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='producoes')
-    revisor = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='revisoes_feitas')
-    data_revisao = models.DateTimeField(null=True, blank=True)
+    escola = models.CharField(max_length=149, null=True, blank=True)
+    
+    # Dados do Material
     titulo = models.CharField(max_length=255)
     disciplina = models.CharField(max_length=100)
     nivel = models.CharField(max_length=100)
@@ -77,24 +66,79 @@ class Producao(models.Model):
     bncc = models.TextField(blank=True, null=True)
     metodologia = models.CharField(max_length=255, blank=True, null=True)
     duracao = models.CharField(max_length=100, blank=True, null=True)
-    # Recursos salvos como string (ex: "Projetor, Internet")
     recursos = models.TextField(blank=True, null=True)
     experiencia = models.TextField(blank=True, null=True)
     resultados = models.TextField(blank=True, null=True) 
-    # Arquivos
+    
+    # Arquivo e Status
     arquivo = models.FileField(upload_to='producoes/', blank=True, null=True)
-    # Metadados
     data_criacao = models.DateTimeField(auto_now_add=True)
-    feedback_revisao = models.TextField(blank=True, null=True)
     status = models.CharField(max_length=50, default='Em revisão')
 
+    def __str__(self):
+        return f"{self.titulo} - {self.user.username} ({self.status})"
+
+
+# ============================================================================
+# 3. SISTEMA DE REVISÃO (DUPLO-CEGO)
+# ============================================================================
+class Avaliacao(models.Model):
+    producao = models.ForeignKey(Producao, on_delete=models.CASCADE, related_name='avaliacoes')
+    revisor = models.ForeignKey(User, on_delete=models.CASCADE, related_name='revisoes_feitas')
+    data_avaliacao = models.DateTimeField(auto_now_add=True)
+    
+    # Resultado e Comentários
+    aprovado = models.BooleanField(default=False) 
+    feedback_revisao = models.TextField(blank=True, null=True)
+    
+    # Notas da Rúbrica
     nota_coerencia = models.IntegerField(default=0)
     nota_qualidade = models.IntegerField(default=0)
     nota_metodologia = models.IntegerField(default=0)
     nota_avaliacao = models.IntegerField(default=0)
     nota_inclusao = models.IntegerField(default=0)
     nota_inovacao = models.IntegerField(default=0)
-    escola = models.CharField(max_length=149, null=True, blank=True)
+
+    class Meta:
+        # Garante que um professor avalie cada produção apenas uma vez
+        unique_together = ('producao', 'revisor')
 
     def __str__(self):
-        return f"{self.titulo} - {self.user.username}"
+        resultado = "Aprovou" if self.aprovado else "Pediu Correção"
+        return f"Avaliação de {self.revisor.username} para '{self.producao.titulo}'"
+
+
+# ============================================================================
+# 4. FÓRUM DE RASCUNHOS
+# ============================================================================
+class Topico(models.Model):
+    CATEGORIAS_CHOICES = (
+        ('Dúvida BNCC', 'Dúvida BNCC'),
+        ('Metodologia', 'Metodologia'),
+        ('Uso de IA', 'Uso de IA'),
+        ('Sugestão', 'Sugestão'),
+        ('Geral', 'Geral'),
+    )
+
+    autor = models.ForeignKey(User, on_delete=models.CASCADE, related_name='topicos_forum')
+    titulo = models.CharField(max_length=255)
+    conteudo = models.TextField()
+    
+    # Novos campos adicionados
+    categoria = models.CharField(max_length=50, choices=CATEGORIAS_CHOICES, default='Geral')
+    resolvido = models.BooleanField(default=False) 
+    
+    arquivo = models.FileField(upload_to='forum_anexos/', blank=True, null=True)
+    data_criacao = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Tópico: {self.titulo} por {self.autor.username}"
+
+class Comentario(models.Model):
+    topico = models.ForeignKey(Topico, on_delete=models.CASCADE, related_name='comentarios')
+    autor = models.ForeignKey(User, on_delete=models.CASCADE)
+    conteudo = models.TextField()
+    data_criacao = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Comentário de {self.autor.username} em {self.topico.titulo}"
