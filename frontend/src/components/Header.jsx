@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Menu, Trophy, LogOut } from 'lucide-react'; 
+import api from '../services/api'; // <--- IMPORTAÇÃO DA API ADICIONADA AQUI
 
 function Header({ onToggleMenu, showMenuButton }) {
   const navigate = useNavigate();
@@ -27,7 +28,34 @@ function Header({ onToggleMenu, showMenuButton }) {
   const [userAvatar, setUserAvatar] = useState(localStorage.getItem('user_avatar'));
 
   useEffect(() => {
-      // Função que atualiza o Header assim que os dados mudam em outra tela
+      // --- MÁGICA AQUI: Busca os dados na API logo ao logar e carregar o Header ---
+      const buscarDadosDoUsuario = async () => {
+          try {
+              const token = localStorage.getItem('access_token');
+              if (token) {
+                  const response = await api.get('api/user/me/');
+                  const data = response.data;
+                  
+                  // Atualiza o "banco de dados" do navegador
+                  localStorage.setItem('user_pontos', data.pontos);
+                  localStorage.setItem('user_nivel', data.nivel);
+                  localStorage.setItem('user_name', data.username);
+                  if (data.avatar) localStorage.setItem('user_avatar', data.avatar);
+
+                  // Atualiza a tela imediatamente
+                  setUserPontos(data.pontos);
+                  setUserNivel(data.nivel);
+                  setUserAvatar(data.avatar);
+              }
+          } catch (error) {
+              console.error("Erro ao sincronizar perfil no Header:", error);
+          }
+      };
+
+      // Executa a busca
+      buscarDadosDoUsuario();
+
+      // Função que atualiza o Header assim que os dados mudam em outra tela (ex: Fórum ou Revisão)
       const atualizarHeader = () => {
           setUserPontos(localStorage.getItem('user_pontos') || '0');
           setUserNivel(localStorage.getItem('user_nivel') || 'Prof. Conectado(a)');

@@ -179,9 +179,8 @@ def api_user_profile(request):
             'escola': profile.escola, 
             'avatar': avatar_url,
             'is_superuser': user.is_superuser,
-            # --- GAMIFICAÇÃO (ENVIANDO DADOS PARA O REACT) ---
             'pontos': profile.pontos,
-            'nivel': profile.get_nivel()
+            'nivel': profile.get_nivel() # <--- CORREÇÃO AQUI
         })
 
     elif request.method == 'PUT':
@@ -213,12 +212,12 @@ def api_user_profile(request):
             'disciplina': profile.disciplina,
             'escola': profile.escola,
             'pontos': profile.pontos,
-            'nivel': profile.get_nivel()
+            'nivel': profile.get_nivel() # <--- CORREÇÃO AQUI
         })
 
 
 # ============================================================================
-# 2. PRODUÇÕES DIDÁTICAS (CRUD)
+# 2. PRODUÇÕES DIDÁTICAS (CRUD E RASCUNHOS)
 # ============================================================================
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
@@ -236,20 +235,27 @@ def api_create_production(request):
         recursos_input = data.getlist('recursos') if hasattr(data, 'getlist') else data.get('recursos', '')
         recursos_str = ", ".join(recursos_input) if isinstance(recursos_input, list) else str(recursos_input)
 
+        # --- LÓGICA DE RASCUNHO APLICADA (ROBUSTA) ---
+        is_draft_val = data.get('is_draft')
+        is_draft = str(is_draft_val).strip().lower() in ['true', '1', 't', 'y', 'yes']
+        status_inicial = 'Rascunho' if is_draft else 'Em revisão'
+
         nova_producao = Producao.objects.create(
             user=user, 
-            titulo=data.get('titulo'),
-            disciplina=data.get('disciplina'),
-            nivel=data.get('nivel_ensino'), 
-            modelo_ia=data.get('modelo_ia'),
-            categoria=data.get('categoria'),
-            bncc=data.get('bncc'),
-            metodologia=data.get('metodologia'),
-            duracao=data.get('duracao'),
+            titulo=data.get('titulo', ''),
+            disciplina=data.get('disciplina', ''),
+            nivel=data.get('nivel_ensino', ''), 
+            modelo_ia=data.get('modelo_ia', ''),
+            prompts_ia=data.get('prompts_ia', ''),
+            categoria=data.get('categoria', ''),
+            bncc=data.get('bncc', ''),
+            metodologia=data.get('metodologia', ''),
+            duracao=data.get('duracao', ''),
             recursos=recursos_str,
-            experiencia=data.get('experiencia'), 
-            resultados=data.get('resultados'),
-            arquivo=arquivo 
+            experiencia=data.get('experiencia', ''), 
+            resultados=data.get('resultados', ''),
+            arquivo=arquivo,
+            status=status_inicial # Salva corretamente no banco!
         )
         return Response({'mensagem': 'Produção criada com sucesso!', 'id': nova_producao.id}, status=201)
     
@@ -317,17 +323,20 @@ def api_get_production_details(request, pk):
                 'inovacao': ultima_avaliacao.nota_inovacao
             }
 
+        lista_recursos = [r.strip() for r in p.recursos.split(',')] if p.recursos else []
+
         data = {
             'id': p.id,
             'titulo': p.titulo,
             'disciplina': p.disciplina,
             'nivel': p.nivel,
             'modelo_ia': p.modelo_ia,
+            'prompts_ia': p.prompts_ia,
             'categoria': p.categoria,
             'bncc': p.bncc,
             'metodologia': p.metodologia,
             'duracao': p.duracao,
-            'recursos': p.recursos,
+            'recursos': lista_recursos,
             'experiencia': p.experiencia,
             'resultados': p.resultados,
             'arquivo': arquivo_url, 
@@ -352,7 +361,7 @@ def api_update_production(request, pk):
     try:
         p = Producao.objects.get(id=pk, user=request.user)
         
-        if p.status != 'Correção solicitada':
+        if p.status not in ['Correção solicitada', 'Rascunho']:
             return Response({'erro': 'Esta produção não pode ser editada no momento.'}, status=403)
 
         data = request.data
@@ -360,6 +369,7 @@ def api_update_production(request, pk):
         p.disciplina = data.get('disciplina', p.disciplina)
         p.nivel = data.get('nivel_ensino', p.nivel)
         p.modelo_ia = data.get('modelo_ia', p.modelo_ia)
+        p.prompts_ia = data.get('prompts_ia', p.prompts_ia)
         p.categoria = data.get('categoria', p.categoria)
         p.bncc = data.get('bncc', p.bncc)
         p.metodologia = data.get('metodologia', p.metodologia)
@@ -375,11 +385,19 @@ def api_update_production(request, pk):
         if novo_arquivo:
             p.arquivo = novo_arquivo
 
-        p.status = 'Em revisão' 
-        p.save()
-        p.avaliacoes.all().delete()
+        # --- LÓGICA DE UPDATE DE STATUS ---
+        is_draft_val = data.get('is_draft')
+        is_draft = str(is_draft_val).strip().lower() in ['true', '1', 't', 'y', 'yes']
         
-        return Response({'mensagem': 'Produção atualizada e reenviada para fila de revisão!'})
+        if is_draft:
+            p.status = 'Rascunho'
+        else:
+            p.status = 'Em revisão' 
+            p.avaliacoes.all().delete() # Limpa avaliações antigas se estiver mandando pra revisão de novo
+            
+        p.save()
+        
+        return Response({'mensagem': 'Produção atualizada com sucesso!'})
 
     except Producao.DoesNotExist:
         return Response({'erro': 'Produção não encontrada.'}, status=404)
@@ -400,6 +418,7 @@ def api_list_review_queue(request):
     except:
         minha_disciplina = 'Outra'
 
+    # SÓ BUSCA O QUE ESTIVER "Em revisão". Rascunhos e aprovações são ignorados!
     producoes_para_revisar = Producao.objects.filter(
         disciplina=minha_disciplina,
         status='Em revisão'
@@ -460,7 +479,6 @@ def api_submit_review(request, pk):
             nota_inovacao=int(data.get('nota_inovacao', 0))
         )
 
-        # --- GAMIFICAÇÃO: +15 XP PARA QUEM AVALIOU ---
         perfil_revisor = request.user.profile
         perfil_revisor.pontos += 15
         perfil_revisor.save()
@@ -485,7 +503,6 @@ def api_submit_review(request, pk):
                 p.status = 'Aprovado'
                 msg_response = 'Revisão registrada! Você ganhou +15 XP. A produção alcançou 2 aprovações e foi publicada na comunidade.'
                 
-                # --- GAMIFICAÇÃO: +50 XP PARA O AUTOR PELA APROVAÇÃO ---
                 perfil_autor = p.user.profile
                 perfil_autor.pontos += 50
                 perfil_autor.save()
@@ -541,11 +558,6 @@ def api_list_public_feed(request):
         })
     
     return Response(lista)
-
-# --- ONTOLOGIA (LEGADO) ---
-@api_view(['GET'])
-def api_listar_ciclos(request):
-    return Response([])
 
 
 # ============================================================================
@@ -701,7 +713,6 @@ def api_forum_detalhe_comentarios(request, pk):
             conteudo=conteudo
         )
 
-        # --- GAMIFICAÇÃO: +5 XP POR AJUDAR NO FÓRUM ---
         perfil_comentarista = request.user.profile
         perfil_comentarista.pontos += 5
         perfil_comentarista.save()
@@ -764,7 +775,6 @@ def api_forum_topicos(request):
             arquivo=arquivo_enviado 
         )
 
-        # --- GAMIFICAÇÃO: +5 XP POR CRIAR TÓPICO ---
         perfil_autor = request.user.profile
         perfil_autor.pontos += 5
         perfil_autor.save()
@@ -859,3 +869,10 @@ def api_admin_delete_forum(request, pk):
     topico = get_object_or_404(Topico, id=pk)
     topico.delete()
     return Response({'mensagem': 'Tópico excluído com sucesso.'})
+
+
+# --- ONTOLOGIA (LEGADO) COISAS DO PROJETO ANTIGO PARA FUNCIONAR ---
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def api_listar_ciclos(request):
+    return Response([])

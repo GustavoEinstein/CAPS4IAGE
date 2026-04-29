@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import api from './services/api'; 
+import api from './services/api';
 import { useParams, useNavigate, useOutletContext } from 'react-router-dom';
+import Swal from 'sweetalert2';
 import { 
     ArrowLeft, 
     Save, 
@@ -17,7 +18,8 @@ import {
     Layers, 
     Plus, 
     X,
-    Loader2
+    Loader2,
+    Send
 } from 'lucide-react';
 
 const EditarProducao = () => {
@@ -29,7 +31,6 @@ const EditarProducao = () => {
     const [submitting, setSubmitting] = useState(false);
     const [customResource, setCustomResource] = useState("");
 
-    // Lista de sugestões (Mesma do Catalogar)
     const RECURSOS_COMUNS = ["Projetor / Datashow", "Internet / Wi-Fi", "Celulares (BYOD)", "Laboratório de Informática", "Tablets", "Quadro Branco", "IA Generativa", "Jogos", "Livro Didático"];
 
     const [formData, setFormData] = useState({
@@ -37,18 +38,19 @@ const EditarProducao = () => {
         disciplina: '', 
         nivel: '', 
         modelo_ia: '',
+        prompts_ia: '', 
         categoria: '', 
         bncc: '', 
         metodologia: '', 
         duracao: '',
-        recursos: [], // Array para gerenciar os chips
+        recursos: [], 
         experiencia: '', 
         resultados: '',
-        arquivo: null // Arquivo novo (opcional)
+        arquivo: null 
     });
     
-    // Arquivo antigo para mostrar na tela (apenas leitura visual)
     const [existingFile, setExistingFile] = useState(null);
+    const [isDraftStatus, setIsDraftStatus] = useState(false); 
 
     // --- 1. CARREGAR DADOS ---
     useEffect(() => {
@@ -57,18 +59,20 @@ const EditarProducao = () => {
                 const response = await api.get(`api/production/${id}/`);
                 const d = response.data;
                 
-                // Converte a string de recursos do banco ("Item1, Item2") volta para Array
+                // CORREÇÃO: Verifica se é string antes de dar o split
                 let recursosArray = [];
-                if (d.recursos) {
-                    // Remove espaços extras e separa por vírgula
+                if (d.recursos && typeof d.recursos === 'string') {
                     recursosArray = d.recursos.split(',').map(r => r.trim()).filter(r => r !== "");
                 }
+
+                setIsDraftStatus(d.status === 'Rascunho');
 
                 setFormData({
                     titulo: d.titulo || '', 
                     disciplina: d.disciplina || '', 
                     nivel: d.nivel || '', 
                     modelo_ia: d.modelo_ia || '', 
+                    prompts_ia: d.prompts_ia || '', 
                     categoria: d.categoria || '', 
                     bncc: d.bncc || '',
                     metodologia: d.metodologia || '', 
@@ -79,14 +83,13 @@ const EditarProducao = () => {
                     arquivo: null
                 });
                 
-                // Guarda a URL/Nome do arquivo existente se houver
                 if (d.arquivo) {
                     setExistingFile(d.arquivo); 
                 }
 
             } catch (error) {
                 console.error("Erro ao carregar:", error);
-                alert("Erro ao carregar dados da produção.");
+                Swal.fire("Erro", "Erro ao carregar dados da produção.", "error");
                 navigate('/dashboard/minhas-producoes');
             } finally {
                 setLoading(false);
@@ -95,7 +98,7 @@ const EditarProducao = () => {
         loadData();
     }, [id, navigate]);
 
-    // --- 2. MANIPULADORES (Iguais ao Catalogar) ---
+    // --- 2. MANIPULADORES ---
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
@@ -126,18 +129,26 @@ const EditarProducao = () => {
         }
     };
 
-    // --- 3. SALVAR EDIÇÃO ---
-    const handleUpdate = async (e) => {
-        e.preventDefault();
+    // --- 3. SALVAR EDIÇÃO (RASCUNHO VS REVISÃO) ---
+    const handleUpdate = async (isDraft) => {
+        
+        if (!isDraft) {
+            if (!formData.titulo || !formData.nivel || !formData.categoria || !formData.experiencia) {
+                Swal.fire('Campos Incompletos', 'Para enviar para revisão, preencha Título, Nível, Categoria e Relato. Se quiser terminar depois, continue salvando como Rascunho.', 'warning');
+                return;
+            }
+        }
+
         setSubmitting(true);
         
         const dataToSend = new FormData();
         
-        // Campos de texto
+        dataToSend.append('is_draft', isDraft);
         dataToSend.append('titulo', formData.titulo);
         dataToSend.append('disciplina', formData.disciplina);
         dataToSend.append('nivel_ensino', formData.nivel);
         dataToSend.append('modelo_ia', formData.modelo_ia);
+        dataToSend.append('prompts_ia', formData.prompts_ia);
         dataToSend.append('categoria', formData.categoria);
         dataToSend.append('bncc', formData.bncc);
         dataToSend.append('metodologia', formData.metodologia);
@@ -145,10 +156,8 @@ const EditarProducao = () => {
         dataToSend.append('experiencia', formData.experiencia);
         dataToSend.append('resultados', formData.resultados);
 
-        // Recursos (envia item por item para o Django tratar com getlist ou string)
         formData.recursos.forEach(r => dataToSend.append('recursos', r));
 
-        // Arquivo (só envia se tiver um NOVO)
         if (formData.arquivo) {
             dataToSend.append('arquivo', formData.arquivo);
         }
@@ -158,47 +167,57 @@ const EditarProducao = () => {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
             
-            alert("Produção corrigida e reenviada para a fila de revisão!");
+            Swal.fire({
+                icon: 'success',
+                title: isDraft ? 'Rascunho Atualizado!' : 'Prática Reenviada!',
+                text: isDraft ? 'Suas alterações foram salvas.' : 'Produção corrigida e enviada para a fila de revisão!',
+                confirmButtonColor: '#1565C0'
+            });
             navigate('/dashboard/minhas-producoes');
             
         } catch (error) {
             console.error(error);
-            alert("Erro ao atualizar produção. Tente novamente.");
+            Swal.fire("Erro", "Erro ao atualizar produção. Tente novamente.", "error");
         } finally {
             setSubmitting(false);
         }
     };
 
-    if (loading) return <div style={{padding: '50px', textAlign: 'center', color: '#90A4AE'}}>Carregando dados...</div>;
+    if (loading) return (
+        <div style={{display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '60vh'}}>
+            <Loader2 size={32} color="#1565C0" className="spin" />
+            <p style={{ marginTop: '10px', color: '#64748B' }}>Carregando dados...</p>
+            <style>{`@keyframes spin { 100% { transform: rotate(360deg); } } .spin { animation: spin 1s linear infinite; }`}</style>
+        </div>
+    );
 
     return (
         <div style={styles.fullPageWrapper}>
             <div style={styles.container}>
                 
-                {/* TOPO DA PÁGINA */}
                 <div style={styles.topBar}>
                     <button onClick={() => navigate(-1)} style={styles.backButton}>
                         <ArrowLeft size={20} /> Cancelar
                     </button>
                     <div style={{textAlign: isMobile ? 'left' : 'right'}}>
-                        <h1 style={styles.pageTitle}>Editar Prática</h1>
-                        <p style={styles.pageSubtitle}>Faça as correções solicitadas e reenvie.</p>
+                        <h1 style={styles.pageTitle}>{isDraftStatus ? "Continuar Editando" : "Editar Prática"}</h1>
+                        <p style={styles.pageSubtitle}>
+                            {isDraftStatus ? "Termine de preencher seu rascunho." : "Faça as correções solicitadas e reenvie."}
+                        </p>
                     </div>
                 </div>
 
                 <div style={styles.mainCard}>
-                    <form onSubmit={handleUpdate}>
-                        
-                        {/* LAYOUT DIVIDIDO (IGUAL CATALOGAR) */}
+                    <div>
                         <div style={{...styles.splitLayout, flexDirection: isMobile ? 'column' : 'row'}}>
                             
-                            {/* --- COLUNA ESQUERDA: FICHA TÉCNICA --- */}
+                            {/* --- COLUNA ESQUERDA --- */}
                             <div style={{...styles.leftCol, width: isMobile ? '100%' : '35%'}}>
                                 <h3 style={styles.sectionTitle}><FileText size={20} color="#1565C0" /> Ficha Técnica</h3>
                                 
                                 <div style={styles.inputGroup}>
-                                    <label style={styles.label}>Título</label>
-                                    <input type="text" name="titulo" value={formData.titulo} onChange={handleChange} style={styles.input} required />
+                                    <label style={styles.label}>Título <span style={styles.asterisk}>*</span></label>
+                                    <input type="text" name="titulo" value={formData.titulo} onChange={handleChange} style={styles.input} />
                                 </div>
                                 
                                 <div style={styles.inputGroup}>
@@ -210,8 +229,8 @@ const EditarProducao = () => {
                                 </div>
                                 
                                 <div style={styles.inputGroup}>
-                                    <label style={styles.label}>Nível</label>
-                                    <select name="nivel" value={formData.nivel} onChange={handleChange} style={styles.input} required>
+                                    <label style={styles.label}>Nível <span style={styles.asterisk}>*</span></label>
+                                    <select name="nivel" value={formData.nivel} onChange={handleChange} style={styles.input}>
                                         <option value="">Selecione...</option>
                                         <option value="Fundamental 1">Fundamental 1</option>
                                         <option value="Fundamental 2">Fundamental 2</option>
@@ -221,8 +240,8 @@ const EditarProducao = () => {
                                 </div>
                                 
                                 <div style={styles.inputGroup}>
-                                    <label style={styles.label}><Layers size={14}/> Categoria / Conteúdo</label>
-                                    <select name="categoria" value={formData.categoria} onChange={handleChange} style={styles.input} required>
+                                    <label style={styles.label}><Layers size={14}/> Categoria / Conteúdo <span style={styles.asterisk}>*</span></label>
+                                    <select name="categoria" value={formData.categoria} onChange={handleChange} style={styles.input}>
                                         <option value="">O que foi criado?</option>
                                         <optgroup label="Planejamento">
                                             <option value="Plano de Aula">Plano de Aula / Roteiro</option>
@@ -245,30 +264,36 @@ const EditarProducao = () => {
                                 
                                 <div style={styles.inputGroup}>
                                     <label style={styles.label}>Modelo de IA Utilizado</label>
-                                    <input type="text" name="modelo_ia" value={formData.modelo_ia} onChange={handleChange} style={styles.input} required />
+                                    <input type="text" name="modelo_ia" value={formData.modelo_ia} onChange={handleChange} style={styles.input} />
+                                </div>
+
+                                <div style={styles.inputGroup}>
+                                    <label style={styles.label}>Prompts Utilizados</label>
+                                    <textarea
+                                        name="prompts_ia"
+                                        value={formData.prompts_ia}
+                                        onChange={handleChange}
+                                        style={{ ...styles.textarea, minHeight: "80px" }}
+                                    />
                                 </div>
                                 
-                                {/* UPLOAD DE ARQUIVO */}
                                 <div style={styles.uploadSection}>
                                     <label style={styles.label}><UploadCloud size={16}/> Anexar Arquivo</label>
                                     <div style={styles.uploadContainer}>
                                         <input type="file" id="file-upload" onChange={handleFileChange} style={{display: 'none'}} />
                                         <label htmlFor="file-upload" style={styles.uploadLabel}>
-                                            {/* Se selecionou um novo */}
                                             {formData.arquivo ? (
                                                 <div style={styles.fileSelected}>
                                                     <CheckCircle2 size={28} color="#4CAF50" />
                                                     <span style={styles.fileName}>Novo: {formData.arquivo.name}</span>
                                                 </div>
                                             ) : (
-                                                // Se não tem novo, mas tem o antigo
                                                 existingFile ? (
                                                     <div style={styles.fileSelected}>
                                                         <FileText size={28} color="#1565C0" />
                                                         <span style={styles.fileName}>Manter atual (ou clique para trocar)</span>
                                                     </div>
                                                 ) : (
-                                                    // Se não tem nada
                                                     <>
                                                         <div style={styles.uploadIconCircle}>
                                                             <UploadCloud size={20} color="#1565C0" />
@@ -284,13 +309,13 @@ const EditarProducao = () => {
                             
                             {!isMobile && <div style={styles.verticalDivider}></div>}
                             
-                            {/* --- COLUNA DIREITA: DETALHAMENTO --- */}
+                            {/* --- COLUNA DIREITA --- */}
                             <div style={{...styles.rightCol, width: isMobile ? '100%' : '65%'}}>
                                 <h3 style={styles.sectionTitle}><BookOpen size={20} color="#1565C0" /> Detalhamento Pedagógico</h3>
                                 
                                 <div style={styles.inputGroup}>
                                     <label style={styles.label}>BNCC / Objetivos</label>
-                                    <textarea name="bncc" value={formData.bncc} onChange={handleChange} style={styles.textarea} rows="2" required />
+                                    <textarea name="bncc" value={formData.bncc} onChange={handleChange} style={styles.textarea} rows="2" />
                                 </div>
                                 
                                 <div style={styles.gridThree}>
@@ -304,11 +329,9 @@ const EditarProducao = () => {
                                     </div>
                                 </div>
                                 
-                                {/* RECURSOS (CHIPS) */}
                                 <div style={styles.inputGroup}>
                                     <label style={styles.label}><Package size={14}/> Recursos Utilizados</label>
                                     
-                                    {/* Chips Sugeridos */}
                                     <div style={styles.resourcesGrid}>
                                         {RECURSOS_COMUNS.map(res => (
                                             <button 
@@ -325,7 +348,6 @@ const EditarProducao = () => {
                                         ))}
                                     </div>
 
-                                    {/* Adicionar Outro */}
                                     <div style={styles.addResourceRow}>
                                         <input 
                                             type="text" 
@@ -338,7 +360,6 @@ const EditarProducao = () => {
                                         <button type="button" onClick={addCustomResource} style={styles.addButton}><Plus size={16}/></button>
                                     </div>
 
-                                    {/* Chips Personalizados (Visualizar Selecionados que não são comuns) */}
                                     <div style={{marginTop: '10px', display: 'flex', gap: '5px', flexWrap: 'wrap'}}>
                                         {formData.recursos.filter(r => !RECURSOS_COMUNS.includes(r)).map((res, i) => (
                                             <span key={i} style={styles.customChip}>
@@ -349,55 +370,53 @@ const EditarProducao = () => {
                                 </div>
                                 
                                 <div style={styles.inputGroup}>
-                                    <label style={styles.label}><Lightbulb size={14}/> Relato da Experiência</label>
-                                    <textarea name="experiencia" value={formData.experiencia} onChange={handleChange} style={{...styles.textarea, minHeight: '100px'}} required />
+                                    <label style={styles.label}><Lightbulb size={14}/> Relato da Experiência <span style={styles.asterisk}>*</span></label>
+                                    <textarea name="experiencia" value={formData.experiencia} onChange={handleChange} style={{...styles.textarea, minHeight: '100px'}} />
                                 </div>
                                 
                                 <div style={styles.inputGroup}>
                                     <label style={styles.label}><Target size={14}/> Resultados / Evidências</label>
-                                    <textarea name="resultados" value={formData.resultados} onChange={handleChange} style={styles.textarea} rows="2" required />
+                                    <textarea name="resultados" value={formData.resultados} onChange={handleChange} style={styles.textarea} rows="2" />
                                 </div>
                                 
+                                {/* --- BOTÕES DUPLOS --- */}
                                 <div style={styles.formFooter}>
-                                    <button type="submit" disabled={submitting} style={styles.submitButton}>
-                                        {submitting ? <Loader2 className="spin" size={20}/> : <Save size={18} />} 
-                                        {submitting ? " Salvando..." : " Salvar e Reenviar"}
+                                    {isDraftStatus && (
+                                        <button type="button" disabled={submitting} onClick={() => handleUpdate(true)} style={styles.draftButton}>
+                                            <Save size={18} /> Salvar Alterações (Rascunho)
+                                        </button>
+                                    )}
+                                    
+                                    <button type="button" disabled={submitting} onClick={() => handleUpdate(false)} style={styles.submitButton}>
+                                        {submitting ? <Loader2 className="spin" size={18}/> : <Send size={18} />} 
+                                        {submitting ? " Enviando..." : isDraftStatus ? " Enviar para Revisão" : " Salvar e Reenviar"}
                                     </button>
                                 </div>
                             </div>
                         </div>
-                    </form>
-                    <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } } .spin { animation: spin 1s linear infinite; }`}</style>
+                    </div>
                 </div>
             </div>
         </div>
     );
 };
 
-// --- ESTILOS IDÊNTICOS AO CATALOGAR PRODUÇÃO ---
 const styles = {
     fullPageWrapper: { backgroundColor: '#F8F9FA', minHeight: '100vh', width: '100%', boxSizing: 'border-box', padding: '20px' },
     container: { maxWidth: '1400px', margin: '0 auto', width: '100%', boxSizing: 'border-box' },
-    
-    // CARDS
     mainCard: { backgroundColor: '#FFFFFF', borderRadius: '16px', padding: '30px', boxShadow: '0 4px 20px rgba(0,0,0,0.04)', border: '1px solid #E0E0E0' },
-
-    // SPLIT LAYOUT
     splitLayout: { display: 'flex', gap: '40px' },
     verticalDivider: { width: '1px', backgroundColor: '#F0F0F0', alignSelf: 'stretch' },
     leftCol: { display: 'flex', flexDirection: 'column' },
     rightCol: { display: 'flex', flexDirection: 'column' },
     sectionTitle: { fontSize: '16px', fontWeight: '700', color: '#37474F', marginBottom: '25px', display: 'flex', alignItems: 'center', gap: '10px', textTransform: 'uppercase', letterSpacing: '0.5px' },
-    
-    // INPUTS
     inputGroup: { marginBottom: '20px', display: 'flex', flexDirection: 'column' },
-    label: { fontSize: '13px', fontWeight: '600', color: '#455A64', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' },
+    label: { fontSize: "13px", fontWeight: "600", color: "#455A64", marginBottom: "8px", display: "flex", alignItems: "center", gap: "6px" },
+    asterisk: { color: "#D32F2F", marginLeft: "2px" },
     input: { width: '100%', padding: '12px 15px', borderRadius: '8px', border: '1px solid #CFD8DC', fontSize: '14px', color: '#37474F', outline: 'none', backgroundColor: '#FFFFFF', boxSizing: 'border-box', height: '45px' },
     textarea: { width: '100%', padding: '12px 15px', borderRadius: '8px', border: '1px solid #CFD8DC', fontSize: '14px', color: '#37474F', outline: 'none', backgroundColor: '#FFFFFF', boxSizing: 'border-box', resize: 'vertical', fontFamily: 'inherit', lineHeight: '1.5' },
     lockedInputWrapper: { display: 'flex', alignItems: 'center', backgroundColor: '#FAFAFA', border: '1px solid #E0E0E0', borderRadius: '8px', overflow: 'hidden', height: '45px' },
-    lockedInput: { flex: 1, border: 'none', backgroundColor: 'transparent', padding: '12px 15px', fontSize: '14px', fontWeight: '600', color: '#78909C', outline: 'none', cursor: 'not-allowed' },
-    
-    // RESOURCES CHIPS
+    lockedInput: { flex: 1, border: 'none', backgroundColor: "transparent", padding: "12px 15px", fontSize: "14px", fontWeight: "600", color: "#78909C", outline: "none", cursor: "not-allowed" },
     resourcesGrid: { display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '10px' },
     resourceChip: { padding: '8px 12px', borderRadius: '20px', border: '1px solid #CFD8DC', backgroundColor: '#FFFFFF', color: '#546E7A', fontSize: '13px', fontWeight: '500', cursor: 'pointer', transition: 'all 0.2s' },
     resourceChipActive: { backgroundColor: '#E3F2FD', color: '#1565C0', borderColor: '#1565C0', fontWeight: '600' },
@@ -405,8 +424,6 @@ const styles = {
     inputSmall: { flex: 1, padding: '8px 12px', borderRadius: '8px', border: '1px solid #CFD8DC', fontSize: '13px', outline: 'none' },
     addButton: { backgroundColor: '#F5F5F5', border: '1px solid #CFD8DC', borderRadius: '8px', width: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#546E7A' },
     customChip: { display: 'flex', alignItems: 'center', gap: '5px', padding: '6px 10px', borderRadius: '20px', backgroundColor: '#FFF3E0', color: '#E65100', border: '1px solid #FFE0B2', fontSize: '12px', fontWeight: '600' },
-
-    // UPLOAD
     uploadSection: { marginTop: 'auto', paddingTop: '10px' },
     uploadContainer: { border: '2px dashed #BBDEFB', borderRadius: '12px', backgroundColor: '#F8FBFF', textAlign: 'center', padding: '20px', display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '120px' },
     uploadLabel: { cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' },
@@ -414,15 +431,15 @@ const styles = {
     uploadTextMain: { fontSize: '13px', fontWeight: '700', color: '#1565C0' },
     fileSelected: { display: 'flex', flexDirection: 'column', alignItems: 'center' },
     fileName: { fontSize: '13px', fontWeight: '600', color: '#333', marginTop: '5px' },
-
-    // NAV & FOOTER
     topBar: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap-reverse', gap: '20px' },
     backButton: { background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', color: '#546E7A', fontWeight: '600', fontSize: '15px' },
     pageTitle: { fontSize: '24px', color: '#1565C0', fontWeight: '800', margin: '0 0 4px 0' },
     pageSubtitle: { fontSize: '14px', color: '#546E7A', margin: 0 },
     gridThree: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '20px' },
-    formFooter: { marginTop: '30px', display: 'flex', justifyContent: 'flex-end' },
-    submitButton: { backgroundColor: '#2E7D32', color: 'white', border: 'none', borderRadius: '8px', padding: '14px 40px', fontSize: '15px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px', boxShadow: '0 4px 12px rgba(46, 125, 50, 0.25)', transition: 'transform 0.2s' },
+    
+    formFooter: { marginTop: '30px', display: 'flex', justifyContent: 'flex-end', gap: '15px', flexWrap: 'wrap' },
+    draftButton: { backgroundColor: "white", color: "#1565C0", border: "1px solid #1565C0", borderRadius: "8px", padding: "12px 24px", fontSize: "15px", fontWeight: "bold", cursor: "pointer", display: "flex", alignItems: "center", gap: "8px", transition: "background 0.2s" },
+    submitButton: { backgroundColor: '#1565C0', color: 'white', border: 'none', borderRadius: '8px', padding: '14px 40px', fontSize: '15px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px', boxShadow: '0 4px 12px rgba(21, 101, 192, 0.25)', transition: 'transform 0.2s' },
 };
 
 export default EditarProducao;

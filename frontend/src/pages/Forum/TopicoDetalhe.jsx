@@ -54,7 +54,6 @@ export default function TopicoDetalhe() {
         }
     };
 
-    // --- RESOLVER TÓPICO COM SWEETALERT ---
     const handleResolver = async (e) => {
         e.preventDefault();
         
@@ -86,7 +85,6 @@ export default function TopicoDetalhe() {
         }
     };
 
-    // --- EXCLUIR TÓPICO COM SWEETALERT ---
     const handleExcluir = async (e) => {
         e.preventDefault();
         setPausarPolling(true); 
@@ -140,7 +138,6 @@ export default function TopicoDetalhe() {
         } catch (e) { return dataString; }
     };
 
-    // --- LÓGICA DE CORES DAS TAGS ---
     const getCategoriaStyle = (cat) => {
         const catStyles = {
             'Dúvida BNCC': { bg: '#DBEAFE', color: '#1E40AF' }, 
@@ -318,8 +315,11 @@ const styles = {
     
     // Área de Resposta
     resolvedNotice: { backgroundColor: '#F0FDF4', padding: '30px', borderRadius: '12px', textAlign: 'center', color: '#065F46', fontWeight: '600', border: '1px solid #A7F3D0' },
-    commentForm: { backgroundColor: '#fff', padding: '25px', borderRadius: '12px', border: '1px solid #E2E8F0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' },
+    commentForm: { backgroundColor: '#FFFFFF', padding: '25px', borderRadius: '12px', border: '1px solid #E2E8F0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' },
     formTitle: { marginTop: 0, marginBottom: '15px', color: '#0F172A', fontSize: '18px', fontWeight: '800' },
-    textArea: { width: '100%', padding: '15px', borderRadius: '10px', border: '1px solid #CBD5E1', marginBottom: '15px', fontFamily: 'inherit', fontSize: '15px', outline: 'none', resize: 'vertical', boxSizing: 'border-box' },
+    
+    // --- CORREÇÃO APLICADA: backgroundColor: '#FFFFFF' FIXO ---
+    textArea: { width: '100%', padding: '15px', borderRadius: '10px', border: '1px solid #CBD5E1', marginBottom: '15px', fontFamily: 'inherit', fontSize: '15px', outline: 'none', resize: 'vertical', boxSizing: 'border-box', backgroundColor: '#FFFFFF', color: '#1E293B' },
+    
     btnSubmitComment: { padding: '12px 24px', backgroundColor: '#2563EB', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: '700', fontSize: '15px', display: 'flex', alignItems: 'center', gap: '8px' }
 };

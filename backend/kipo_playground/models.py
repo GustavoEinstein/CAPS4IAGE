@@ -78,6 +78,10 @@ class Producao(models.Model):
     disciplina = models.CharField(max_length=100)
     nivel = models.CharField(max_length=100)
     modelo_ia = models.CharField(max_length=100)
+    
+    # --- NOVO CAMPO: PROMPTS DA IA ---
+    prompts_ia = models.TextField(blank=True, null=True)
+    
     categoria = models.CharField(max_length=100)
     bncc = models.TextField(blank=True, null=True)
     metodologia = models.CharField(max_length=255, blank=True, null=True)

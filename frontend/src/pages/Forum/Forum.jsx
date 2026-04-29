@@ -66,7 +66,6 @@ export default function Forum() {
                 const perfilRes = await api.get('api/user/me/');
                 localStorage.setItem('user_pontos', perfilRes.data.pontos);
                 localStorage.setItem('user_nivel', perfilRes.data.nivel);
-                // Dispara o evento para o Header ouvir e atualizar a tela na mesma hora
                 window.dispatchEvent(new Event('perfilAtualizado')); 
             } catch (err) {
                 console.log("Erro ao atualizar pontos no header", err);
@@ -76,7 +75,6 @@ export default function Forum() {
             const jaCriou = localStorage.getItem('primeiro_topico_criado');
             
             if (!jaCriou) {
-                // Alerta celebrativo na primeira vez
                 Swal.fire({
                     icon: 'success',
                     title: 'Primeira Discussão!',
@@ -86,7 +84,6 @@ export default function Forum() {
                 });
                 localStorage.setItem('primeiro_topico_criado', 'true');
             } else {
-                // Toast discreto nas próximas vezes
                 const Toast = Swal.mixin({
                     toast: true,
                     position: 'top-end',
@@ -126,7 +123,6 @@ export default function Forum() {
         }
     };
 
-    // --- LÓGICA DE CORES DAS TAGS ---
     const getCategoriaStyle = (cat) => {
         const styles = {
             'Dúvida BNCC': { bg: '#DBEAFE', color: '#1E40AF' }, 
@@ -138,7 +134,6 @@ export default function Forum() {
         return styles[cat] || styles['Geral'];
     };
 
-    // Filtros
     const topicosFiltrados = topicos.filter(t => {
         const matchCategoria = filtroCategoria === 'Todas' || t.categoria === filtroCategoria;
         const matchBusca = t.titulo.toLowerCase().includes(busca.toLowerCase());
@@ -154,9 +149,7 @@ export default function Forum() {
                 </button>
             </div>
 
-            {/* BARRA DE FERRAMENTAS */}
             <div style={styles.toolbar}>
-                {/* Busca */}
                 <div style={styles.searchWrapper}>
                     <Search size={18} style={styles.iconInside} />
                     <input 
@@ -168,7 +161,6 @@ export default function Forum() {
                     />
                 </div>
 
-                {/* Dropdown de Categorias */}
                 <div style={styles.selectWrapper}>
                     <Filter size={18} style={styles.iconInside} />
                     <select 
@@ -184,7 +176,6 @@ export default function Forum() {
                 </div>
             </div>
 
-            {/* LISTAGEM DE TÓPICOS */}
             {loading ? (
                 <div style={styles.loadingContainer}>
                     <Loader2 size={32} color="#2563EB" className="spin" />
@@ -252,7 +243,6 @@ export default function Forum() {
                 </div>
             )}
 
-            {/* MODAL DE CRIAÇÃO */}
             {showModal && (
                 <div style={styles.modalOverlay} onClick={() => setShowModal(false)}>
                     <div style={styles.modalContent} onClick={(e) => e.stopPropagation()}>
@@ -313,7 +303,6 @@ export default function Forum() {
     );
 }
 
-// --- ESTILOS ---
 const styles = {
     container: { padding: '30px 20px', maxWidth: '900px', margin: '0 auto', fontFamily: 'Inter, sans-serif' },
     headerArea: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '25px', flexWrap: 'wrap', gap: '15px' },
@@ -325,14 +314,16 @@ const styles = {
     selectWrapper: { position: 'relative', minWidth: '220px' },
     iconInside: { position: 'absolute', left: '15px', top: '50%', transform: 'translateY(-50%)', color: '#94A3B8' },
     iconDropdown: { position: 'absolute', right: '15px', top: '50%', transform: 'translateY(-50%)', color: '#94A3B8', pointerEvents: 'none' },
-    searchInput: { width: '100%', padding: '12px 15px 12px 42px', borderRadius: '8px', border: '1px solid #E2E8F0', outline: 'none', fontSize: '14px', boxSizing: 'border-box', color: '#334155', transition: 'border-color 0.2s' },
-    selectInput: { width: '100%', padding: '12px 40px 12px 42px', borderRadius: '8px', border: '1px solid #E2E8F0', appearance: 'none', backgroundColor: '#fff', fontSize: '14px', color: '#334155', cursor: 'pointer', outline: 'none', fontWeight: '500', transition: 'border-color 0.2s' },
+    
+    // --- CORREÇÃO APLICADA: backgroundColor: '#FFFFFF' FIXO ---
+    searchInput: { width: '100%', padding: '12px 15px 12px 42px', borderRadius: '8px', border: '1px solid #E2E8F0', outline: 'none', fontSize: '14px', boxSizing: 'border-box', color: '#334155', backgroundColor: '#FFFFFF', transition: 'border-color 0.2s' },
+    selectInput: { width: '100%', padding: '12px 40px 12px 42px', borderRadius: '8px', border: '1px solid #E2E8F0', appearance: 'none', backgroundColor: '#FFFFFF', fontSize: '14px', color: '#334155', cursor: 'pointer', outline: 'none', fontWeight: '500', transition: 'border-color 0.2s' },
     
     loadingContainer: { display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '60px 0' },
     emptyState: { textAlign: 'center', padding: '60px 20px', backgroundColor: '#F8FAFC', borderRadius: '12px', border: '2px dashed #E2E8F0' },
     
     topicList: { display: 'flex', flexDirection: 'column', gap: '16px' },
-    topicCard: { border: '1px solid #E2E8F0', padding: '20px', borderRadius: '12px', backgroundColor: '#fff', transition: 'all 0.2s', display: 'flex', flexDirection: 'column', gap: '12px', cursor: 'pointer' },
+    topicCard: { border: '1px solid #E2E8F0', padding: '20px', borderRadius: '12px', backgroundColor: '#FFFFFF', transition: 'all 0.2s', display: 'flex', flexDirection: 'column', gap: '12px', cursor: 'pointer' },
     topicHeader: { display: 'flex', gap: '10px', alignItems: 'center' },
     tag: { fontSize: '11px', fontWeight: '700', padding: '4px 10px', borderRadius: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' },
     tagResolved: { display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', fontWeight: '700', color: '#059669', backgroundColor: '#D1FAE5', padding: '4px 10px', borderRadius: '6px', textTransform: 'uppercase' },
@@ -344,11 +335,14 @@ const styles = {
     
     // MODAL
     modalOverlay: { position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15, 23, 42, 0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, backdropFilter: 'blur(4px)' },
-    modalContent: { backgroundColor: '#fff', padding: '30px', borderRadius: '16px', width: '100%', maxWidth: '550px', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' },
+    modalContent: { backgroundColor: '#FFFFFF', padding: '30px', borderRadius: '16px', width: '100%', maxWidth: '550px', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' },
     modalTitle: { marginTop: 0, marginBottom: '24px', color: '#0F172A', fontSize: '20px', fontWeight: '800' },
     inputGroup: { marginBottom: '16px' },
     label: { display: 'block', marginBottom: '6px', fontWeight: '600', color: '#334155', fontSize: '14px' },
-    input: { width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #CBD5E1', outline: 'none', boxSizing: 'border-box', fontFamily: 'inherit', fontSize: '14px', color: '#1E293B' },
+    
+    // --- CORREÇÃO APLICADA: backgroundColor: '#FFFFFF' FIXO ---
+    input: { width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #CBD5E1', outline: 'none', boxSizing: 'border-box', fontFamily: 'inherit', fontSize: '14px', color: '#1E293B', backgroundColor: '#FFFFFF' },
+    
     fileLabel: { display: 'inline-flex', alignItems: 'center', gap: '8px', cursor: 'pointer', color: '#2563EB', fontWeight: '600', backgroundColor: '#EFF6FF', padding: '10px 16px', borderRadius: '8px', fontSize: '14px', transition: 'background-color 0.2s' },
     fileName: { marginLeft: '12px', fontSize: '13px', color: '#64748B', fontWeight: '500' },
     modalActions: { display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '30px' },

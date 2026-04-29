@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import api from '../services/api'; 
 import { useNavigate, useOutletContext } from 'react-router-dom';
-import { Alert } from '../utils/alerts'; // <--- IMPORTAÇÃO DO ALERTA
+import { Alert } from '../utils/alerts'; 
 import { 
     FileText, 
     ClipboardCheck, 
@@ -13,7 +13,8 @@ import {
     Calendar, 
     Plus,
     User,
-    Wrench
+    Wrench,
+    Edit3
 } from 'lucide-react';
 
 const MinhasProducoes = () => {
@@ -39,7 +40,6 @@ const MinhasProducoes = () => {
                 }
             } catch (error) {
                 console.error("Erro ao carregar dados:", error);
-                // --- POP-UP DE ERRO AQUI ---
                 Alert.erro("Erro de Conexão", "Não foi possível carregar a sua lista de produções.");
             } finally {
                 setLoading(false);
@@ -139,11 +139,15 @@ const CardProducao = ({ data, navigate, isMobile }) => {
         if (s.includes('rejeitado') || s.includes('correção')) {
             return { color: '#C62828', bg: '#FFEBEE', icon: <XCircle size={16} />, label: 'Rejeitado', border: '#FFCDD2' };
         }
+        if (s.includes('rascunho')) {
+            return { color: '#334155', bg: '#E2E8F0', icon: <Edit3 size={16} />, label: 'Rascunho Salvo', border: '#CBD5E1' };
+        }
         return { color: '#F57C00', bg: '#FFF3E0', icon: <Clock size={16} />, label: 'Aguardando Revisão', border: '#FFE0B2' };
     };
 
     const config = getStatusConfig(data.status);
     const isRejected = config.label === 'Rejeitado';
+    const isDraft = config.label === 'Rascunho Salvo'; 
 
     const rejectionMessage = (() => {
         const raw = data.feedback_revisor || "";
@@ -154,16 +158,38 @@ const CardProducao = ({ data, navigate, isMobile }) => {
     })();
 
     return (
-        <div style={styles.card} onClick={() => navigate(`/dashboard/minha-producao/${data.id}`)}>
+        <div 
+            style={{
+                ...styles.card,
+                backgroundColor: isDraft ? '#F1F5F9' : '#FFFFFF', 
+                // --- BORDAS SÓLIDAS APLICADAS AQUI ---
+                border: isDraft ? '1px solid #94A3B8' : '1px solid #E0E0E0',
+            }} 
+            onClick={() => navigate(isDraft ? `/dashboard/editar-producao/${data.id}` : `/dashboard/minha-producao/${data.id}`)}
+            onMouseOver={(e) => {
+                e.currentTarget.style.borderColor = isDraft ? '#64748B' : '#BBDEFB';
+                e.currentTarget.style.transform = 'translateY(-2px)';
+                e.currentTarget.style.boxShadow = '0 6px 12px rgba(0,0,0,0.05)';
+            }}
+            onMouseOut={(e) => {
+                e.currentTarget.style.borderColor = isDraft ? '#94A3B8' : '#E0E0E0';
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = '0 2px 5px rgba(0,0,0,0.02)';
+            }}
+        >
             <div style={styles.cardMain}>
                 <div style={styles.cardHeader}>
-                    <span style={styles.disciplineBadge}>{data.disciplina || "Geral"}</span>
+                    <span style={{...styles.disciplineBadge, opacity: isDraft ? 0.6 : 1}}>
+                        {data.disciplina || "Geral"}
+                    </span>
                     <span style={styles.dateText}>
-                        <Calendar size={12} style={{marginRight:4}}/> Enviado em: {data.data}
+                        <Calendar size={12} style={{marginRight:4}}/> Salvo em: {data.data || "Hoje"}
                     </span>
                 </div>
                 
-                <h3 style={styles.cardTitle}>{data.titulo}</h3>
+                <h3 style={{...styles.cardTitle, color: isDraft ? '#475569' : '#333'}}>
+                    {data.titulo || "(Rascunho sem título)"}
+                </h3>
                 
                 {isRejected && rejectionMessage && (
                     <div style={styles.feedbackBox}>
@@ -178,7 +204,8 @@ const CardProducao = ({ data, navigate, isMobile }) => {
 
             <div style={{
                 ...styles.cardStatusSide, 
-                borderLeft: isMobile ? 'none' : '1px solid #F0F0F0', 
+                // --- LINHA DIVISÓRIA SÓLIDA AQUI ---
+                borderLeft: isMobile ? 'none' : '1px solid #CBD5E1', 
                 paddingLeft: isMobile ? 0 : '20px', 
                 alignItems: isMobile ? 'flex-start' : 'flex-end', 
                 paddingTop: isMobile ? '15px' : 0
@@ -201,9 +228,27 @@ const CardProducao = ({ data, navigate, isMobile }) => {
                         </button>
                     )}
 
-                    <button style={styles.actionButtonSecondary}>
-                        <Eye size={14} /> Visualizar
-                    </button>
+                    {isDraft ? (
+                        <button 
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                navigate(`/dashboard/editar-producao/${data.id}`);
+                            }}
+                            style={styles.actionButtonDraft}
+                        >
+                            <Edit3 size={14} /> Continuar Editando
+                        </button>
+                    ) : (
+                        <button 
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                navigate(`/dashboard/minha-producao/${data.id}`);
+                            }}
+                            style={styles.actionButtonSecondary}
+                        >
+                            <Eye size={14} /> Visualizar
+                        </button>
+                    )}
                 </div>
             </div>
         </div>
@@ -214,7 +259,20 @@ const CardHistorico = ({ data, navigate, isMobile }) => {
     const aprovou = data.meu_veredito && data.meu_veredito.toUpperCase().includes('APROVADO');
 
     return (
-        <div style={styles.card} onClick={() => navigate(`/dashboard/producao/${data.id}`)}>
+        <div 
+            style={styles.card} 
+            onClick={() => navigate(`/dashboard/producao/${data.id}`)}
+            onMouseOver={(e) => {
+                e.currentTarget.style.borderColor = '#BBDEFB';
+                e.currentTarget.style.transform = 'translateY(-2px)';
+                e.currentTarget.style.boxShadow = '0 6px 12px rgba(0,0,0,0.05)';
+            }}
+            onMouseOut={(e) => {
+                e.currentTarget.style.borderColor = '#E0E0E0';
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = '0 2px 5px rgba(0,0,0,0.02)';
+            }}
+        >
             <div style={styles.cardMain}>
                 <div style={styles.cardHeader}>
                     <span style={{...styles.disciplineBadge, backgroundColor: '#ECEFF1', color: '#455A64'}}>
@@ -263,12 +321,12 @@ const styles = {
     tabActive: { display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 20px', background: 'none', border: 'none', borderBottom: '3px solid #1565C0', color: '#1565C0', fontWeight: '700', cursor: 'pointer', fontSize: '14px' },
     tabInactive: { display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 20px', background: 'none', border: 'none', borderBottom: '3px solid transparent', color: '#757575', fontWeight: '600', cursor: 'pointer', fontSize: '14px', opacity: 0.7, transition: 'opacity 0.2s' },
 
-    list: { display: 'flex', flexDirection: 'column', gap: '15px' },
+    list: { display: 'flex', flexDirection: 'column', gap: '16px' },
     emptyState: { padding: '60px', textAlign: 'center', backgroundColor: 'white', borderRadius: '12px', border: '1px dashed #DDD' },
 
     card: {
         display: 'flex', flexDirection: 'row', flexWrap: 'wrap',
-        backgroundColor: '#FFFFFF', borderRadius: '12px', border: '1px solid #E0E0E0',
+        borderRadius: '12px',
         padding: '25px', boxShadow: '0 2px 5px rgba(0,0,0,0.02)',
         gap: '20px', cursor: 'pointer', transition: 'all 0.2s ease'
     },
@@ -278,7 +336,7 @@ const styles = {
     dateText: { fontSize: '12px', color: '#90A4AE', display: 'flex', alignItems: 'center' },
     
     cardTitle: { 
-        fontSize: '18px', fontWeight: '700', color: '#333', margin: '0 0 10px 0',
+        fontSize: '18px', fontWeight: '700', margin: '0 0 10px 0',
         wordBreak: 'break-word', overflowWrap: 'break-word' 
     },
     
@@ -313,7 +371,8 @@ const styles = {
     cardStatusSide: { display: 'flex', flexDirection: 'column', justifyContent: 'center', minWidth: '160px' },
     statusBadge: { display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: '700', border: '1px solid' },
     
-    actionButtonSecondary: { background: 'none', border: '1px solid #CFD8DC', color: '#546E7A', padding: '8px 14px', borderRadius: '6px', cursor: 'pointer', fontSize: '13px', fontWeight: '600', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', transition: 'all 0.2s', width: '100%' },
+    actionButtonSecondary: { background: '#FFFFFF', border: '1px solid #CFD8DC', color: '#546E7A', padding: '8px 14px', borderRadius: '6px', cursor: 'pointer', fontSize: '13px', fontWeight: '600', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', transition: 'all 0.2s', width: '100%' },
+    actionButtonDraft: { backgroundColor: '#1E293B', color: 'white', border: 'none', padding: '8px 14px', borderRadius: '6px', cursor: 'pointer', fontSize: '13px', fontWeight: '600', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', transition: 'all 0.2s', width: '100%', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' },
     
     actionButtonEdit: {
         backgroundColor: '#C62828', 
