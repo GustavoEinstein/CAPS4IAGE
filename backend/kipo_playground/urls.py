@@ -44,15 +44,27 @@ urlpatterns = [
     path('api/ontology/cycles/', views.api_listar_ciclos, name='list_cycles'),
 
     # ============================================================================
-    # 3. ROTAS DE ADMINISTRAÇÃO (APROVAÇÃO DE CONTAS) - NOVO
+    # 3. ROTAS DE ADMINISTRAÇÃO (APROVAÇÃO DE CONTAS)
     # ============================================================================
     path('api/admin/pending-users/', views.api_list_pending_users, name='pending_users'),
     path('api/admin/approve-user/<int:user_id>/', views.api_approve_reject_user, name='approve_user'),
 
 
-# --- FÓRUM ---
+    # ============================================================================
+    # 4. FÓRUM 
+    # ============================================================================
     path('api/forum/topicos/', views.api_forum_topicos, name='forum_topicos'),
     path('api/forum/topicos/<int:pk>/', views.api_forum_detalhe_comentarios, name='forum_detalhes'),
+
+    # ============================================================================
+    # 5. ROTAS DO PAINEL DE ADMINISTRAÇÃO GERAL - NOVO
+    # ============================================================================
+    path('api/admin/users/', views.api_admin_list_users, name='api_admin_list_users'),
+    path('api/admin/users/<int:pk>/delete/', views.api_admin_delete_user, name='api_admin_delete_user'),
+    path('api/admin/productions/', views.api_admin_list_productions, name='api_admin_list_productions'),
+    path('api/admin/productions/<int:pk>/delete/', views.api_admin_delete_production, name='api_admin_delete_production'),
+    path('api/admin/forum/', views.api_admin_list_forum, name='api_admin_list_forum'),
+    path('api/admin/forum/<int:pk>/delete/', views.api_admin_delete_forum, name='api_admin_delete_forum'),
 
 ]
 

@@ -639,11 +639,9 @@ def api_approve_reject_user(request, user_id):
 
 
 # ============================================================================
-# 6. FÓRUM DA COMUNIDADE (NOVO)
+# 6. FÓRUM DA COMUNIDADE 
 # ============================================================================
-
-
-@api_view(['GET', 'POST', 'PUT', 'DELETE']) # Adicionado DELETE aqui
+@api_view(['GET', 'POST', 'PUT', 'DELETE']) 
 @permission_classes([IsAuthenticated])
 def api_forum_detalhe_comentarios(request, pk):
     try:
@@ -702,9 +700,8 @@ def api_forum_detalhe_comentarios(request, pk):
         topico.save()
         return Response({'mensagem': 'Tópico marcado como resolvido!'})
 
-    # --- NOVA LÓGICA DE EXCLUSÃO ---
     elif request.method == 'DELETE':
-        if topico.autor != request.user:
+        if topico.autor != request.user and not request.user.is_superuser:
             return Response({'erro': 'Você não tem permissão para excluir este tópico.'}, status=403)
         
         topico.delete()
@@ -714,12 +711,10 @@ def api_forum_detalhe_comentarios(request, pk):
 @permission_classes([IsAuthenticated])
 def api_forum_topicos(request):
     if request.method == 'GET':
-        # Buscamos todos os tópicos ordenados pelo mais recente
         topicos = Topico.objects.all().order_by('-data_criacao')
         
         lista = []
         for t in topicos:
-            # Pegamos a disciplina do perfil do autor para mostrar no card do fórum
             disciplina = t.autor.profile.disciplina if hasattr(t.autor, 'profile') else 'Geral'
             
             lista.append({
@@ -727,8 +722,7 @@ def api_forum_topicos(request):
                 'titulo': t.titulo,
                 'categoria': t.categoria,
                 'autor': t.autor.first_name or t.autor.username,
-                'disciplina_autor': disciplina, # <--- Enviando a disciplina para o card do fórum
-                # timezone.localtime corrige o erro do "agora mesmo" infinito
+                'disciplina_autor': disciplina,
                 'data': timezone.localtime(t.data_criacao).strftime('%d/%m/%Y %H:%M'),
                 'resolvido': t.resolvido,
                 'total_comentarios': t.comentarios.count()
@@ -741,19 +735,106 @@ def api_forum_topicos(request):
         conteudo = request.data.get('conteudo')
         categoria = request.data.get('categoria', 'Geral')
         
-        # Captura o arquivo enviado pelo formulário (via FormData no React)
         arquivo_enviado = request.FILES.get('arquivo') 
 
         if not titulo or not conteudo:
             return Response({'erro': 'Título e conteúdo são obrigatórios.'}, status=400)
 
-        # Salva o novo tópico com todos os campos, incluindo o arquivo/material de apoio
         Topico.objects.create(
             titulo=titulo,
             conteudo=conteudo,
             categoria=categoria,
             autor=request.user,
-            arquivo=arquivo_enviado # <--- Salva o arquivo no banco de dados
+            arquivo=arquivo_enviado 
         )
 
         return Response({'mensagem': 'Tópico criado com sucesso!'}, status=201)
+
+# ============================================================================
+# 7. PAINEL DE ADMINISTRAÇÃO GERAL
+# ============================================================================
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def api_admin_list_users(request):
+    if not request.user.is_superuser:
+        return Response({'erro': 'Acesso negado'}, status=403)
+        
+    users = User.objects.all().select_related('profile').order_by('-date_joined')
+    lista = []
+    for u in users:
+        disciplina = u.profile.disciplina if hasattr(u, 'profile') else 'N/A'
+        lista.append({
+            'id': u.id,
+            'username': u.username,
+            'email': u.email,
+            'disciplina': disciplina,
+            'is_superuser': u.is_superuser
+        })
+    return Response(lista)
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def api_admin_delete_user(request, pk):
+    if not request.user.is_superuser:
+        return Response({'erro': 'Acesso negado'}, status=403)
+        
+    if request.user.id == pk:
+        return Response({'erro': 'Você não pode excluir a si mesmo.'}, status=400)
+        
+    user_to_delete = get_object_or_404(User, id=pk)
+    user_to_delete.delete()
+    return Response({'mensagem': 'Usuário excluído com sucesso.'})
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def api_admin_list_productions(request):
+    if not request.user.is_superuser:
+        return Response({'erro': 'Acesso negado'}, status=403)
+        
+    prods = Producao.objects.all().order_by('-data_criacao')
+    lista = [{
+        'id': p.id,
+        'titulo': p.titulo,
+        'autor': p.user.username,
+        'status': p.status,
+        'data': timezone.localtime(p.data_criacao).strftime('%d/%m/%Y')
+    } for p in prods]
+    
+    return Response(lista)
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def api_admin_delete_production(request, pk):
+    if not request.user.is_superuser:
+        return Response({'erro': 'Acesso negado'}, status=403)
+        
+    prod = get_object_or_404(Producao, id=pk)
+    prod.delete()
+    return Response({'mensagem': 'Produção excluída com sucesso.'})
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def api_admin_list_forum(request):
+    if not request.user.is_superuser:
+        return Response({'erro': 'Acesso negado'}, status=403)
+        
+    topicos = Topico.objects.all().order_by('-data_criacao')
+    lista = [{
+        'id': t.id,
+        'titulo': t.titulo,
+        'autor': t.autor.username,
+        'categoria': t.categoria
+    } for t in topicos]
+    
+    return Response(lista)
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def api_admin_delete_forum(request, pk):
+    if not request.user.is_superuser:
+        return Response({'erro': 'Acesso negado'}, status=403)
+        
+    topico = get_object_or_404(Topico, id=pk)
+    topico.delete()
+    return Response({'mensagem': 'Tópico excluído com sucesso.'})

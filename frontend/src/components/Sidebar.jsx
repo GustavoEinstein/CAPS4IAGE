@@ -9,7 +9,8 @@ import {
   LifeBuoy,
   BookOpenCheck,
   UserCheck, 
-  MessageSquare, // <--- NOVO ÍCONE PARA O FÓRUM ADICIONADO AQUI
+  MessageSquare, 
+  ShieldAlert, // <--- NOVO ÍCONE PARA O PAINEL DE CONTROLE
   X,
 } from "lucide-react"
 
@@ -118,7 +119,6 @@ function Sidebar({ isOpen, isMobile, onClose }) {
             </NavLink>
           </li>
           
-          {/* --- NOVO LINK PARA O FÓRUM --- */}
           <li>
             <NavLink
               to="/dashboard/forum"
@@ -144,6 +144,17 @@ function Sidebar({ isOpen, isMobile, onClose }) {
                 >
                   <UserCheck size={20} style={styles.icon} />
                   Aprovação de Contas
+                </NavLink>
+              </li>
+              {/* --- NOVO: PAINEL DE CONTROLE --- */}
+              <li>
+                <NavLink
+                  to="/dashboard/admin"
+                  style={getLinkStyle}
+                  onClick={isMobile ? onClose : undefined}
+                >
+                  <ShieldAlert size={20} style={styles.icon} />
+                  Painel de Controle
                 </NavLink>
               </li>
             </ul>
@@ -179,113 +190,19 @@ function Sidebar({ isOpen, isMobile, onClose }) {
 }
 
 const styles = {
-  sidebar: {
-    width: "260px",
-    height: "100vh",
-    backgroundColor: "#FFFFFF",
-    borderRight: "1px solid #E0E0E0",
-    display: "flex",
-    flexDirection: "column",
-    top: 0,
-    left: 0,
-    zIndex: 1000,
-    transition: "transform 0.3s ease-in-out", 
-  },
-  logoContainer: {
-    padding: "20px",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between", 
-    borderBottom: "1px solid #F5F5F5",
-  },
-  logoIconBg: {
-    width: "40px",
-    height: "40px",
-    backgroundColor: "#E3F2FD",
-    borderRadius: "8px",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  logoCircle: {
-    width: "40px",
-    height: "40px",
-    backgroundColor: "#E3F2FD",
-    borderRadius: "50%",
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  logoTitle: {
-    fontSize: "18px",
-    fontWeight: "800",
-    color: "#1565C0",
-    margin: 0,
-    lineHeight: 1.1,
-  },
-  logoSubtitle: {
-    fontSize: "12px",
-    color: "#546E7A",
-    fontWeight: "600",
-    letterSpacing: "0.5px",
-  },
-  closeButton: {
-    background: "none",
-    border: "none",
-    cursor: "pointer",
-    padding: "5px",
-  },
-  nav: {
-    padding: "20px",
-    flex: 1,
-    display: "flex",
-    flexDirection: "column",
-    overflowY: "auto",
-  },
-  ul: {
-    listStyle: "none",
-    padding: 0,
-    margin: 0,
-    display: "flex",
-    flexDirection: "column",
-    gap: "6px",
-  },
-  sectionLabel: {
-    fontSize: "11px",
-    fontWeight: "700",
-    color: "#90A4AE",
-    letterSpacing: "0.8px",
-    margin: "15px 0 10px 12px",
-    textTransform: "uppercase",
-  },
-  link: {
-    display: "flex",
-    alignItems: "center",
-    padding: "12px 14px",
-    textDecoration: "none",
-    color: "#546E7A",
-    fontSize: "14px",
-    fontWeight: "500",
-    borderRadius: "10px",
-    transition: "all 0.2s ease",
-    border: "1px solid transparent",
-  },
-  linkActive: {
-    backgroundColor: "#E3F2FD",
-    color: "#1565C0",
-    fontWeight: "600",
-    border: "1px solid #BBDEFB",
-  },
+  sidebar: { width: "260px", height: "100vh", backgroundColor: "#FFFFFF", borderRight: "1px solid #E0E0E0", display: "flex", flexDirection: "column", top: 0, left: 0, zIndex: 1000, transition: "transform 0.3s ease-in-out" },
+  logoContainer: { padding: "20px", display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: "1px solid #F5F5F5" },
+  logoCircle: { width: "40px", height: "40px", backgroundColor: "#E3F2FD", borderRadius: "50%", display: "flex", justifyContent: "center", alignItems: "center" },
+  logoTitle: { fontSize: "18px", fontWeight: "800", color: "#1565C0", margin: 0, lineHeight: 1.1 },
+  closeButton: { background: "none", border: "none", cursor: "pointer", padding: "5px" },
+  nav: { padding: "20px", flex: 1, display: "flex", flexDirection: "column", overflowY: "auto" },
+  ul: { listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: "6px" },
+  sectionLabel: { fontSize: "11px", fontWeight: "700", color: "#90A4AE", letterSpacing: "0.8px", margin: "15px 0 10px 12px", textTransform: "uppercase" },
+  link: { display: "flex", alignItems: "center", padding: "12px 14px", textDecoration: "none", color: "#546E7A", fontSize: "14px", fontWeight: "500", borderRadius: "10px", transition: "all 0.2s ease", border: "1px solid transparent" },
+  linkActive: { backgroundColor: "#E3F2FD", color: "#1565C0", fontWeight: "600", border: "1px solid #BBDEFB" },
   icon: { marginRight: "12px" },
   footer: { padding: "20px", borderTop: "1px solid #F5F5F5" },
-  proCard: {
-    background: "linear-gradient(135deg, #1565C0 0%, #1976D2 100%)",
-    borderRadius: "10px",
-    padding: "16px",
-    color: "white",
-    fontSize: "14px",
-    textAlign: "center",
-  },
+  proCard: { background: "linear-gradient(135deg, #1565C0 0%, #1976D2 100%)", borderRadius: "10px", padding: "16px", color: "white", fontSize: "14px", textAlign: "center" },
 }
 
 export default Sidebar

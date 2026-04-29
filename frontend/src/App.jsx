@@ -23,9 +23,10 @@ import Ajuda from './pages/Ajuda';
 import Profile from './pages/Profile'; 
 import AprovacaoContas from './pages/AprovacaoContas';
 
-// --- NOVAS PÁGINAS DO FÓRUM ---
+// --- NOVAS PÁGINAS DO FÓRUM E ADMIN ---
 import Forum from './pages/Forum/Forum';
 import TopicoDetalhe from './pages/Forum/TopicoDetalhe';
+import Admin from './pages/Admin'; // <--- IMPORTAÇÃO DA NOVA PÁGINA ADMIN
 
 // --- PÁGINA DE EDIÇÃO ---
 import EditarProducao from './EditarProducao';
@@ -39,7 +40,6 @@ function App() {
       <Routes>
         
         {/* === ROTAS PÚBLICAS === */}
-        
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
@@ -67,15 +67,16 @@ function App() {
                 <Route path="revisao/:id" element={<Revisao />} />          
                 <Route path="ajuda" element={<Ajuda />} />
 
-                {/* --- ROTAS DO FÓRUM (NOVAS) --- */}
+                {/* --- ROTAS DO FÓRUM --- */}
                 <Route path="forum" element={<Forum />} />
                 <Route path="forum/:id" element={<TopicoDetalhe />} />
 
                 {/* --- ROTA DE EDIÇÃO --- */}
                 <Route path="editar-producao/:id" element={<EditarProducao />} />
 
-                {/* --- ROTA DE ADMINISTRAÇÃO --- */}
+                {/* --- ROTAS DE ADMINISTRAÇÃO --- */}
                 <Route path="aprovacoes" element={<AprovacaoContas />} />
+                <Route path="admin" element={<Admin />} /> {/* <--- NOVA ROTA REGISTRADA AQUI */}
 
             </Route>
 
