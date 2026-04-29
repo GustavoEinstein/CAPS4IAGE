@@ -36,8 +36,22 @@ class Profile(models.Model):
     escola = models.CharField(max_length=150, null=True, blank=True)
     status_conta = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Em análise')
 
+    # --- CAMPO DE GAMIFICAÇÃO ---
+    pontos = models.IntegerField(default=0)
+
+    def get_nivel(self):
+        """Retorna o título (badge) baseado na progressão pedagógica do usuário"""
+        if self.pontos <= 50:
+            return "Prof. Conectado(a)"
+        elif self.pontos <= 150:
+            return "Curador(a) Pedagógico(a)"
+        elif self.pontos <= 300:
+            return "Mentor(a) de Inovação"
+        else:
+            return "Embaixador(a) do Saber"
+
     def __str__(self):
-        return f'{self.user.username} - {self.disciplina}'
+        return f'{self.user.username} - {self.disciplina} ({self.get_nivel()})'
 
 @receiver(post_save, sender=User)
 def create_user_profile(sender, instance, created, **kwargs):
@@ -46,7 +60,9 @@ def create_user_profile(sender, instance, created, **kwargs):
 
 @receiver(post_save, sender=User)
 def save_user_profile(sender, instance, **kwargs):
-    instance.profile.save()
+    # Garantir que o perfil existe antes de salvar (evita erro em criações via shell/admin)
+    if hasattr(instance, 'profile'):
+        instance.profile.save()
 
 
 # ============================================================================
@@ -104,7 +120,6 @@ class Avaliacao(models.Model):
         unique_together = ('producao', 'revisor')
 
     def __str__(self):
-        resultado = "Aprovou" if self.aprovado else "Pediu Correção"
         return f"Avaliação de {self.revisor.username} para '{self.producao.titulo}'"
 
 
@@ -124,7 +139,6 @@ class Topico(models.Model):
     titulo = models.CharField(max_length=255)
     conteudo = models.TextField()
     
-    # Novos campos adicionados
     categoria = models.CharField(max_length=50, choices=CATEGORIAS_CHOICES, default='Geral')
     resolvido = models.BooleanField(default=False) 
     

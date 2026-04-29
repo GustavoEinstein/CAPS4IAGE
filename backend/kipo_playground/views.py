@@ -38,7 +38,6 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.throttling import ScopedRateThrottle 
 
-# IMPORTANTE: Agora importando também Topico e Comentario para o Fórum
 from .models import Profile, Producao, Avaliacao, Topico, Comentario
 
 # --- CONFIGURAÇÃO GLOBAL DE SEGURANÇA DE ARQUIVOS ---
@@ -179,7 +178,10 @@ def api_user_profile(request):
             'disciplina': profile.disciplina,
             'escola': profile.escola, 
             'avatar': avatar_url,
-            'is_superuser': user.is_superuser
+            'is_superuser': user.is_superuser,
+            # --- GAMIFICAÇÃO (ENVIANDO DADOS PARA O REACT) ---
+            'pontos': profile.pontos,
+            'nivel': profile.get_nivel()
         })
 
     elif request.method == 'PUT':
@@ -209,7 +211,9 @@ def api_user_profile(request):
             'username': nome_exibicao,
             'avatar': avatar_url,
             'disciplina': profile.disciplina,
-            'escola': profile.escola 
+            'escola': profile.escola,
+            'pontos': profile.pontos,
+            'nivel': profile.get_nivel()
         })
 
 
@@ -283,7 +287,6 @@ def api_get_production_details(request, pk):
     try:
         p = Producao.objects.get(id=pk)
 
-        # 1. TRAVAS DE SEGURANÇA (Quem pode visualizar?)
         is_dono = p.user == request.user
         is_admin = request.user.is_superuser
         is_aprovado = p.status in ['Aprovado', 'Concluído']
@@ -295,7 +298,6 @@ def api_get_production_details(request, pk):
         if not (is_dono or is_admin or is_aprovado or is_revisor or is_potencial_revisor):
             return Response({'erro': 'Acesso negado. Esta produção é privada ou ainda está em avaliação.'}, status=403)
         
-        # 2. PREPARAÇÃO DOS DADOS
         arquivo_url = request.build_absolute_uri(p.arquivo.url) if p.arquivo else None
 
         avaliacoes = p.avaliacoes.all()
@@ -304,7 +306,6 @@ def api_get_production_details(request, pk):
         notas = None
         feedback_texto = None
 
-        # Se já tiver avaliação, carrega as notas para o 2º revisor ou para o dono ver o que errou
         if ultima_avaliacao:
             feedback_texto = ultima_avaliacao.feedback_revisao
             notas = {
@@ -316,7 +317,6 @@ def api_get_production_details(request, pk):
                 'inovacao': ultima_avaliacao.nota_inovacao
             }
 
-        # 3. RESPOSTA PARA O FRONTEND
         data = {
             'id': p.id,
             'titulo': p.titulo,
@@ -388,7 +388,7 @@ def api_update_production(request, pk):
 
 
 # ============================================================================
-# 3. SISTEMA DE REVISÃO (DUPLO CEGO & HISTÓRICO)
+# 3. SISTEMA DE REVISÃO E GAMIFICAÇÃO
 # ============================================================================
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -460,9 +460,14 @@ def api_submit_review(request, pk):
             nota_inovacao=int(data.get('nota_inovacao', 0))
         )
 
+        # --- GAMIFICAÇÃO: +15 XP PARA QUEM AVALIOU ---
+        perfil_revisor = request.user.profile
+        perfil_revisor.pontos += 15
+        perfil_revisor.save()
+
         if not aprovado:
             p.status = 'Correção solicitada'
-            msg_response = 'Sua avaliação foi registrada. A produção foi devolvida ao autor para correção.'
+            msg_response = 'Sua avaliação foi registrada. Você ganhou +15 XP! A produção foi devolvida ao autor para correção.'
             
             try:
                 autor_email = p.user.email
@@ -478,10 +483,15 @@ def api_submit_review(request, pk):
             
             if total_aprovacoes >= 2:
                 p.status = 'Aprovado'
-                msg_response = 'Revisão registrada! A produção alcançou 2 aprovações e foi publicada na comunidade.'
+                msg_response = 'Revisão registrada! Você ganhou +15 XP. A produção alcançou 2 aprovações e foi publicada na comunidade.'
+                
+                # --- GAMIFICAÇÃO: +50 XP PARA O AUTOR PELA APROVAÇÃO ---
+                perfil_autor = p.user.profile
+                perfil_autor.pontos += 50
+                perfil_autor.save()
             else:
                 p.status = 'Em revisão'
-                msg_response = f'Revisão registrada! Esta produção agora possui {total_aprovacoes} aprovação(ões). Aguardando o segundo revisor.'
+                msg_response = f'Revisão registrada! Você ganhou +15 XP. Esta produção agora possui {total_aprovacoes} aprovação(ões). Aguardando o segundo revisor.'
 
         p.save()
         return Response({'mensagem': msg_response})
@@ -658,7 +668,7 @@ def api_forum_detalhe_comentarios(request, pk):
                 'autor': c.autor.first_name or c.autor.username,
                 'is_autor_topico': c.autor == topico.autor,
                 'conteudo': c.conteudo,
-                'data': c.data_criacao.strftime('%d/%m/%Y %H:%M')
+                'data': timezone.localtime(c.data_criacao).strftime('%d/%m/%Y %H:%M')
             })
 
         arquivo_url = request.build_absolute_uri(topico.arquivo.url) if topico.arquivo else None
@@ -671,7 +681,7 @@ def api_forum_detalhe_comentarios(request, pk):
             'resolvido': topico.resolvido,
             'autor': topico.autor.first_name or topico.autor.username,
             'is_dono_topico': topico.autor == request.user,
-            'data': topico.data_criacao.strftime('%d/%m/%Y %H:%M'),
+            'data': timezone.localtime(topico.data_criacao).strftime('%d/%m/%Y %H:%M'),
             'arquivo': arquivo_url,
             'comentarios': lista_comentarios
         }
@@ -690,7 +700,13 @@ def api_forum_detalhe_comentarios(request, pk):
             autor=request.user,
             conteudo=conteudo
         )
-        return Response({'mensagem': 'Comentário adicionado com sucesso!'})
+
+        # --- GAMIFICAÇÃO: +5 XP POR AJUDAR NO FÓRUM ---
+        perfil_comentarista = request.user.profile
+        perfil_comentarista.pontos += 5
+        perfil_comentarista.save()
+
+        return Response({'mensagem': 'Comentário adicionado com sucesso! Você ganhou +5 XP.'})
 
     elif request.method == 'PUT':
         if topico.autor != request.user:
@@ -748,7 +764,12 @@ def api_forum_topicos(request):
             arquivo=arquivo_enviado 
         )
 
-        return Response({'mensagem': 'Tópico criado com sucesso!'}, status=201)
+        # --- GAMIFICAÇÃO: +5 XP POR CRIAR TÓPICO ---
+        perfil_autor = request.user.profile
+        perfil_autor.pontos += 5
+        perfil_autor.save()
+
+        return Response({'mensagem': 'Tópico criado com sucesso! Você ganhou +5 XP.'}, status=201)
 
 # ============================================================================
 # 7. PAINEL DE ADMINISTRAÇÃO GERAL
