@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Menu, Trophy, LogOut } from 'lucide-react'; 
 
@@ -21,6 +21,29 @@ function Header({ onToggleMenu, showMenuButton }) {
 
   const currentTitle = pageTitles[location.pathname] || 'Página do Sistema';
 
+  // --- ESTADOS DINÂMICOS PARA ATUALIZAÇÃO EM TEMPO REAL ---
+  const [userPontos, setUserPontos] = useState(localStorage.getItem('user_pontos') || '0');
+  const [userNivel, setUserNivel] = useState(localStorage.getItem('user_nivel') || 'Prof. Conectado(a)');
+  const [userAvatar, setUserAvatar] = useState(localStorage.getItem('user_avatar'));
+
+  useEffect(() => {
+      // Função que atualiza o Header assim que os dados mudam em outra tela
+      const atualizarHeader = () => {
+          setUserPontos(localStorage.getItem('user_pontos') || '0');
+          setUserNivel(localStorage.getItem('user_nivel') || 'Prof. Conectado(a)');
+          setUserAvatar(localStorage.getItem('user_avatar'));
+      };
+
+      // Escuta tanto as abas do navegador quanto os eventos dentro do próprio sistema
+      window.addEventListener('storage', atualizarHeader);
+      window.addEventListener('perfilAtualizado', atualizarHeader);
+
+      return () => {
+          window.removeEventListener('storage', atualizarHeader);
+          window.removeEventListener('perfilAtualizado', atualizarHeader);
+      };
+  }, []);
+
   // --- AÇÕES ---
   const handleLogout = (e) => { 
       e.stopPropagation();
@@ -32,11 +55,7 @@ function Header({ onToggleMenu, showMenuButton }) {
       navigate('/perfil');
   };
 
-  // --- DADOS DO USUÁRIO E GAMIFICAÇÃO ---
   const fullUserName = localStorage.getItem('user_name') || '';
-  const userAvatar = localStorage.getItem('user_avatar');
-  const userPontos = localStorage.getItem('user_pontos') || '0';
-  const userNivel = localStorage.getItem('user_nivel') || 'Prof. Conectado(a)';
   
   const getFirstName = (fullName) => {
       if (!fullName) return '';
@@ -68,25 +87,21 @@ function Header({ onToggleMenu, showMenuButton }) {
             
             <div style={{...styles.userInfo, display: showMenuButton ? 'none' : 'flex'}}>
                 
-                {/* Linha 1: Nome e Sair (Lado a Lado) */}
+                {/* Linha 1: Nome e Sair */}
                 <div style={styles.nameRow}>
                     <span style={styles.userName}>
                         Prof. {displayName}
                     </span>
                     <span style={styles.separator}>|</span>
-                    <span 
-                        onClick={handleLogout} 
-                        style={styles.logoutLink}
-                        title="Sair do sistema"
-                    >
+                    <span onClick={handleLogout} style={styles.logoutLink} title="Sair do sistema">
                         Sair <LogOut size={12} style={{marginLeft: '4px'}}/>
                     </span>
                 </div>
                 
-                {/* Linha 2: Etiqueta de XP Docente */}
+                {/* Linha 2: Badge de XP Profissional */}
                 <div style={styles.xpBadgeHeader}>
                     <Trophy size={11} color="#B45309" />
-                    <span>{userNivel} • {userPontos} XP</span>
+                    <span>{userNivel} <span style={{opacity: 0.6, margin: '0 2px'}}>•</span> {userPontos} XP</span>
                 </div>
 
             </div>
@@ -127,12 +142,10 @@ const styles = {
     breadcrumb: { fontSize: '15px', fontWeight: '600', display: 'flex', alignItems: 'center', whiteSpace: 'nowrap' },
     
     userArea: { display: 'flex', alignItems: 'center' },
-    profile: { display: 'flex', alignItems: 'center', gap: '15px', cursor: 'pointer' },
+    profile: { display: 'flex', alignItems: 'center', gap: '14px', cursor: 'pointer' },
     
-    // Organiza as duas linhas de texto
-    userInfo: { flexDirection: 'column', alignItems: 'flex-end', justifyContent: 'center', gap: '4px' },
+    userInfo: { flexDirection: 'column', alignItems: 'flex-end', justifyContent: 'center', gap: '5px' },
     
-    // Nome e Logout
     nameRow: { display: 'flex', alignItems: 'center', gap: '8px' },
     userName: { fontSize: '14px', fontWeight: '800', color: '#1E293B' },
     separator: { color: '#CBD5E1', fontSize: '12px' },
@@ -147,7 +160,6 @@ const styles = {
         transition: 'color 0.2s',
     },
 
-    // Etiqueta com cores pedagógicas (Amarelo/Ouro sutil)
     xpBadgeHeader: {
         display: 'flex',
         alignItems: 'center',
@@ -155,10 +167,10 @@ const styles = {
         backgroundColor: '#FFFBEB', 
         color: '#B45309', 
         border: '1px solid #FDE68A',
-        padding: '2px 10px',
-        borderRadius: '20px',
-        fontSize: '10px',
-        fontWeight: '800',
+        padding: '3px 10px',
+        borderRadius: '12px',
+        fontSize: '11px',
+        fontWeight: '700',
         textTransform: 'uppercase',
         letterSpacing: '0.3px'
     },

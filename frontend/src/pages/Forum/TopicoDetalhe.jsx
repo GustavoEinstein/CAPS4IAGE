@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../../services/api';
-import { ArrowLeft, Download, UserCircle, CheckCircle, Trash2 } from 'lucide-react';
+import { ArrowLeft, Download, CheckCircle, Trash2, Loader2, Send } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import Swal from 'sweetalert2'; 
 
@@ -63,7 +63,7 @@ export default function TopicoDetalhe() {
             text: "Deseja marcar esta discussão como resolvida? Isso impedirá novos comentários.",
             icon: 'question',
             showCancelButton: true,
-            confirmButtonColor: '#059669', // Verde do botão original
+            confirmButtonColor: '#059669', 
             cancelButtonColor: '#94A3B8',
             confirmButtonText: 'Sim, marcar como resolvido!',
             cancelButtonText: 'Cancelar'
@@ -96,7 +96,7 @@ export default function TopicoDetalhe() {
             text: "Esta ação excluirá permanentemente o tópico e todos os seus comentários. Não é possível desfazer!",
             icon: 'warning',
             showCancelButton: true,
-            confirmButtonColor: '#DC2626', // Vermelho do botão original
+            confirmButtonColor: '#DC2626', 
             cancelButtonColor: '#94A3B8',
             confirmButtonText: 'Sim, excluir permanentemente!',
             cancelButtonText: 'Cancelar'
@@ -140,102 +140,186 @@ export default function TopicoDetalhe() {
         } catch (e) { return dataString; }
     };
 
-    if (loading && !topico) return <p style={{ padding: '20px' }}>Carregando a discussão...</p>;
+    // --- LÓGICA DE CORES DAS TAGS ---
+    const getCategoriaStyle = (cat) => {
+        const catStyles = {
+            'Dúvida BNCC': { bg: '#DBEAFE', color: '#1E40AF' }, 
+            'Metodologia': { bg: '#FEF3C7', color: '#B45309' }, 
+            'Uso de IA': { bg: '#F3E8FF', color: '#6B21A8' },   
+            'Sugestão': { bg: '#DCFCE7', color: '#047857' },    
+            'Geral': { bg: '#F1F5F9', color: '#475569' }        
+        };
+        return catStyles[cat] || catStyles['Geral'];
+    };
+
+    if (loading && !topico) return (
+        <div style={styles.loadingContainer}>
+            <Loader2 size={32} color="#2563EB" className="spin" />
+            <p style={{ marginTop: '10px', color: '#64748B' }}>Carregando discussão...</p>
+            <style>{`@keyframes spin { 100% { transform: rotate(360deg); } } .spin { animation: spin 1s linear infinite; }`}</style>
+        </div>
+    );
+    
     if (!topico) return null;
 
+    const catStyle = getCategoriaStyle(topico.categoria);
+    const authorInitial = topico.autor ? topico.autor.charAt(0).toUpperCase() : 'P';
+
     return (
-        <div style={{ padding: '20px', maxWidth: '900px', margin: '0 auto' }}>
-            <button type="button" onClick={() => navigate(-1)} style={{ display: 'flex', alignItems: 'center', gap: '5px', background: 'none', border: 'none', color: '#64748B', cursor: 'pointer', marginBottom: '20px' }}>
+        <div style={styles.container}>
+            <button type="button" onClick={() => navigate(-1)} style={styles.btnVoltar}>
                 <ArrowLeft size={16} /> Voltar para o Fórum
             </button>
 
-            <div style={{ backgroundColor: '#fff', padding: '25px', borderRadius: '8px', border: '1px solid #E2E8F0', marginBottom: '30px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                    <div>
-                        <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: '10px' }}>
-                            <span style={{ fontSize: '11px', fontWeight: 'bold', padding: '4px 10px', backgroundColor: '#F1F5F9', color: '#475569', borderRadius: '6px', textTransform: 'uppercase' }}>
+            {/* --- CABEÇALHO DO TÓPICO --- */}
+            <div style={styles.topicCard}>
+                <div style={styles.topicHeaderRow}>
+                    <div style={{ flex: 1 }}>
+                        <div style={styles.tagsContainer}>
+                            <span style={{ ...styles.tag, backgroundColor: catStyle.bg, color: catStyle.color }}>
                                 {topico.categoria}
                             </span>
                             {topico.resolvido && (
-                                <span style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', fontWeight: 'bold', color: '#10B981', backgroundColor: '#ECFDF5', padding: '4px 8px', borderRadius: '6px' }}>
+                                <span style={styles.tagResolved}>
                                     <CheckCircle size={14} /> Tópico Resolvido
                                 </span>
                             )}
                         </div>
-                        <h1 style={{ marginTop: 0, color: '#0F172A', fontSize: '24px', marginBottom: '10px' }}>{topico.titulo}</h1>
-                        <p style={{ margin: 0, color: '#64748B', fontSize: '14px' }}>Publicado por <strong>{topico.autor}</strong> {calcularTempoAtras(topico.data)}</p>
+                        
+                        <h1 style={styles.topicTitle}>{topico.titulo}</h1>
+                        
+                        <div style={styles.authorInfo}>
+                            <div style={styles.avatarMini}>{authorInitial}</div>
+                            <span>Publicado por Prof. <strong>{topico.autor}</strong> • {calcularTempoAtras(topico.data)}</span>
+                        </div>
                     </div>
 
+                    {/* AÇÕES DO DONO DO TÓPICO */}
                     {topico.is_dono_topico && (
-                        <div style={{ display: 'flex', gap: '10px' }}>
+                        <div style={styles.actionButtons}>
                             {!topico.resolvido && (
-                                <button type="button" onClick={handleResolver} style={{ padding: '8px 12px', backgroundColor: '#F0FDF4', color: '#059669', border: '1px solid #A7F3D0', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                                    <CheckCircle size={16} /> Marcar tópico como resolvido
+                                <button type="button" onClick={handleResolver} style={styles.btnResolve}>
+                                    <CheckCircle size={16} /> Resolver
                                 </button>
                             )}
-                            <button type="button" onClick={handleExcluir} style={{ padding: '8px 12px', backgroundColor: '#FEF2F2', color: '#DC2626', border: '1px solid #FECACA', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                            <button type="button" onClick={handleExcluir} style={styles.btnDelete}>
                                 <Trash2 size={16} /> Excluir
                             </button>
                         </div>
                     )}
                 </div>
 
-                <div style={{ color: '#334155', lineHeight: '1.6', marginTop: '20px', borderTop: '1px solid #E2E8F0', paddingTop: '20px' }}>
+                <div style={styles.markdownContent}>
                     <ReactMarkdown>{topico.conteudo}</ReactMarkdown>
                 </div>
                 
                 {topico.arquivo && (
-                    <div style={{ marginTop: '25px', padding: '15px', backgroundColor: '#F8FAFC', borderRadius: '6px', display: 'inline-block' }}>
+                    <div style={styles.attachmentBox}>
                         <a href={topico.arquivo} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }}>
-                            <button type="button" style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 15px', backgroundColor: '#10B981', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>
-                                <Download size={18} /> Baixar Material de Apoio.
+                            <button type="button" style={styles.btnDownload}>
+                                <Download size={18} /> Baixar Material de Apoio
                             </button>
                         </a>
                     </div>
                 )}
             </div>
 
-            <h3 style={{ color: '#1E293B', marginBottom: '15px' }}>Discussão ({topico.comentarios.length})</h3>
+            <h3 style={styles.commentsSectionTitle}>Discussão ({topico.comentarios.length})</h3>
             
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', marginBottom: '30px' }}>
-                {topico.comentarios.map(comentario => (
-                    <div key={comentario.id} style={{ backgroundColor: '#F8FAFC', padding: '15px', borderRadius: '8px', border: comentario.is_autor_topico ? '1px solid #BFDBFE' : '1px solid #E2E8F0' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
-                            <UserCircle size={24} color={comentario.is_autor_topico ? "#2563EB" : "#64748B"} />
-                            <span style={{ fontWeight: 'bold', color: '#334155' }}>{comentario.autor}</span>
-                            {comentario.is_autor_topico && (
-                                <span style={{ fontSize: '10px', fontWeight: 'bold', backgroundColor: '#DBEAFE', color: '#1D4ED8', padding: '2px 6px', borderRadius: '4px' }}>AUTOR</span>
-                            )}
-                            <span style={{ fontSize: '12px', color: '#94A3B8' }}>{calcularTempoAtras(comentario.data)}</span>
+            {/* --- LISTA DE COMENTÁRIOS --- */}
+            <div style={styles.commentsList}>
+                {topico.comentarios.map(comentario => {
+                    const commentInitial = comentario.autor ? comentario.autor.charAt(0).toUpperCase() : 'U';
+                    
+                    return (
+                        <div key={comentario.id} style={{ ...styles.commentCard, borderColor: comentario.is_autor_topico ? '#BFDBFE' : '#E2E8F0', backgroundColor: comentario.is_autor_topico ? '#EFF6FF' : '#F8FAFC' }}>
+                            <div style={styles.commentHeader}>
+                                <div style={{...styles.avatarMini, backgroundColor: comentario.is_autor_topico ? '#2563EB' : '#E2E8F0', color: comentario.is_autor_topico ? 'white' : '#475569'}}>
+                                    {commentInitial}
+                                </div>
+                                <span style={styles.commentAuthor}>{comentario.autor}</span>
+                                {comentario.is_autor_topico && (
+                                    <span style={styles.badgeAuthor}>AUTOR</span>
+                                )}
+                                <span style={styles.commentTime}>{calcularTempoAtras(comentario.data)}</span>
+                            </div>
+                            <div style={styles.commentBody}>
+                                <ReactMarkdown>{comentario.conteudo}</ReactMarkdown>
+                            </div>
                         </div>
-                        <div style={{ margin: 0, color: '#475569' }}>
-                            <ReactMarkdown>{comentario.conteudo}</ReactMarkdown>
-                        </div>
-                    </div>
-                ))}
+                    )
+                })}
             </div>
 
+            {/* --- ÁREA DE RESPOSTA --- */}
             {topico.resolvido ? (
-                <div style={{ backgroundColor: '#F0FDF4', padding: '20px', borderRadius: '8px', textAlign: 'center', color: '#065F46', fontWeight: 'bold', border: '1px solid #A7F3D0' }}>
-                    <CheckCircle size={24} style={{ marginBottom: '10px' }} />
-                    <p style={{ margin: 0 }}>Esta discussão foi marcada como resolvida pelo autor e está fechada para novos comentários.</p>
+                <div style={styles.resolvedNotice}>
+                    <CheckCircle size={28} style={{ marginBottom: '10px' }} />
+                    <p style={{ margin: 0, fontSize: '15px' }}>Esta discussão foi marcada como resolvida pelo autor e está fechada para novos comentários.</p>
                 </div>
             ) : (
-                <form onSubmit={handleComentar} style={{ backgroundColor: '#fff', padding: '20px', borderRadius: '8px', border: '1px solid #E2E8F0' }}>
-                    <h4 style={{ marginTop: 0 }}>Adicionar um comentário</h4>
+                <form onSubmit={handleComentar} style={styles.commentForm}>
+                    <h4 style={styles.formTitle}>Adicionar um comentário</h4>
                     <textarea 
                         value={novoComentario} 
                         onChange={(e) => setNovoComentario(e.target.value)} 
                         placeholder="Escreva sua sugestão ou dúvida..."
                         required 
                         rows="4" 
-                        style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #ccc', marginBottom: '10px', fontFamily: 'inherit' }} 
+                        style={styles.textArea} 
                     />
-                    <button type="submit" style={{ padding: '10px 20px', backgroundColor: '#2563EB', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
-                        Enviar Comentário
-                    </button>
+                    <div style={{display: 'flex', justifyContent: 'flex-end'}}>
+                        <button type="submit" style={styles.btnSubmitComment}>
+                            <Send size={16} /> Enviar Comentário
+                        </button>
+                    </div>
                 </form>
             )}
         </div>
     );
 }
+
+// --- ESTILOS ---
+const styles = {
+    container: { padding: '30px 20px', maxWidth: '900px', margin: '0 auto', fontFamily: 'Inter, sans-serif' },
+    loadingContainer: { display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '60vh' },
+    
+    btnVoltar: { display: 'flex', alignItems: 'center', gap: '6px', background: 'none', border: 'none', color: '#64748B', cursor: 'pointer', marginBottom: '25px', fontWeight: '600', fontSize: '14px', transition: 'color 0.2s' },
+    
+    // Tópico Principal
+    topicCard: { backgroundColor: '#fff', padding: '35px', borderRadius: '12px', border: '1px solid #E2E8F0', marginBottom: '40px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' },
+    topicHeaderRow: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '20px' },
+    tagsContainer: { display: 'flex', gap: '10px', alignItems: 'center', marginBottom: '16px' },
+    tag: { fontSize: '11px', fontWeight: '700', padding: '4px 12px', borderRadius: '20px', textTransform: 'uppercase', letterSpacing: '0.5px' },
+    tagResolved: { display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', fontWeight: '700', color: '#059669', backgroundColor: '#D1FAE5', padding: '4px 12px', borderRadius: '20px', textTransform: 'uppercase' },
+    topicTitle: { margin: '0 0 15px 0', color: '#0F172A', fontSize: '28px', fontWeight: '900', lineHeight: '1.2' },
+    authorInfo: { display: 'flex', alignItems: 'center', gap: '10px', color: '#64748B', fontSize: '14px' },
+    avatarMini: { width: '28px', height: '28px', backgroundColor: '#E2E8F0', color: '#475569', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '13px' },
+    
+    // Ações do Dono
+    actionButtons: { display: 'flex', gap: '10px' },
+    btnResolve: { padding: '8px 14px', backgroundColor: '#F0FDF4', color: '#059669', border: '1px solid #A7F3D0', borderRadius: '8px', cursor: 'pointer', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', transition: 'filter 0.2s' },
+    btnDelete: { padding: '8px 14px', backgroundColor: '#FEF2F2', color: '#DC2626', border: '1px solid #FECACA', borderRadius: '8px', cursor: 'pointer', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', transition: 'filter 0.2s' },
+    
+    // Conteúdo
+    markdownContent: { color: '#334155', lineHeight: '1.8', marginTop: '25px', borderTop: '1px solid #E2E8F0', paddingTop: '25px', fontSize: '16px' },
+    attachmentBox: { marginTop: '30px', padding: '20px', backgroundColor: '#F8FAFC', borderRadius: '10px', display: 'inline-block', border: '1px dashed #CBD5E1' },
+    btnDownload: { display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 18px', backgroundColor: '#10B981', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: '700', fontSize: '14px' },
+    
+    // Comentários
+    commentsSectionTitle: { color: '#1E293B', marginBottom: '20px', fontSize: '20px', fontWeight: '800' },
+    commentsList: { display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '40px' },
+    commentCard: { padding: '20px', borderRadius: '12px', border: '1px solid' },
+    commentHeader: { display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' },
+    commentAuthor: { fontWeight: '700', color: '#1E293B', fontSize: '15px' },
+    badgeAuthor: { fontSize: '10px', fontWeight: '800', backgroundColor: '#BFDBFE', color: '#1D4ED8', padding: '2px 8px', borderRadius: '12px', letterSpacing: '0.5px' },
+    commentTime: { fontSize: '12px', color: '#94A3B8' },
+    commentBody: { margin: 0, color: '#475569', lineHeight: '1.6', fontSize: '15px' },
+    
+    // Área de Resposta
+    resolvedNotice: { backgroundColor: '#F0FDF4', padding: '30px', borderRadius: '12px', textAlign: 'center', color: '#065F46', fontWeight: '600', border: '1px solid #A7F3D0' },
+    commentForm: { backgroundColor: '#fff', padding: '25px', borderRadius: '12px', border: '1px solid #E2E8F0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' },
+    formTitle: { marginTop: 0, marginBottom: '15px', color: '#0F172A', fontSize: '18px', fontWeight: '800' },
+    textArea: { width: '100%', padding: '15px', borderRadius: '10px', border: '1px solid #CBD5E1', marginBottom: '15px', fontFamily: 'inherit', fontSize: '15px', outline: 'none', resize: 'vertical', boxSizing: 'border-box' },
+    btnSubmitComment: { padding: '12px 24px', backgroundColor: '#2563EB', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: '700', fontSize: '15px', display: 'flex', alignItems: 'center', gap: '8px' }
+};

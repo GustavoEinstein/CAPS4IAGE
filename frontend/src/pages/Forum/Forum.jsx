@@ -1,7 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../../services/api';
-import { MessageSquare, PlusCircle, Paperclip, CheckCircle, Filter, Search, ChevronDown } from 'lucide-react';
+import Swal from 'sweetalert2';
+import { 
+    MessageSquare, 
+    PlusCircle, 
+    Paperclip, 
+    CheckCircle, 
+    Filter, 
+    Search, 
+    ChevronDown, 
+    Loader2, 
+    MessagesSquare 
+} from 'lucide-react';
 
 export default function Forum() {
     const [topicos, setTopicos] = useState([]);
@@ -29,6 +40,7 @@ export default function Forum() {
             setTopicos(response.data);
         } catch (error) {
             console.error("Erro ao buscar tópicos", error);
+            Swal.fire('Ops!', 'Não foi possível carregar as discussões. Tente novamente.', 'error');
         } finally {
             setLoading(false);
         }
@@ -48,9 +60,49 @@ export default function Forum() {
             });
             setShowModal(false);
             setTitulo(''); setConteudo(''); setCategoria('Geral'); setArquivo(null);
+            
+            // --- 1. SINCRONIZAR PONTUAÇÃO IMEDIATAMENTE COM O HEADER ---
+            try {
+                const perfilRes = await api.get('api/user/me/');
+                localStorage.setItem('user_pontos', perfilRes.data.pontos);
+                localStorage.setItem('user_nivel', perfilRes.data.nivel);
+                // Dispara o evento para o Header ouvir e atualizar a tela na mesma hora
+                window.dispatchEvent(new Event('perfilAtualizado')); 
+            } catch (err) {
+                console.log("Erro ao atualizar pontos no header", err);
+            }
+
+            // --- 2. LÓGICA DO ALERTA (PRIMEIRA VEZ VS PRÓXIMAS) ---
+            const jaCriou = localStorage.getItem('primeiro_topico_criado');
+            
+            if (!jaCriou) {
+                // Alerta celebrativo na primeira vez
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Primeira Discussão!',
+                    text: 'Seu tópico foi publicado. Você ganhou +5 XP por começar a participar da comunidade!',
+                    timer: 4000,
+                    showConfirmButton: false
+                });
+                localStorage.setItem('primeiro_topico_criado', 'true');
+            } else {
+                // Toast discreto nas próximas vezes
+                const Toast = Swal.mixin({
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    timer: 2000,
+                    timerProgressBar: true,
+                });
+                Toast.fire({
+                    icon: 'success',
+                    title: 'Tópico publicado com sucesso!'
+                });
+            }
+
             carregarTopicos(); 
         } catch (error) {
-            alert("Erro ao criar o tópico.");
+            Swal.fire('Erro!', 'Ocorreu um problema ao publicar seu tópico.', 'error');
         }
     };
 
@@ -74,7 +126,19 @@ export default function Forum() {
         }
     };
 
-    // Lógica combinada: Categoria + Busca por título
+    // --- LÓGICA DE CORES DAS TAGS ---
+    const getCategoriaStyle = (cat) => {
+        const styles = {
+            'Dúvida BNCC': { bg: '#DBEAFE', color: '#1E40AF' }, 
+            'Metodologia': { bg: '#FEF3C7', color: '#B45309' }, 
+            'Uso de IA': { bg: '#F3E8FF', color: '#6B21A8' },   
+            'Sugestão': { bg: '#DCFCE7', color: '#047857' },    
+            'Geral': { bg: '#F1F5F9', color: '#475569' }        
+        };
+        return styles[cat] || styles['Geral'];
+    };
+
+    // Filtros
     const topicosFiltrados = topicos.filter(t => {
         const matchCategoria = filtroCategoria === 'Todas' || t.categoria === filtroCategoria;
         const matchBusca = t.titulo.toLowerCase().includes(busca.toLowerCase());
@@ -82,138 +146,165 @@ export default function Forum() {
     });
 
     return (
-        <div style={{ padding: '20px', maxWidth: '900px', margin: '0 auto' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                <h2 style={{ color: '#1E293B' }}>Fórum de Rascunhos e Dúvidas</h2>
-                <button 
-                    onClick={() => setShowModal(true)}
-                    style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 15px', backgroundColor: '#2563EB', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}
-                >
+        <div style={styles.container}>
+            <div style={styles.headerArea}>
+                <h2 style={styles.pageTitle}>Fórum de Rascunhos e Dúvidas</h2>
+                <button onClick={() => setShowModal(true)} style={styles.btnCreate}>
                     <PlusCircle size={18} /> Novo Tópico
                 </button>
             </div>
 
             {/* BARRA DE FERRAMENTAS */}
-            <div style={{ display: 'flex', gap: '15px', marginBottom: '30px', flexWrap: 'wrap' }}>
-                
+            <div style={styles.toolbar}>
                 {/* Busca */}
-                <div style={{ flex: 1, position: 'relative', minWidth: '250px' }}>
-                    <Search size={18} style={{ position: 'absolute', left: '15px', top: '50%', transform: 'translateY(-50%)', color: '#94A3B8' }} />
+                <div style={styles.searchWrapper}>
+                    <Search size={18} style={styles.iconInside} />
                     <input 
                         type="text" 
                         placeholder="Buscar discussão pelo título..." 
                         value={busca}
                         onChange={(e) => setBusca(e.target.value)}
-                        style={{ width: '100%', padding: '12px 15px 12px 42px', borderRadius: '8px', border: '1px solid #CBD5E1', outline: 'none', fontSize: '15px', boxSizing: 'border-box' }}
+                        style={styles.searchInput}
                     />
                 </div>
 
                 {/* Dropdown de Categorias */}
-                <div style={{ position: 'relative', minWidth: '200px' }}>
-                    <Filter size={18} style={{ position: 'absolute', left: '15px', top: '50%', transform: 'translateY(-50%)', color: '#94A3B8' }} />
+                <div style={styles.selectWrapper}>
+                    <Filter size={18} style={styles.iconInside} />
                     <select 
                         value={filtroCategoria}
                         onChange={(e) => setFiltroCategoria(e.target.value)}
-                        style={{ 
-                            width: '100%', 
-                            padding: '12px 40px 12px 42px', 
-                            borderRadius: '8px', 
-                            border: '1px solid #CBD5E1', 
-                            appearance: 'none', 
-                            backgroundColor: '#fff', 
-                            fontSize: '15px', 
-                            color: '#334155',
-                            cursor: 'pointer',
-                            outline: 'none',
-                            fontWeight: '500'
-                        }}
+                        style={styles.selectInput}
                     >
                         {categoriasDisponiveis.map(cat => (
                             <option key={cat} value={cat}>{cat === 'Todas' ? 'Todas as Categorias' : cat}</option>
                         ))}
                     </select>
-                    <ChevronDown size={18} style={{ position: 'absolute', right: '15px', top: '50%', transform: 'translateY(-50%)', color: '#94A3B8', pointerEvents: 'none' }} />
+                    <ChevronDown size={18} style={styles.iconDropdown} />
                 </div>
             </div>
 
+            {/* LISTAGEM DE TÓPICOS */}
             {loading ? (
-                <p>Carregando discussões...</p>
+                <div style={styles.loadingContainer}>
+                    <Loader2 size={32} color="#2563EB" className="spin" />
+                    <p style={{ marginTop: '10px', color: '#64748B' }}>Carregando discussões...</p>
+                    <style>{`@keyframes spin { 100% { transform: rotate(360deg); } } .spin { animation: spin 1s linear infinite; }`}</style>
+                </div>
             ) : topicosFiltrados.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '40px', backgroundColor: '#F8FAFC', borderRadius: '8px', border: '1px dashed #CBD5E1' }}>
-                    <p style={{ color: '#64748B', margin: 0 }}>Nenhum tópico encontrado.</p>
+                <div style={styles.emptyState}>
+                    <MessagesSquare size={48} color="#CBD5E1" style={{ marginBottom: '15px' }} />
+                    <h3 style={{ margin: '0 0 5px 0', color: '#475569' }}>Nenhum tópico encontrado</h3>
+                    <p style={{ color: '#94A3B8', margin: 0 }}>Tente mudar os filtros ou seja o primeiro a iniciar esta discussão!</p>
                 </div>
             ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                    {topicosFiltrados.map(topico => (
-                        <Link to={`/dashboard/forum/${topico.id}`} key={topico.id} style={{ textDecoration: 'none', color: 'inherit' }}>
-                            <div style={{ border: '1px solid #E2E8F0', padding: '20px', borderRadius: '8px', backgroundColor: '#fff', transition: 'all 0.2s', display: 'flex', flexDirection: 'column', gap: '10px' }}
-                                 onMouseOver={(e) => e.currentTarget.style.borderColor = '#93C5FD'}
-                                 onMouseOut={(e) => e.currentTarget.style.borderColor = '#E2E8F0'}
-                            >
-                                <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                                    <span style={{ fontSize: '11px', fontWeight: 'bold', padding: '4px 10px', backgroundColor: '#F1F5F9', color: '#475569', borderRadius: '6px', textTransform: 'uppercase' }}>
-                                        {topico.categoria}
-                                    </span>
-                                    {topico.resolvido && (
-                                        <span style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', fontWeight: 'bold', color: '#10B981', backgroundColor: '#ECFDF5', padding: '4px 8px', borderRadius: '6px' }}>
-                                            <CheckCircle size={14} /> Resolvido
-                                        </span>
-                                    )}
-                                </div>
+                <div style={styles.topicList}>
+                    {topicosFiltrados.map(topico => {
+                        const catStyle = getCategoriaStyle(topico.categoria);
+                        const initial = topico.autor ? topico.autor.charAt(0).toUpperCase() : 'P';
 
-                                <h3 style={{ margin: '0', color: '#0F172A', fontSize: '18px' }}>{topico.titulo}</h3>
-                                
-                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: '#64748B', marginTop: '5px' }}>
-                                    <span>Por Prof. <strong>{topico.autor}</strong> ({topico.disciplina_autor}) • {calcularTempoAtras(topico.data)}</span>
-                                    <span style={{ display: 'flex', alignItems: 'center', gap: '5px', fontWeight: '500' }}>
-                                        <MessageSquare size={16} /> {topico.total_comentarios} Respostas
-                                    </span>
+                        return (
+                            <Link to={`/dashboard/forum/${topico.id}`} key={topico.id} style={{ textDecoration: 'none', color: 'inherit' }}>
+                                <div 
+                                    style={styles.topicCard}
+                                    onMouseOver={(e) => {
+                                        e.currentTarget.style.borderColor = '#93C5FD';
+                                        e.currentTarget.style.transform = 'translateY(-2px)';
+                                        e.currentTarget.style.boxShadow = '0 10px 15px -3px rgba(0, 0, 0, 0.05)';
+                                    }}
+                                    onMouseOut={(e) => {
+                                        e.currentTarget.style.borderColor = '#E2E8F0';
+                                        e.currentTarget.style.transform = 'translateY(0)';
+                                        e.currentTarget.style.boxShadow = 'none';
+                                    }}
+                                >
+                                    <div style={styles.topicHeader}>
+                                        <span style={{ ...styles.tag, backgroundColor: catStyle.bg, color: catStyle.color }}>
+                                            {topico.categoria}
+                                        </span>
+                                        {topico.resolvido && (
+                                            <span style={styles.tagResolved}>
+                                                <CheckCircle size={14} /> Resolvido
+                                            </span>
+                                        )}
+                                    </div>
+
+                                    <h3 style={styles.topicTitle}>{topico.titulo}</h3>
+                                    
+                                    <div style={styles.topicFooter}>
+                                        <div style={styles.authorArea}>
+                                            <div style={styles.authorAvatar}>{initial}</div>
+                                            <span>
+                                                Por Prof. <strong>{topico.autor}</strong> 
+                                                {topico.disciplina_autor && topico.disciplina_autor !== 'undefined' ? ` (${topico.disciplina_autor})` : ''} 
+                                                <span style={{opacity: 0.6, margin: '0 5px'}}>•</span> 
+                                                {calcularTempoAtras(topico.data)}
+                                            </span>
+                                        </div>
+                                        <span style={styles.commentsBadge}>
+                                            <MessageSquare size={16} /> {topico.total_comentarios} Respostas
+                                        </span>
+                                    </div>
                                 </div>
-                            </div>
-                        </Link>
-                    ))}
+                            </Link>
+                        );
+                    })}
                 </div>
             )}
 
-            {/* Modal de Criação */}
+            {/* MODAL DE CRIAÇÃO */}
             {showModal && (
-                <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15, 23, 42, 0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
-                    <div style={{ backgroundColor: '#fff', padding: '30px', borderRadius: '12px', width: '100%', maxWidth: '500px', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)' }}>
-                        <h3 style={{ marginTop: 0, marginBottom: '20px', color: '#0F172A' }}>Criar Nova Discussão</h3>
+                <div style={styles.modalOverlay} onClick={() => setShowModal(false)}>
+                    <div style={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+                        <h3 style={styles.modalTitle}>Criar Nova Discussão</h3>
                         <form onSubmit={handleCriarTopico}>
-                            <div style={{ marginBottom: '15px' }}>
-                                <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500', color: '#334155' }}>Categoria</label>
-                                <select value={categoria} onChange={(e) => setCategoria(e.target.value)} style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #CBD5E1', outline: 'none' }}>
+                            
+                            <div style={styles.inputGroup}>
+                                <label style={styles.label}>Categoria</label>
+                                <select value={categoria} onChange={(e) => setCategoria(e.target.value)} style={styles.input}>
                                     {categoriasDisponiveis.filter(c => c !== 'Todas').map(cat => (
                                         <option key={cat} value={cat}>{cat}</option>
                                     ))}
                                 </select>
                             </div>
-                            <div style={{ marginBottom: '15px' }}>
-                                <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500', color: '#334155' }}>Título</label>
-                                <input type="text" value={titulo} onChange={(e) => setTitulo(e.target.value)} required style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #CBD5E1', outline: 'none', boxSizing: 'border-box' }} />
+                            
+                            <div style={styles.inputGroup}>
+                                <label style={styles.label}>Título</label>
+                                <input 
+                                    type="text" 
+                                    value={titulo} 
+                                    onChange={(e) => setTitulo(e.target.value)} 
+                                    required 
+                                    placeholder="Ex: Como avaliar competências socioemocionais?"
+                                    style={styles.input} 
+                                />
                             </div>
-                            <div style={{ marginBottom: '15px' }}>
-                                <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500', color: '#334155' }}>Sua dúvida ou contexto</label>
+                            
+                            <div style={styles.inputGroup}>
+                                <label style={styles.label}>Sua dúvida ou contexto</label>
                                 <textarea 
                                     value={conteudo} 
                                     onChange={(e) => setConteudo(e.target.value)} 
                                     required 
                                     rows="5" 
-                                    style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #CBD5E1', outline: 'none', boxSizing: 'border-box', fontFamily: 'inherit' }} 
+                                    placeholder="Explique sua dúvida, compartilhe uma ideia ou peça ajuda aos colegas..."
+                                    style={{...styles.input, resize: 'vertical'}} 
                                 />
                             </div>
-                            <div style={{ marginBottom: '25px' }}>
-                                <label style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', cursor: 'pointer', color: '#2563EB', fontWeight: '500', backgroundColor: '#EFF6FF', padding: '8px 12px', borderRadius: '6px' }}>
+                            
+                            <div style={styles.inputGroup}>
+                                <label style={styles.fileLabel}>
                                     <Paperclip size={18} /> Anexar Rascunho (Opcional)
                                     <input type="file" onChange={(e) => setArquivo(e.target.files[0])} style={{ display: 'none' }} />
                                 </label>
-                                {arquivo && <span style={{ marginLeft: '10px', fontSize: '13px', color: '#64748B' }}>{arquivo.name}</span>}
+                                {arquivo && <span style={styles.fileName}>{arquivo.name}</span>}
                             </div>
-                            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
-                                <button type="button" onClick={() => setShowModal(false)} style={{ padding: '10px 15px', backgroundColor: '#F1F5F9', color: '#475569', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: '600' }}>Cancelar</button>
-                                <button type="submit" style={{ padding: '10px 20px', backgroundColor: '#2563EB', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: '600' }}>Publicar</button>
+                            
+                            <div style={styles.modalActions}>
+                                <button type="button" onClick={() => setShowModal(false)} style={styles.btnCancel}>Cancelar</button>
+                                <button type="submit" style={styles.btnSubmit}>Publicar</button>
                             </div>
+
                         </form>
                     </div>
                 </div>
@@ -221,3 +312,46 @@ export default function Forum() {
         </div>
     );
 }
+
+// --- ESTILOS ---
+const styles = {
+    container: { padding: '30px 20px', maxWidth: '900px', margin: '0 auto', fontFamily: 'Inter, sans-serif' },
+    headerArea: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '25px', flexWrap: 'wrap', gap: '15px' },
+    pageTitle: { color: '#0F172A', margin: 0, fontSize: '24px', fontWeight: '800' },
+    btnCreate: { display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 18px', backgroundColor: '#2563EB', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: '700', transition: 'background-color 0.2s' },
+    
+    toolbar: { display: 'flex', gap: '15px', marginBottom: '30px', flexWrap: 'wrap' },
+    searchWrapper: { flex: 1, position: 'relative', minWidth: '250px' },
+    selectWrapper: { position: 'relative', minWidth: '220px' },
+    iconInside: { position: 'absolute', left: '15px', top: '50%', transform: 'translateY(-50%)', color: '#94A3B8' },
+    iconDropdown: { position: 'absolute', right: '15px', top: '50%', transform: 'translateY(-50%)', color: '#94A3B8', pointerEvents: 'none' },
+    searchInput: { width: '100%', padding: '12px 15px 12px 42px', borderRadius: '8px', border: '1px solid #E2E8F0', outline: 'none', fontSize: '14px', boxSizing: 'border-box', color: '#334155', transition: 'border-color 0.2s' },
+    selectInput: { width: '100%', padding: '12px 40px 12px 42px', borderRadius: '8px', border: '1px solid #E2E8F0', appearance: 'none', backgroundColor: '#fff', fontSize: '14px', color: '#334155', cursor: 'pointer', outline: 'none', fontWeight: '500', transition: 'border-color 0.2s' },
+    
+    loadingContainer: { display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '60px 0' },
+    emptyState: { textAlign: 'center', padding: '60px 20px', backgroundColor: '#F8FAFC', borderRadius: '12px', border: '2px dashed #E2E8F0' },
+    
+    topicList: { display: 'flex', flexDirection: 'column', gap: '16px' },
+    topicCard: { border: '1px solid #E2E8F0', padding: '20px', borderRadius: '12px', backgroundColor: '#fff', transition: 'all 0.2s', display: 'flex', flexDirection: 'column', gap: '12px', cursor: 'pointer' },
+    topicHeader: { display: 'flex', gap: '10px', alignItems: 'center' },
+    tag: { fontSize: '11px', fontWeight: '700', padding: '4px 10px', borderRadius: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' },
+    tagResolved: { display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', fontWeight: '700', color: '#059669', backgroundColor: '#D1FAE5', padding: '4px 10px', borderRadius: '6px', textTransform: 'uppercase' },
+    topicTitle: { margin: '0', color: '#0F172A', fontSize: '18px', fontWeight: '700' },
+    topicFooter: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '13px', color: '#64748B', marginTop: '4px', flexWrap: 'wrap', gap: '10px' },
+    authorArea: { display: 'flex', alignItems: 'center', gap: '8px' },
+    authorAvatar: { width: '26px', height: '26px', backgroundColor: '#E2E8F0', color: '#475569', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '12px' },
+    commentsBadge: { display: 'flex', alignItems: 'center', gap: '5px', fontWeight: '600', backgroundColor: '#F1F5F9', padding: '6px 12px', borderRadius: '20px', color: '#475569' },
+    
+    // MODAL
+    modalOverlay: { position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15, 23, 42, 0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, backdropFilter: 'blur(4px)' },
+    modalContent: { backgroundColor: '#fff', padding: '30px', borderRadius: '16px', width: '100%', maxWidth: '550px', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' },
+    modalTitle: { marginTop: 0, marginBottom: '24px', color: '#0F172A', fontSize: '20px', fontWeight: '800' },
+    inputGroup: { marginBottom: '16px' },
+    label: { display: 'block', marginBottom: '6px', fontWeight: '600', color: '#334155', fontSize: '14px' },
+    input: { width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #CBD5E1', outline: 'none', boxSizing: 'border-box', fontFamily: 'inherit', fontSize: '14px', color: '#1E293B' },
+    fileLabel: { display: 'inline-flex', alignItems: 'center', gap: '8px', cursor: 'pointer', color: '#2563EB', fontWeight: '600', backgroundColor: '#EFF6FF', padding: '10px 16px', borderRadius: '8px', fontSize: '14px', transition: 'background-color 0.2s' },
+    fileName: { marginLeft: '12px', fontSize: '13px', color: '#64748B', fontWeight: '500' },
+    modalActions: { display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '30px' },
+    btnCancel: { padding: '12px 20px', backgroundColor: '#F1F5F9', color: '#475569', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: '700', fontSize: '14px' },
+    btnSubmit: { padding: '12px 24px', backgroundColor: '#2563EB', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: '700', fontSize: '14px' }
+};
