@@ -23,9 +23,12 @@ source venv/bin/activate
 echo "Instalando setuptools e wheel..."
 pip install --upgrade setuptools wheel
 pip install "setuptools==81.0.0"
+python -m pip install Pillow
 
 echo "Instalando todas as dependências do requirements.txt..."
 pip install -r requirements.txt
+
+pip3 install --upgrade djangorestframework-simplejwt
 
 echo "Migrações do banco de dados..."
 python3 manage.py migrate
