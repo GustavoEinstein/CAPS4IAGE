@@ -306,10 +306,9 @@ const LandingPage = () => {
         <div style={styles.container}>
           <div style={styles.footerTop}>
             <div>
-              <span style={styles.footerLogo}>T.E.I.A</span>
+              <span style={styles.footerLogo}>T.E.I.A — Tecendo a Educação com IA</span>
               <p style={styles.footerDesc}>
-                Conectando inteligência humana e artificial para transformar a
-                educação básica brasileira.
+                Conectando a sabedoria docente à inteligência artificial para tecer o futuro do ensino no Brasil.
               </p>
             </div>
 
