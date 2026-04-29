@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
+import Swal from 'sweetalert2';
 import { 
     ShieldCheck, 
     CheckCircle, 
@@ -13,26 +15,48 @@ import {
 } from 'lucide-react';
 
 const AprovacaoContas = () => {
+    const navigate = useNavigate();
     const [usuarios, setUsuarios] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [processingId, setProcessingId] = useState(null); // Para o botão não ser clicado 2x
+    const [processingId, setProcessingId] = useState(null); 
 
     useEffect(() => {
-        carregarUsuarios();
+        verificarAcesso();
     }, []);
+
+    // --- NOVA TRAVA DE SEGURANÇA NO FRONTEND ---
+    const verificarAcesso = async () => {
+        try {
+            const perfilRes = await api.get('api/user/me/');
+            
+            if (!perfilRes.data.is_superuser) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Acesso Negado',
+                    text: 'Você não tem privilégios de administrador para acessar esta página.',
+                    confirmButtonColor: '#2563EB'
+                });
+                navigate('/dashboard');
+                return;
+            }
+
+            // Se for superuser, permite carregar a lista
+            carregarUsuarios();
+
+        } catch (error) {
+            console.error("Erro ao validar permissões", error);
+            navigate('/dashboard');
+        }
+    };
 
     const carregarUsuarios = async () => {
         try {
-            const token = localStorage.getItem('access_token');
-            const response = await api.get('api/admin/pending-users/', {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+            const response = await api.get('api/admin/pending-users/');
             setUsuarios(response.data);
         } catch (error) {
             console.error("Erro ao carregar usuários:", error);
-            // Só exibe alerta se não for erro de autenticação (já tratado no interceptor)
             if (error.response?.status !== 401 && error.response?.status !== 403) {
-                alert("Erro ao carregar lista de aprovação. Verifique sua conexão.");
+                Swal.fire('Erro!', 'Erro ao carregar lista de aprovação. Verifique sua conexão.', 'error');
             }
         } finally {
             setLoading(false);
@@ -40,23 +64,38 @@ const AprovacaoContas = () => {
     };
 
     const handleAcao = async (id, nome, acao) => {
-        const confirmar = window.confirm(`Tem certeza que deseja marcar a conta de ${nome} como ${acao.toUpperCase()}?`);
-        if (!confirmar) return;
+        const result = await Swal.fire({
+            title: `Confirmar Ação`,
+            text: `Tem certeza que deseja marcar a conta de ${nome} como ${acao.toUpperCase()}?`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: acao === 'Aprovado' ? '#10B981' : '#EF4444',
+            cancelButtonColor: '#94A3B8',
+            confirmButtonText: `Sim, ${acao}!`,
+            cancelButtonText: 'Cancelar'
+        });
+
+        if (!result.isConfirmed) return;
         
         setProcessingId(id);
         
         try {
-            const token = localStorage.getItem('access_token');
-            await api.post(`api/admin/approve-user/${id}/`, { acao: acao }, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+            await api.post(`api/admin/approve-user/${id}/`, { acao: acao });
             
-            // Remove o usuário aprovado/rejeitado da lista imediatamente (sem precisar recarregar a tela)
+            // Remove o usuário aprovado/rejeitado da lista imediatamente
             setUsuarios(usuarios.filter(u => u.id !== id));
+            
+            Swal.fire({
+                icon: 'success',
+                title: 'Sucesso!',
+                text: `Conta de ${nome} foi ${acao.toLowerCase()}.`,
+                timer: 2000,
+                showConfirmButton: false
+            });
             
         } catch (error) {
             console.error("Erro ao aprovar/rejeitar:", error);
-            alert("Erro ao executar ação. Tente novamente.");
+            Swal.fire('Erro!', 'Falha ao executar ação. Tente novamente.', 'error');
         } finally {
             setProcessingId(null);
         }
@@ -66,7 +105,7 @@ const AprovacaoContas = () => {
         return (
             <div style={styles.loadingContainer}>
                 <Loader2 size={32} color="#1565C0" className="spin" />
-                <p style={{ color: '#546E7A', marginTop: '10px' }}>Buscando contas pendentes...</p>
+                <p style={{ color: '#546E7A', marginTop: '10px' }}>Verificando credenciais de segurança...</p>
                 <style>{`@keyframes spin { 100% { transform: rotate(360deg); } } .spin { animation: spin 1s linear infinite; }`}</style>
             </div>
         );
@@ -160,7 +199,7 @@ const AprovacaoContas = () => {
 };
 
 const styles = {
-    container: { padding: '30px', maxWidth: '1100px', margin: '0 auto' },
+    container: { padding: '30px', maxWidth: '1100px', margin: '0 auto', fontFamily: 'Inter, sans-serif' },
     loadingContainer: { display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '60vh' },
     
     header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' },
