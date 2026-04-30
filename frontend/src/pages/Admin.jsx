@@ -83,7 +83,7 @@ export default function Admin() {
         }
     };
 
-    // --- LÓGICA DE EXPORTAÇÃO EXCEL (ATUALIZADO PARA "DOCENTE") ---
+    // --- LÓGICA DE EXPORTAÇÃO EXCEL ---
     const exportarExcel = () => {
         let dados = [];
         let nomeArquivo = `relatorio_${activeTab}_teia.xlsx`;
@@ -94,7 +94,7 @@ export default function Admin() {
                 "Nome": u.username,
                 "E-mail": u.email,
                 "Disciplina": u.disciplina,
-                "Perfil": u.is_superuser ? 'Administrador' : 'Docente' // <--- ALTERADO AQUI
+                "Perfil": u.is_superuser ? 'Administrador' : 'Docente' 
             }));
         } else if (activeTab === 'producoes') {
             dados = producoesFiltradas.map(p => ({
@@ -121,7 +121,7 @@ export default function Admin() {
         XLSX.writeFile(workbook, nomeArquivo);
     };
 
-    // --- LÓGICA DE EXPORTAÇÃO PDF (ATUALIZADO PARA "DOCENTE") ---
+    // --- LÓGICA DE EXPORTAÇÃO PDF ---
     const exportarPDF = () => {
         const doc = new jsPDF();
         const azulTeia = [21, 101, 192];
@@ -140,7 +140,6 @@ export default function Admin() {
 
         if (activeTab === 'usuarios') {
             head = [["ID", "Nome", "E-mail", "Disciplina", "Papel"]];
-            // ALTERADO PARA "DOCENTE" ABAIXO
             body = usuariosFiltrados.map(u => [u.id, u.username, u.email, u.disciplina, u.is_superuser ? 'Admin' : 'Docente']);
         } else if (activeTab === 'producoes') {
             head = [["ID", "Título", "Autor", "Status", "Data"]];
@@ -267,7 +266,6 @@ export default function Admin() {
                                         <td style={styles.td}>#{u.id}</td>
                                         <td style={styles.td}><strong>{u.username}</strong></td>
                                         <td style={styles.td}>{u.email}</td>
-                                        {/* ALTERADO PARA "DOCENTE" NA TABELA ABAIXO TAMBÉM */}
                                         <td style={styles.td}>{u.is_superuser ? 'Administrador' : 'Docente'}</td>
                                         <td style={styles.td}>
                                             <button onClick={() => handleDeletar('usuario', u.id, u.username)} style={styles.btnDelete} disabled={u.is_superuser}>
@@ -328,22 +326,30 @@ const styles = {
     pageTitle: { margin: 0, fontSize: '26px', fontWeight: '900', color: '#0F172A' },
     pageSubtitle: { margin: 0, color: '#64748B' },
     statsGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px', marginBottom: '30px' },
-    statCard: { backgroundColor: 'white', padding: '20px', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '15px', boxShadow: '0 2px 4px rgba(0,0,0,0.05)', cursor: 'pointer' },
+    statCard: { backgroundColor: '#FFFFFF', padding: '20px', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '15px', boxShadow: '0 2px 4px rgba(0,0,0,0.05)', cursor: 'pointer' },
     statLabel: { margin: 0, fontSize: '12px', color: '#64748B', fontWeight: 'bold' },
-    statNumber: { margin: 0, fontSize: '24px', fontWeight: '900' },
-    mainContent: { backgroundColor: 'white', borderRadius: '12px', overflow: 'hidden', border: '1px solid #E2E8F0' },
+    
+    // --- CORES TRAVADAS AQUI ---
+    statNumber: { margin: 0, fontSize: '24px', fontWeight: '900', color: '#0F172A' }, 
+    mainContent: { backgroundColor: '#FFFFFF', borderRadius: '12px', overflow: 'hidden', border: '1px solid #E2E8F0' },
     toolbar: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '15px 20px', backgroundColor: '#F8FAFC', borderBottom: '1px solid #E2E8F0', flexWrap: 'wrap', gap: '15px' },
     tabs: { display: 'flex', gap: '5px' },
     tabActive: { padding: '10px 20px', borderRadius: '8px', border: 'none', backgroundColor: '#2563EB', color: 'white', fontWeight: 'bold', cursor: 'pointer' },
     tabInactive: { padding: '10px 20px', borderRadius: '8px', border: 'none', backgroundColor: 'transparent', color: '#64748B', cursor: 'pointer' },
     actionsGroup: { display: 'flex', alignItems: 'center', gap: '15px' },
-    searchBox: { display: 'flex', alignItems: 'center', gap: '10px', backgroundColor: 'white', padding: '8px 15px', borderRadius: '8px', border: '1px solid #E2E8F0' },
-    searchInput: { border: 'none', outline: 'none', fontSize: '14px' },
+    searchBox: { display: 'flex', alignItems: 'center', gap: '10px', backgroundColor: '#FFFFFF', padding: '8px 15px', borderRadius: '8px', border: '1px solid #E2E8F0' },
+    
+    // --- CORES TRAVADAS AQUI ---
+    searchInput: { border: 'none', outline: 'none', fontSize: '14px', color: '#1E293B', backgroundColor: 'transparent' }, 
     btnExport: { display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', fontSize: '13px' },
     tableContainer: { padding: '10px 20px 20px 20px', overflowX: 'auto' },
     table: { width: '100%', borderCollapse: 'collapse' },
-    th: { textAlign: 'left', padding: '12px', borderBottom: '2px solid #F1F5F9', color: '#64748B', fontSize: '12px', textTransform: 'uppercase' },
-    td: { padding: '12px', borderBottom: '1px solid #F1F5F9', fontSize: '14px' },
+    th: { textAlign: 'left', padding: '12px', borderBottom: '2px solid #E2E8F0', color: '#64748B', fontSize: '12px', textTransform: 'uppercase' },
+    
+    // --- CORES TRAVADAS AQUI ---
+    tr: { backgroundColor: '#FFFFFF' }, 
+    td: { padding: '12px', borderBottom: '1px solid #E2E8F0', fontSize: '14px', color: '#334155' }, 
+    
     btnDelete: { padding: '8px', backgroundColor: '#FEE2E2', color: '#DC2626', border: 'none', borderRadius: '6px', cursor: 'pointer' },
     btnView: { padding: '8px', backgroundColor: '#E0F2FE', color: '#0284C7', border: 'none', borderRadius: '6px', cursor: 'pointer' },
     loadingContainer: { display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '80vh', color: '#546E7A' },
