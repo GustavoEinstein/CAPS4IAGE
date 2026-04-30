@@ -24,7 +24,7 @@ export default function Forum() {
     const [busca, setBusca] = useState(''); 
     const categoriasDisponiveis = ['Todas', 'Dúvida BNCC', 'Metodologia', 'Uso de IA', 'Sugestão', 'Geral'];
 
-    // Estados do Formulário
+   
     const [titulo, setTitulo] = useState('');
     const [conteudo, setConteudo] = useState('');
     const [categoria, setCategoria] = useState('Geral');
@@ -61,7 +61,7 @@ export default function Forum() {
             setShowModal(false);
             setTitulo(''); setConteudo(''); setCategoria('Geral'); setArquivo(null);
             
-            // --- 1. SINCRONIZAR PONTUAÇÃO IMEDIATAMENTE COM O HEADER ---
+          
             try {
                 const perfilRes = await api.get('api/user/me/');
                 localStorage.setItem('user_pontos', perfilRes.data.pontos);
@@ -332,15 +332,14 @@ const styles = {
     authorArea: { display: 'flex', alignItems: 'center', gap: '8px' },
     authorAvatar: { width: '26px', height: '26px', backgroundColor: '#E2E8F0', color: '#475569', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '12px' },
     commentsBadge: { display: 'flex', alignItems: 'center', gap: '5px', fontWeight: '600', backgroundColor: '#F1F5F9', padding: '6px 12px', borderRadius: '20px', color: '#475569' },
-    
-    // MODAL
+
     modalOverlay: { position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15, 23, 42, 0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, backdropFilter: 'blur(4px)' },
     modalContent: { backgroundColor: '#FFFFFF', padding: '30px', borderRadius: '16px', width: '100%', maxWidth: '550px', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' },
     modalTitle: { marginTop: 0, marginBottom: '24px', color: '#0F172A', fontSize: '20px', fontWeight: '800' },
     inputGroup: { marginBottom: '16px' },
     label: { display: 'block', marginBottom: '6px', fontWeight: '600', color: '#334155', fontSize: '14px' },
     
-    // --- CORREÇÃO APLICADA: backgroundColor: '#FFFFFF' FIXO ---
+    
     input: { width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #CBD5E1', outline: 'none', boxSizing: 'border-box', fontFamily: 'inherit', fontSize: '14px', color: '#1E293B', backgroundColor: '#FFFFFF' },
     
     fileLabel: { display: 'inline-flex', alignItems: 'center', gap: '8px', cursor: 'pointer', color: '#2563EB', fontWeight: '600', backgroundColor: '#EFF6FF', padding: '10px 16px', borderRadius: '8px', fontSize: '14px', transition: 'background-color 0.2s' },

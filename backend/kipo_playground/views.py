@@ -40,7 +40,7 @@ from rest_framework.throttling import ScopedRateThrottle
 
 from .models import Profile, Producao, Avaliacao, Topico, Comentario
 
-# --- CONFIGURAÇÃO GLOBAL DE SEGURANÇA DE ARQUIVOS ---
+#lista de arquivos permitidas no servidor, fora esses não serão aceitos 
 ALLOWED_EXTENSIONS = [
     '.pdf', '.doc', '.docx', '.txt', 
     '.ppt', '.pptx', '.xls', '.xlsx', 
@@ -106,9 +106,7 @@ class CustomTokenObtainPairView(TokenObtainPairView):
     throttle_scope = 'login_attempts'
 
 
-# ============================================================================
-# 1. AUTENTICAÇÃO & PERFIL
-# ============================================================================
+#views de autenticação  e perfil 
 @csrf_exempt
 @api_view(['POST'])
 @authentication_classes([])
@@ -216,9 +214,7 @@ def api_user_profile(request):
         })
 
 
-# ============================================================================
-# 2. PRODUÇÕES DIDÁTICAS (CRUD E RASCUNHOS)
-# ============================================================================
+#produção didatica e rascunho 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def api_create_production(request):
@@ -235,7 +231,7 @@ def api_create_production(request):
         recursos_input = data.getlist('recursos') if hasattr(data, 'getlist') else data.get('recursos', '')
         recursos_str = ", ".join(recursos_input) if isinstance(recursos_input, list) else str(recursos_input)
 
-        # --- LÓGICA DE RASCUNHO APLICADA (ROBUSTA) ---
+       #logica para conseguir aplicar o rascunho
         is_draft_val = data.get('is_draft')
         is_draft = str(is_draft_val).strip().lower() in ['true', '1', 't', 'y', 'yes']
         status_inicial = 'Rascunho' if is_draft else 'Em revisão'
@@ -385,7 +381,7 @@ def api_update_production(request, pk):
         if novo_arquivo:
             p.arquivo = novo_arquivo
 
-        # --- LÓGICA DE UPDATE DE STATUS ---
+  
         is_draft_val = data.get('is_draft')
         is_draft = str(is_draft_val).strip().lower() in ['true', '1', 't', 'y', 'yes']
         
@@ -405,9 +401,7 @@ def api_update_production(request, pk):
         return Response({'erro': 'Erro interno ao atualizar.'}, status=500)
 
 
-# ============================================================================
-# 3. SISTEMA DE REVISÃO E GAMIFICAÇÃO
-# ============================================================================
+#sistema de revisão e gamificação do sistema
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def api_list_review_queue(request):
@@ -560,9 +554,7 @@ def api_list_public_feed(request):
     return Response(lista)
 
 
-# ============================================================================
-# 4. RECUPERAÇÃO DE SENHA (SMTP GOOGLE)
-# ============================================================================
+#painel de recuperação de senha(nao sei se ainda está funcionado tem que testar)
 @csrf_exempt
 @api_view(['POST'])
 @authentication_classes([]) 
@@ -616,9 +608,7 @@ def api_password_reset_confirm(request, uidb64, token):
         return Response({'erro': 'Link expirado ou inválido.'}, status=400)
 
 
-# ============================================================================
-# 5. ADMINISTRAÇÃO (APROVAÇÃO DE CONTAS)
-# ============================================================================
+#painel de aprovação de contas 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def api_list_pending_users(request):
@@ -660,9 +650,7 @@ def api_approve_reject_user(request, user_id):
         return Response({'erro': 'Usuário não encontrado'}, status=404)
 
 
-# ============================================================================
-# 6. FÓRUM DA COMUNIDADE 
-# ============================================================================
+#views para o forum do sistema 
 @api_view(['GET', 'POST', 'PUT', 'DELETE']) 
 @permission_classes([IsAuthenticated])
 def api_forum_detalhe_comentarios(request, pk):
@@ -781,9 +769,9 @@ def api_forum_topicos(request):
 
         return Response({'mensagem': 'Tópico criado com sucesso! Você ganhou +5 XP.'}, status=201)
 
-# ============================================================================
-# 7. PAINEL DE ADMINISTRAÇÃO GERAL
-# ============================================================================
+
+
+#views para o painel de administração
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -871,7 +859,6 @@ def api_admin_delete_forum(request, pk):
     return Response({'mensagem': 'Tópico excluído com sucesso.'})
 
 
-# --- ONTOLOGIA (LEGADO) COISAS DO PROJETO ANTIGO PARA FUNCIONAR ---
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def api_listar_ciclos(request):

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Menu, Trophy, LogOut } from 'lucide-react'; 
-import api from '../services/api'; // <--- IMPORTAÇÃO DA API ADICIONADA AQUI
+import api from '../services/api'; //
 
 function Header({ onToggleMenu, showMenuButton }) {
   const navigate = useNavigate();
@@ -22,13 +22,13 @@ function Header({ onToggleMenu, showMenuButton }) {
 
   const currentTitle = pageTitles[location.pathname] || 'Página do Sistema';
 
-  // --- ESTADOS DINÂMICOS PARA ATUALIZAÇÃO EM TEMPO REAL ---
+ 
   const [userPontos, setUserPontos] = useState(localStorage.getItem('user_pontos') || '0');
   const [userNivel, setUserNivel] = useState(localStorage.getItem('user_nivel') || 'Prof. Conectado(a)');
   const [userAvatar, setUserAvatar] = useState(localStorage.getItem('user_avatar'));
 
   useEffect(() => {
-      // --- MÁGICA AQUI: Busca os dados na API logo ao logar e carregar o Header ---
+   
       const buscarDadosDoUsuario = async () => {
           try {
               const token = localStorage.getItem('access_token');
@@ -52,17 +52,17 @@ function Header({ onToggleMenu, showMenuButton }) {
           }
       };
 
-      // Executa a busca
+    
       buscarDadosDoUsuario();
 
-      // Função que atualiza o Header assim que os dados mudam em outra tela (ex: Fórum ou Revisão)
+    
       const atualizarHeader = () => {
           setUserPontos(localStorage.getItem('user_pontos') || '0');
           setUserNivel(localStorage.getItem('user_nivel') || 'Prof. Conectado(a)');
           setUserAvatar(localStorage.getItem('user_avatar'));
       };
 
-      // Escuta tanto as abas do navegador quanto os eventos dentro do próprio sistema
+     
       window.addEventListener('storage', atualizarHeader);
       window.addEventListener('perfilAtualizado', atualizarHeader);
 
