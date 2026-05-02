@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import api from '../services/api'; 
 import { useOutletContext, useParams, useNavigate } from 'react-router-dom';
-import { Alert } from '../utils/alerts'; // Se já estiver usando o Alerts
+import { Alert } from '../utils/alerts'; 
 import { 
     Star, CheckCircle2, Bot, Download, ArrowLeft, Clock, Wrench, 
     BookOpen, Target, Lightbulb, ThumbsUp, ThumbsDown, ShieldAlert, FileText, User, 
-    AlertTriangle, Lock, PenTool, Eye // Adicionado o Eye
+    AlertTriangle, Lock, PenTool, Eye, Cpu, Terminal // <--- Ícones novos adicionados aqui
 } from 'lucide-react';
 
 const Revisao = () => {
@@ -152,9 +152,36 @@ const Revisao = () => {
                         <div style={styles.techItem}><Clock size={16} color="#1565C0"/><div><span style={styles.techLabel}>Duração</span><span style={styles.techValue}>{producaoEmRevisao.duracao}</span></div></div>
                     </div>
 
-                    <div style={styles.section}><h3 style={styles.sectionTitle}><BookOpen size={18}/> Alinhamento BNCC</h3><div style={styles.bnccBox}>{producaoEmRevisao.bncc}</div></div>
-                    <div style={styles.section}><h3 style={styles.sectionTitle}><Lightbulb size={18}/> Relato de Experiência</h3><p style={styles.textBody}>{producaoEmRevisao.experiencia}</p></div>
-                    <div style={styles.section}><h3 style={styles.sectionTitle}><Target size={18}/> Resultados</h3><div style={styles.resultsBox}>{producaoEmRevisao.resultados}</div></div>
+                    <div style={styles.section}>
+                        <h3 style={styles.sectionTitle}><BookOpen size={18}/> Alinhamento BNCC</h3>
+                        <div style={styles.bnccBox}>{producaoEmRevisao.bncc || "Não informado."}</div>
+                    </div>
+
+                    {/* --- NOVO CAMPO: BNCC Computação --- */}
+                    <div style={styles.section}>
+                        <h3 style={styles.sectionTitle}><Cpu size={18}/> BNCC Computação</h3>
+                        <div style={styles.bnccBox}>
+                            {producaoEmRevisao.bncc_computacao || "Nenhuma habilidade de computação registrada."}
+                        </div>
+                    </div>
+
+                    {/* --- NOVO CAMPO: Prompts Utilizados --- */}
+                    <div style={styles.section}>
+                        <h3 style={styles.sectionTitle}><Terminal size={18}/> Prompts Utilizados na IA</h3>
+                        <div style={styles.promptBox}>
+                            {producaoEmRevisao.prompts_ia || "Nenhum prompt foi registrado nesta produção."}
+                        </div>
+                    </div>
+
+                    <div style={styles.section}>
+                        <h3 style={styles.sectionTitle}><Lightbulb size={18}/> Relato de Experiência</h3>
+                        <p style={styles.textBody}>{producaoEmRevisao.experiencia}</p>
+                    </div>
+
+                    <div style={styles.section}>
+                        <h3 style={styles.sectionTitle}><Target size={18}/> Resultados</h3>
+                        <div style={styles.resultsBox}>{producaoEmRevisao.resultados || "Sem resultados registrados."}</div>
+                    </div>
 
                     {producaoEmRevisao.arquivo && (
                         <div style={styles.downloadContainer}>
@@ -171,7 +198,6 @@ const Revisao = () => {
                         </div>
                     )}
 
-                    {/* --- NOVO: EXIBE AS NOTAS DO 1º REVISOR SE HOUVER --- */}
                     {producaoEmRevisao.total_avaliacoes === 1 && producaoEmRevisao.notas && (
                         <div style={styles.firstReviewerBox}>
                             <h3 style={styles.firstReviewerTitle}><Eye size={18}/> Parecer do 1º Revisor</h3>
@@ -273,16 +299,19 @@ const styles = {
     sectionTitle: { fontSize: '16px', fontWeight: '800', color: '#37474F', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '8px' },
     bnccBox: { backgroundColor: '#FFF8E1', borderLeft: '4px solid #FFC107', padding: '15px', borderRadius: '6px', color: '#4E342E', fontSize: '14px', lineHeight: '1.5' },
     textBody: { fontSize: '15px', lineHeight: '1.6', color: '#455A64', whiteSpace: 'pre-wrap' },
-    resultsBox: { backgroundColor: '#E8F5E9', border: '1px solid #C8E6C9', padding: '15px', borderRadius: '8px', color: '#1B5E20', fontSize: '14px', fontStyle: 'italic' },
+    
+    // --- ESTILO NOVO PARA A CAIXA DE PROMPTS ---
+    promptBox: { backgroundColor: '#F8FAFC', padding: '15px', borderRadius: '8px', borderLeft: '4px solid #8B5CF6', color: '#475569', fontSize: '14px', fontStyle: 'italic', whiteSpace: 'pre-wrap', lineHeight: '1.6' },
+
+    resultsBox: { backgroundColor: '#E8F5E9', border: '1px solid #C8E6C9', padding: '15px', borderRadius: '8px', color: '#1B5E20', fontSize: '14px', fontStyle: 'italic', whiteSpace: 'pre-wrap' },
 
     downloadContainer: { marginTop: '25px', padding: '12px 15px', backgroundColor: '#F8F9FA', borderRadius: '10px', border: '1px solid #E0E0E0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '15px' },
     fileInfoBox: { display: 'flex', alignItems: 'center', gap: '10px', flex: 1, minWidth: 0 },
     fileIconSmall: { backgroundColor: 'white', padding: '6px', borderRadius: '6px', border: '1px solid #E0E0E0', display: 'flex', alignItems: 'center', justifyContent: 'center' },
-    fileName: { display: 'block', fontSize: '13px', fontWeight: '700', color: '#333', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' },
+    fileName: { display: 'block', fontSize: '13px', fontWeight: '700', color: '#333', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%' },
     fileType: { fontSize: '11px', color: '#90A4AE' },
     downloadBtnCompact: { backgroundColor: '#1565C0', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', cursor: 'pointer', fontSize: '12px', fontWeight: '700', boxShadow: '0 2px 5px rgba(21, 101, 192, 0.2)', transition: 'background 0.2s', whiteSpace: 'nowrap' },
 
-    // --- ESTILOS DO PARECER DO 1º REVISOR ---
     firstReviewerBox: { backgroundColor: '#F8FBFF', border: '1px solid #BBDEFB', borderRadius: '12px', padding: '20px', marginTop: '30px' },
     firstReviewerTitle: { fontSize: '15px', fontWeight: '800', color: '#1565C0', margin: '0 0 15px 0', display: 'flex', alignItems: 'center', gap: '8px' },
     firstReviewerGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '10px', marginBottom: '15px' },

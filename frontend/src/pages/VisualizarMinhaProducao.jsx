@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import api from '../services/api'; 
 import { useParams, useNavigate, useOutletContext } from 'react-router-dom';
-import { Alert } from '../utils/alerts'; // <--- IMPORTAÇÃO DO ALERTA
+import { Alert } from '../utils/alerts'; 
 import { 
     ArrowLeft, Calendar, Clock, Bot, BookOpen, CheckCircle2,
     XCircle, Wrench, Lightbulb, Target, Download, FileText, User, Package, Star,
     Send, MapPin, Search, AlertCircle, RefreshCw, File, ChevronRight,
-    BarChart3, ShieldAlert, ThumbsUp, AlertTriangle 
+    BarChart3, ShieldAlert, ThumbsUp, AlertTriangle, 
+    Terminal, Cpu // <--- Ícones novos adicionados aqui
 } from 'lucide-react';
 
 const VisualizarMinhaProducao = () => {
@@ -34,7 +35,6 @@ const VisualizarMinhaProducao = () => {
             window.URL.revokeObjectURL(urlBlob);
         } catch (error) {
             console.error("Erro no download:", error);
-            // --- POP-UP DE ERRO AQUI ---
             Alert.erro("Download Falhou", "Não foi possível baixar o arquivo. Verifique sua conexão.");
         }
     };
@@ -46,7 +46,6 @@ const VisualizarMinhaProducao = () => {
                 setData(response.data);
             } catch (error) {
                 console.error("Erro ao carregar detalhes:", error);
-                // --- POP-UP DE ERRO AQUI ---
                 Alert.erro("Erro de Carregamento", "Não foi possível carregar os detalhes da produção.");
             } finally {
                 setLoading(false);
@@ -140,7 +139,7 @@ const VisualizarMinhaProducao = () => {
                                 </div>
                                 
                                 <div style={styles.metaRow}>
-                                    <div style={styles.iaTag}><Bot size={14} /> {data.modelo_ia}</div>
+                                    <div style={styles.iaTag}><Bot size={14} /> {data.modelo_ia || "Nenhum modelo informado"}</div>
                                     <span style={styles.dateText}><User size={14} /> Autor: {data.autor || "Você"}</span>
                                 </div>
                             </div>
@@ -160,9 +159,34 @@ const VisualizarMinhaProducao = () => {
                                 </div>
                             </div>
 
-                            <div style={styles.section}><h3 style={styles.sectionTitle}><BookOpen size={18}/> Intencionalidade (BNCC)</h3><p style={styles.textBody}>{data.bncc}</p></div>
-                            <div style={styles.section}><h3 style={styles.sectionTitle}><Lightbulb size={18}/> Relato de Experiência</h3><p style={styles.textBody}>{data.experiencia || data.relato}</p></div>
-                            <div style={styles.section}><h3 style={styles.sectionTitle}><Target size={18}/> Resultados</h3><div style={styles.resultsBox}>{data.resultados || "Sem resultados registrados."}</div></div>
+                            <div style={styles.section}>
+                                <h3 style={styles.sectionTitle}><BookOpen size={18}/> Intencionalidade (BNCC)</h3>
+                                <p style={styles.textBody}>{data.bncc || "Não informado."}</p>
+                            </div>
+
+                            {/* --- NOVO CAMPO: BNCC Computação --- */}
+                            <div style={styles.section}>
+                                <h3 style={styles.sectionTitle}><Cpu size={18}/> BNCC Computação</h3>
+                                <p style={styles.textBody}>{data.bncc_computacao || "Nenhuma habilidade de computação registrada."}</p>
+                            </div>
+
+                            {/* --- NOVO CAMPO: Prompts Utilizados --- */}
+                            <div style={styles.section}>
+                                <h3 style={styles.sectionTitle}><Terminal size={18}/> Prompts Utilizados na IA</h3>
+                                <div style={styles.promptBox}>
+                                    {data.prompts_ia || "Nenhum prompt foi registrado nesta produção."}
+                                </div>
+                            </div>
+
+                            <div style={styles.section}>
+                                <h3 style={styles.sectionTitle}><Lightbulb size={18}/> Relato de Experiência</h3>
+                                <p style={styles.textBody}>{data.experiencia || data.relato || "Não informado."}</p>
+                            </div>
+                            
+                            <div style={styles.section}>
+                                <h3 style={styles.sectionTitle}><Target size={18}/> Resultados</h3>
+                                <div style={styles.resultsBox}>{data.resultados || "Sem resultados registrados."}</div>
+                            </div>
                             
                             <ParecerTecnico producao={data} />
 
@@ -342,9 +366,13 @@ const styles = {
     techValue: { fontSize: '13px', color: '#37474F', fontWeight: '600' },
 
     section: { marginBottom: '30px' },
-    sectionTitle: { fontSize: '16px', fontWeight: '800', color: '#37474F', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' },
-    textBody: { fontSize: '15px', lineHeight: '1.6', color: '#455A64' },
-    resultsBox: { backgroundColor: '#E8F5E9', padding: '15px', borderRadius: '8px', borderLeft: '4px solid #1565C0', color: '#333', fontSize: '14px', fontStyle: 'italic' },
+    sectionTitle: { fontSize: '16px', fontWeight: '800', color: '#37474F', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '8px' },
+    textBody: { fontSize: '15px', lineHeight: '1.6', color: '#455A64', whiteSpace: 'pre-wrap' },
+    
+    // --- ESTILO NOVO PARA A CAIXA DE PROMPTS ---
+    promptBox: { backgroundColor: '#F8FAFC', padding: '15px', borderRadius: '8px', borderLeft: '4px solid #8B5CF6', color: '#475569', fontSize: '14px', fontStyle: 'italic', whiteSpace: 'pre-wrap', lineHeight: '1.6' },
+
+    resultsBox: { backgroundColor: '#E8F5E9', padding: '15px', borderRadius: '8px', borderLeft: '4px solid #1565C0', color: '#333', fontSize: '14px', fontStyle: 'italic', whiteSpace: 'pre-wrap' },
 
     timelineCard: { backgroundColor: 'white', border: '1px solid #E0E0E0', borderRadius: '12px', padding: '20px', boxShadow: '0 2px 5px rgba(0,0,0,0.03)' },
     sectionTitleSmall: { fontSize: '12px', textTransform: 'uppercase', color: '#90A4AE', fontWeight: '800', marginBottom: '15px' },

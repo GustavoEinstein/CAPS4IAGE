@@ -106,7 +106,7 @@ class CustomTokenObtainPairView(TokenObtainPairView):
     throttle_scope = 'login_attempts'
 
 
-#views de autenticação  e perfil 
+#views de autenticação e perfil 
 @csrf_exempt
 @api_view(['POST'])
 @authentication_classes([])
@@ -178,7 +178,7 @@ def api_user_profile(request):
             'avatar': avatar_url,
             'is_superuser': user.is_superuser,
             'pontos': profile.pontos,
-            'nivel': profile.get_nivel() # <--- CORREÇÃO AQUI
+            'nivel': profile.get_nivel()
         })
 
     elif request.method == 'PUT':
@@ -210,7 +210,7 @@ def api_user_profile(request):
             'disciplina': profile.disciplina,
             'escola': profile.escola,
             'pontos': profile.pontos,
-            'nivel': profile.get_nivel() # <--- CORREÇÃO AQUI
+            'nivel': profile.get_nivel()
         })
 
 
@@ -231,7 +231,7 @@ def api_create_production(request):
         recursos_input = data.getlist('recursos') if hasattr(data, 'getlist') else data.get('recursos', '')
         recursos_str = ", ".join(recursos_input) if isinstance(recursos_input, list) else str(recursos_input)
 
-       #logica para conseguir aplicar o rascunho
+        #logica para conseguir aplicar o rascunho
         is_draft_val = data.get('is_draft')
         is_draft = str(is_draft_val).strip().lower() in ['true', '1', 't', 'y', 'yes']
         status_inicial = 'Rascunho' if is_draft else 'Em revisão'
@@ -245,13 +245,14 @@ def api_create_production(request):
             prompts_ia=data.get('prompts_ia', ''),
             categoria=data.get('categoria', ''),
             bncc=data.get('bncc', ''),
+            bncc_computacao=data.get('bncc_computacao', ''), # <--- NOVO CAMPO AQUI (Criação)
             metodologia=data.get('metodologia', ''),
             duracao=data.get('duracao', ''),
             recursos=recursos_str,
             experiencia=data.get('experiencia', ''), 
             resultados=data.get('resultados', ''),
             arquivo=arquivo,
-            status=status_inicial # Salva corretamente no banco!
+            status=status_inicial 
         )
         return Response({'mensagem': 'Produção criada com sucesso!', 'id': nova_producao.id}, status=201)
     
@@ -330,6 +331,7 @@ def api_get_production_details(request, pk):
             'prompts_ia': p.prompts_ia,
             'categoria': p.categoria,
             'bncc': p.bncc,
+            'bncc_computacao': p.bncc_computacao, # <--- NOVO CAMPO AQUI (Leitura)
             'metodologia': p.metodologia,
             'duracao': p.duracao,
             'recursos': lista_recursos,
@@ -368,6 +370,7 @@ def api_update_production(request, pk):
         p.prompts_ia = data.get('prompts_ia', p.prompts_ia)
         p.categoria = data.get('categoria', p.categoria)
         p.bncc = data.get('bncc', p.bncc)
+        p.bncc_computacao = data.get('bncc_computacao', p.bncc_computacao) # <--- NOVO CAMPO AQUI (Atualização)
         p.metodologia = data.get('metodologia', p.metodologia)
         p.duracao = data.get('duracao', p.duracao)
         p.experiencia = data.get('experiencia', p.experiencia)

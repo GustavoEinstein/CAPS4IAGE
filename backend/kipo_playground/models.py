@@ -79,11 +79,15 @@ class Producao(models.Model):
     nivel = models.CharField(max_length=100)
     modelo_ia = models.CharField(max_length=100)
     
-    # --- NOVO CAMPO: PROMPTS DA IA ---
+    # --- PROMPTS DA IA ---
     prompts_ia = models.TextField(blank=True, null=True)
     
     categoria = models.CharField(max_length=100)
     bncc = models.TextField(blank=True, null=True)
+    
+    # --- NOVO CAMPO: BNCC COMPUTAÇÃO ---
+    bncc_computacao = models.TextField(blank=True, null=True) 
+    
     metodologia = models.CharField(max_length=255, blank=True, null=True)
     duracao = models.CharField(max_length=100, blank=True, null=True)
     recursos = models.TextField(blank=True, null=True)

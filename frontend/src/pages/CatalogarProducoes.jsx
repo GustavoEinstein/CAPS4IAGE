@@ -87,6 +87,7 @@ const ManualFormSplit = ({ onBack, navigate, isMobile, initialData }) => {
     prompts_ia: "", 
     categoria: "",
     bncc: "",
+    bncc_computacao: "", 
     metodologia: "",
     duracao: "",
     recursos: [],
@@ -148,8 +149,8 @@ const ManualFormSplit = ({ onBack, navigate, isMobile, initialData }) => {
   const handleSubmit = async (isDraft) => {
     
     if (!isDraft) {
-        if (!formData.titulo || !formData.nivel || !formData.categoria || !formData.experiencia) {
-            Swal.fire('Campos Incompletos', 'Para enviar para revisão, preencha Título, Nível, Categoria e Relato. Se quiser terminar depois, você pode "Salvar como Rascunho".', 'warning');
+        if (!formData.titulo || !formData.nivel || !formData.categoria || !formData.experiencia || !formData.bncc_computacao) {
+            Swal.fire('Campos Incompletos', 'Para enviar para revisão, preencha Título, Nível, Categoria, Relato e BNCC Computação. Se quiser terminar depois, você pode "Salvar como Rascunho".', 'warning');
             return;
         }
     }
@@ -210,7 +211,7 @@ const ManualFormSplit = ({ onBack, navigate, isMobile, initialData }) => {
                 </h3>
                 
                 <div style={styles.inputGroup}>
-                  <label style={styles.label}>Título <span style={styles.asterisk}>*</span></label>
+                  <label style={styles.label}>Título</label>
                   <input
                     type="text"
                     name="titulo"
@@ -230,7 +231,7 @@ const ManualFormSplit = ({ onBack, navigate, isMobile, initialData }) => {
                 </div>
                 
                 <div style={styles.inputGroup}>
-                  <label style={styles.label}>Nível <span style={styles.asterisk}>*</span></label>
+                  <label style={styles.label}>Nível</label>
                   <select name="nivel" value={formData.nivel} onChange={handleChange} style={styles.input}>
                     <option value="">Selecione...</option>
                     <option value="Fundamental 1">Fundamental 1</option>
@@ -242,7 +243,7 @@ const ManualFormSplit = ({ onBack, navigate, isMobile, initialData }) => {
                 
                 <div style={styles.inputGroup}>
                   <label style={styles.label}>
-                    <Layers size={14} /> Conteúdo Gerado <span style={styles.asterisk}>*</span>
+                    <Layers size={14} /> Conteúdo Gerado
                   </label>
                   <select name="categoria" value={formData.categoria} onChange={handleChange} style={styles.input}>
                     <option value="">O que a IA ajudou a criar?</option>
@@ -278,7 +279,6 @@ const ManualFormSplit = ({ onBack, navigate, isMobile, initialData }) => {
                   />
                 </div>
 
-                {/* --- CAMPO DE PROMPT --- */}
                 <div style={styles.inputGroup}>
                   <label style={styles.label}>Prompts Utilizados</label>
                   <textarea
@@ -334,6 +334,18 @@ const ManualFormSplit = ({ onBack, navigate, isMobile, initialData }) => {
                     placeholder="Cite os códigos e objetivos..."
                   />
                 </div>
+
+                <div style={styles.inputGroup}>
+                  <label style={styles.label}>BNCC Computação</label>
+                  <textarea
+                    name="bncc_computacao"
+                    value={formData.bncc_computacao}
+                    onChange={handleChange}
+                    style={styles.textarea}
+                    rows="2"
+                    placeholder="Cite as habilidades/competências de computação..."
+                  />
+                </div>
                 
                 <div style={styles.gridThree}>
                   <div style={styles.inputGroup}>
@@ -374,7 +386,7 @@ const ManualFormSplit = ({ onBack, navigate, isMobile, initialData }) => {
 
                 <div style={styles.inputGroup}>
                   <label style={styles.label}>
-                    <Lightbulb size={14} /> Relato da Experiência <span style={styles.asterisk}>*</span>
+                    <Lightbulb size={14} /> Relato da Experiência
                   </label>
                   <textarea name="experiencia" value={formData.experiencia} onChange={handleChange} style={{ ...styles.textarea, minHeight: "100px" }} placeholder="Descreva como foi a aplicação em sala..." />
                 </div>
@@ -647,7 +659,6 @@ const styles = {
   sectionTitle: { fontSize: "16px", fontWeight: "700", color: "#37474F", marginBottom: "25px", display: "flex", alignItems: "center", gap: "10px", textTransform: "uppercase", letterSpacing: "0.5px" },
   inputGroup: { marginBottom: "20px", display: "flex", flexDirection: "column" },
   label: { fontSize: "13px", fontWeight: "600", color: "#455A64", marginBottom: "8px", display: "flex", alignItems: "center", gap: "6px" },
-  asterisk: { color: "#D32F2F", marginLeft: "2px" },
   input: { width: "100%", padding: "12px 15px", borderRadius: "8px", border: "1px solid #CFD8DC", fontSize: "14px", color: "#37474F", outline: "none", backgroundColor: "#FFFFFF", boxSizing: "border-box", height: "45px" },
   textarea: { width: "100%", padding: "12px 15px", borderRadius: "8px", border: "1px solid #CFD8DC", fontSize: "14px", color: "#37474F", outline: "none", backgroundColor: "#FFFFFF", boxSizing: "border-box", resize: "vertical", fontFamily: "inherit", lineHeight: "1.5" },
   lockedInputWrapper: { display: "flex", alignItems: "center", backgroundColor: "#FAFAFA", border: "1px solid #E0E0E0", borderRadius: "8px", overflow: "hidden", height: "45px" },
