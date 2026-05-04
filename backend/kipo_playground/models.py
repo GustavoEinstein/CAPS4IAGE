@@ -6,9 +6,6 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 import random
 
-def random_string():
-    return str(random.randint(1000000, 99999999))
-
 # ============================================================================
 # 1. PERFIL DO USUÁRIO
 # ============================================================================
@@ -40,61 +37,105 @@ class Profile(models.Model):
     pontos = models.IntegerField(default=0)
 
     def get_nivel(self):
-        """Retorna o título (badge) baseado na progressão pedagógica do usuário"""
-        if self.pontos <= 50:
-            return "Prof. Conectado(a)"
-        elif self.pontos <= 150:
-            return "Curador(a) Pedagógico(a)"
-        elif self.pontos <= 300:
-            return "Mentor(a) de Inovação"
-        else:
-            return "Embaixador(a) do Saber"
+        """Retorna o título baseado em uma curva de dificuldade crescente"""
+        if self.pontos <= 100:
+            return "🌱 Prof. Conectado(a)"
+        elif self.pontos <= 400: # +300 para o próximo
+            return "📖 Curador(a) Pedagógico(a)"
+        elif self.pontos <= 1000: # +600 para o próximo
+            return "💡 Mentor(a) de Inovação"
+        else: # +1500 ou mais para elite
+            return "🦉 Embaixador(a) do Saber"
+
+    def get_progresso_proximo_nivel(self):
+        """Calcula a lógica da barra de progresso para o React"""
+        marcos = [0, 100, 400, 1000, 2500] 
+        
+        nivel_atual_idx = 0
+        for i, marco in enumerate(marcos):
+            if self.pontos >= marco:
+                nivel_atual_idx = i
+            else:
+                break
+        
+        if nivel_atual_idx >= len(marcos) - 1:
+            return {
+                "porcentagem": 100, 
+                "falta": 0, 
+                "proximo_marco": "∞",
+                "label": "Nível Máximo"
+            }
+
+        inicio_faixa = marcos[nivel_atual_idx]
+        fim_faixa = marcos[nivel_atual_idx + 1]
+        
+        pontos_na_faixa = self.pontos - inicio_faixa
+        tamanho_faixa = fim_faixa - inicio_faixa
+        
+        porcentagem = (pontos_na_faixa / tamanho_faixa) * 100
+        falta = fim_faixa - self.pontos
+        
+        return {
+            "porcentagem": round(porcentagem, 1),
+            "falta": falta,
+            "proximo_marco": fim_faixa,
+            "label": f"{self.pontos} / {fim_faixa} XP"
+        }
 
     def __str__(self):
         return f'{self.user.username} - {self.disciplina} ({self.get_nivel()})'
 
-@receiver(post_save, sender=User)
-def create_user_profile(sender, instance, created, **kwargs):
-    if created:
-        Profile.objects.create(user=instance)
+# ============================================================================
+# 2. SISTEMA DE HISTÓRICO DE XP (EXTRATO)
+# ============================================================================
+class RegistroXP(models.Model):
+    perfil = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name='historico_xp')
+    quantidade = models.IntegerField()
+    descricao = models.CharField(max_length=255)
+    data = models.DateTimeField(auto_now_add=True)
 
-@receiver(post_save, sender=User)
-def save_user_profile(sender, instance, **kwargs):
-    # Garantir que o perfil existe antes de salvar (evita erro em criações via shell/admin)
-    if hasattr(instance, 'profile'):
-        instance.profile.save()
-
+    def __str__(self):
+        return f"{self.perfil.user.username} | {self.quantidade} XP | {self.descricao}"
 
 # ============================================================================
-# 2. PRODUÇÕES DIDÁTICAS
+# 3. SISTEMA DE CONQUISTAS (BADGES)
+# ============================================================================
+class Conquista(models.Model):
+    nome = models.CharField(max_length=100)
+    descricao = models.TextField()
+    icone = models.CharField(max_length=50, help_text="Nome do ícone Lucide (ex: trophy, star)")
+    xp_bonus = models.IntegerField(default=0)
+
+    def __str__(self):
+        return self.nome
+
+class ConquistaUsuario(models.Model):
+    perfil = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name='conquistas')
+    conquista = models.ForeignKey(Conquista, on_delete=models.CASCADE)
+    data_conquista = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('perfil', 'conquista')
+
+# ============================================================================
+# 4. PRODUÇÕES DIDÁTICAS
 # ============================================================================
 class Producao(models.Model):
-    # Autor e Localização
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='producoes')
     escola = models.CharField(max_length=149, null=True, blank=True)
-    
-    # Dados do Material
     titulo = models.CharField(max_length=255)
     disciplina = models.CharField(max_length=100)
     nivel = models.CharField(max_length=100)
     modelo_ia = models.CharField(max_length=100)
-    
-    # --- PROMPTS DA IA ---
     prompts_ia = models.TextField(blank=True, null=True)
-    
     categoria = models.CharField(max_length=100)
     bncc = models.TextField(blank=True, null=True)
-    
-    # --- NOVO CAMPO: BNCC COMPUTAÇÃO ---
     bncc_computacao = models.TextField(blank=True, null=True) 
-    
     metodologia = models.CharField(max_length=255, blank=True, null=True)
     duracao = models.CharField(max_length=100, blank=True, null=True)
     recursos = models.TextField(blank=True, null=True)
     experiencia = models.TextField(blank=True, null=True)
     resultados = models.TextField(blank=True, null=True) 
-    
-    # Arquivo e Status
     arquivo = models.FileField(upload_to='producoes/', blank=True, null=True)
     data_criacao = models.DateTimeField(auto_now_add=True)
     status = models.CharField(max_length=50, default='Em revisão')
@@ -102,20 +143,15 @@ class Producao(models.Model):
     def __str__(self):
         return f"{self.titulo} - {self.user.username} ({self.status})"
 
-
 # ============================================================================
-# 3. SISTEMA DE REVISÃO (DUPLO-CEGO)
+# 5. SISTEMA DE REVISÃO
 # ============================================================================
 class Avaliacao(models.Model):
     producao = models.ForeignKey(Producao, on_delete=models.CASCADE, related_name='avaliacoes')
     revisor = models.ForeignKey(User, on_delete=models.CASCADE, related_name='revisoes_feitas')
     data_avaliacao = models.DateTimeField(auto_now_add=True)
-    
-    # Resultado e Comentários
     aprovado = models.BooleanField(default=False) 
     feedback_revisao = models.TextField(blank=True, null=True)
-    
-    # Notas da Rúbrica
     nota_coerencia = models.IntegerField(default=0)
     nota_qualidade = models.IntegerField(default=0)
     nota_metodologia = models.IntegerField(default=0)
@@ -124,43 +160,39 @@ class Avaliacao(models.Model):
     nota_inovacao = models.IntegerField(default=0)
 
     class Meta:
-        # Garante que um professor avalie cada produção apenas uma vez
         unique_together = ('producao', 'revisor')
 
-    def __str__(self):
-        return f"Avaliação de {self.revisor.username} para '{self.producao.titulo}'"
-
-
 # ============================================================================
-# 4. FÓRUM DE RASCUNHOS
+# 6. FÓRUM
 # ============================================================================
 class Topico(models.Model):
     CATEGORIAS_CHOICES = (
-        ('Dúvida BNCC', 'Dúvida BNCC'),
-        ('Metodologia', 'Metodologia'),
-        ('Uso de IA', 'Uso de IA'),
-        ('Sugestão', 'Sugestão'),
-        ('Geral', 'Geral'),
+        ('Dúvida BNCC', 'Dúvida BNCC'), ('Metodologia', 'Metodologia'),
+        ('Uso de IA', 'Uso de IA'), ('Sugestão', 'Sugestão'), ('Geral', 'Geral'),
     )
-
     autor = models.ForeignKey(User, on_delete=models.CASCADE, related_name='topicos_forum')
     titulo = models.CharField(max_length=255)
     conteudo = models.TextField()
-    
     categoria = models.CharField(max_length=50, choices=CATEGORIAS_CHOICES, default='Geral')
     resolvido = models.BooleanField(default=False) 
-    
     arquivo = models.FileField(upload_to='forum_anexos/', blank=True, null=True)
     data_criacao = models.DateTimeField(auto_now_add=True)
 
-    def __str__(self):
-        return f"Tópico: {self.titulo} por {self.autor.username}"
-
 class Comentario(models.Model):
     topico = models.ForeignKey(Topico, on_delete=models.CASCADE, related_name='comentarios')
-    autor = models.ForeignKey(User, on_delete=models.CASCADE)
+    autor = models.ForeignKey(User, on_delete=models.CASCADE, related_name='comentarios_usuario')
     conteudo = models.TextField()
     data_criacao = models.DateTimeField(auto_now_add=True)
 
-    def __str__(self):
-        return f"Comentário de {self.autor.username} em {self.topico.titulo}"
+# ============================================================================
+# SIGNALS
+# ============================================================================
+@receiver(post_save, sender=User)
+def create_user_profile(sender, instance, created, **kwargs):
+    if created:
+        Profile.objects.create(user=instance)
+
+@receiver(post_save, sender=User)
+def save_user_profile(sender, instance, **kwargs):
+    if hasattr(instance, 'profile'):
+        instance.profile.save()

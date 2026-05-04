@@ -32,13 +32,16 @@ from django.core.mail import EmailMultiAlternatives
 from django.utils.html import strip_tags
 from django.conf import settings
 from django.views.decorators.csrf import csrf_exempt
+from django.db.models import Count
 
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.throttling import ScopedRateThrottle 
 
-from .models import Profile, Producao, Avaliacao, Topico, Comentario
+# Importação dos novos modelos de gamificação
+from .models import Profile, Producao, Avaliacao, Topico, Comentario, RegistroXP, Conquista, ConquistaUsuario
+
 
 #lista de arquivos permitidas no servidor, fora esses não serão aceitos 
 ALLOWED_EXTENSIONS = [
@@ -46,6 +49,20 @@ ALLOWED_EXTENSIONS = [
     '.ppt', '.pptx', '.xls', '.xlsx', 
     '.jpg', '.jpeg', '.png'
 ]
+
+# ============================================================================
+# FUNÇÃO AUXILIAR DE GAMIFICAÇÃO
+# ============================================================================
+def adicionar_xp(perfil, quantidade, descricao):
+    """Adiciona XP ao perfil e gera um registro no histórico"""
+    perfil.pontos += quantidade
+    perfil.save()
+    RegistroXP.objects.create(
+        perfil=perfil,
+        quantidade=quantidade,
+        descricao=descricao
+    )
+
 # ----------------------------------------------------
 
 def logout_user(request):
@@ -169,6 +186,19 @@ def api_user_profile(request):
 
         nome_exibicao = user.first_name if user.first_name else user.username
 
+        # Dados de progresso de nível
+        progresso = profile.get_progresso_proximo_nivel()
+
+        # Busca as conquistas (badges) do usuário
+        conquistas_usuario = profile.conquistas.all().select_related('conquista')
+        lista_conquistas = [{
+            'id': c.conquista.id,
+            'nome': c.conquista.nome,
+            'descricao': c.conquista.descricao,
+            'icone': c.conquista.icone,
+            'data': c.data_conquista.strftime('%d/%m/%Y')
+        } for c in conquistas_usuario]
+
         return Response({
             'id': user.id,
             'username': nome_exibicao,
@@ -178,7 +208,9 @@ def api_user_profile(request):
             'avatar': avatar_url,
             'is_superuser': user.is_superuser,
             'pontos': profile.pontos,
-            'nivel': profile.get_nivel()
+            'nivel': profile.get_nivel(),
+            'progresso': progresso,
+            'conquistas': lista_conquistas
         })
 
     elif request.method == 'PUT':
@@ -210,7 +242,8 @@ def api_user_profile(request):
             'disciplina': profile.disciplina,
             'escola': profile.escola,
             'pontos': profile.pontos,
-            'nivel': profile.get_nivel()
+            'nivel': profile.get_nivel(),
+            'progresso': profile.get_progresso_proximo_nivel()
         })
 
 
@@ -245,7 +278,7 @@ def api_create_production(request):
             prompts_ia=data.get('prompts_ia', ''),
             categoria=data.get('categoria', ''),
             bncc=data.get('bncc', ''),
-            bncc_computacao=data.get('bncc_computacao', ''), # <--- NOVO CAMPO AQUI (Criação)
+            bncc_computacao=data.get('bncc_computacao', ''), 
             metodologia=data.get('metodologia', ''),
             duracao=data.get('duracao', ''),
             recursos=recursos_str,
@@ -331,7 +364,7 @@ def api_get_production_details(request, pk):
             'prompts_ia': p.prompts_ia,
             'categoria': p.categoria,
             'bncc': p.bncc,
-            'bncc_computacao': p.bncc_computacao, # <--- NOVO CAMPO AQUI (Leitura)
+            'bncc_computacao': p.bncc_computacao, 
             'metodologia': p.metodologia,
             'duracao': p.duracao,
             'recursos': lista_recursos,
@@ -370,7 +403,7 @@ def api_update_production(request, pk):
         p.prompts_ia = data.get('prompts_ia', p.prompts_ia)
         p.categoria = data.get('categoria', p.categoria)
         p.bncc = data.get('bncc', p.bncc)
-        p.bncc_computacao = data.get('bncc_computacao', p.bncc_computacao) # <--- NOVO CAMPO AQUI (Atualização)
+        p.bncc_computacao = data.get('bncc_computacao', p.bncc_computacao) 
         p.metodologia = data.get('metodologia', p.metodologia)
         p.duracao = data.get('duracao', p.duracao)
         p.experiencia = data.get('experiencia', p.experiencia)
@@ -392,7 +425,7 @@ def api_update_production(request, pk):
             p.status = 'Rascunho'
         else:
             p.status = 'Em revisão' 
-            p.avaliacoes.all().delete() # Limpa avaliações antigas se estiver mandando pra revisão de novo
+            p.avaliacoes.all().delete()
             
         p.save()
         
@@ -415,7 +448,6 @@ def api_list_review_queue(request):
     except:
         minha_disciplina = 'Outra'
 
-    # SÓ BUSCA O QUE ESTIVER "Em revisão". Rascunhos e aprovações são ignorados!
     producoes_para_revisar = Producao.objects.filter(
         disciplina=minha_disciplina,
         status='Em revisão'
@@ -463,7 +495,7 @@ def api_submit_review(request, pk):
         
         feedback_texto = f"PONTOS FORTES:\n{pontos_fortes}\n\nSUGESTÕES DE MELHORIA:\n{pontos_melhoria}"
         
-        avaliacao = Avaliacao.objects.create(
+        Avaliacao.objects.create(
             producao=p,
             revisor=request.user,
             aprovado=aprovado,
@@ -477,8 +509,7 @@ def api_submit_review(request, pk):
         )
 
         perfil_revisor = request.user.profile
-        perfil_revisor.pontos += 15
-        perfil_revisor.save()
+        adicionar_xp(perfil_revisor, 15, f"Revisão da produção: {p.titulo}")
 
         if not aprovado:
             p.status = 'Correção solicitada'
@@ -501,8 +532,7 @@ def api_submit_review(request, pk):
                 msg_response = 'Revisão registrada! Você ganhou +15 XP. A produção alcançou 2 aprovações e foi publicada na comunidade.'
                 
                 perfil_autor = p.user.profile
-                perfil_autor.pontos += 50
-                perfil_autor.save()
+                adicionar_xp(perfil_autor, 50, f"Produção aprovada pela comunidade: {p.titulo}")
             else:
                 p.status = 'Em revisão'
                 msg_response = f'Revisão registrada! Você ganhou +15 XP. Esta produção agora possui {total_aprovacoes} aprovação(ões). Aguardando o segundo revisor.'
@@ -557,7 +587,7 @@ def api_list_public_feed(request):
     return Response(lista)
 
 
-#painel de recuperação de senha(nao sei se ainda está funcionado tem que testar)
+#painel de recuperação de senha
 @csrf_exempt
 @api_view(['POST'])
 @authentication_classes([]) 
@@ -705,8 +735,7 @@ def api_forum_detalhe_comentarios(request, pk):
         )
 
         perfil_comentarista = request.user.profile
-        perfil_comentarista.pontos += 5
-        perfil_comentarista.save()
+        adicionar_xp(perfil_comentarista, 5, f"Comentário no tópico: {topico.titulo}")
 
         return Response({'mensagem': 'Comentário adicionado com sucesso! Você ganhou +5 XP.'})
 
@@ -767,8 +796,7 @@ def api_forum_topicos(request):
         )
 
         perfil_autor = request.user.profile
-        perfil_autor.pontos += 5
-        perfil_autor.save()
+        adicionar_xp(perfil_autor, 5, f"Novo tópico aberto: {titulo}")
 
         return Response({'mensagem': 'Tópico criado com sucesso! Você ganhou +5 XP.'}, status=201)
 
@@ -866,3 +894,103 @@ def api_admin_delete_forum(request, pk):
 @permission_classes([AllowAny])
 def api_listar_ciclos(request):
     return Response([])
+
+
+# SISTEMA DE RANKING
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def api_ranking_gamificacao(request):
+    top_xp_users = Profile.objects.select_related('user').order_by('-pontos')[:10]
+    top_xp = [{
+        'id': p.user.id,
+        'nome': p.user.first_name or p.user.username,
+        'disciplina': p.disciplina,
+        'pontos': p.pontos,
+        'nivel': p.get_nivel(),
+    } for p in top_xp_users if p.pontos > 0]
+
+    revisores_qs = User.objects.annotate(
+        total_revisoes=Count('revisoes_feitas', distinct=True)
+    ).order_by('-total_revisoes')[:10]
+    
+    top_revisores = [{
+        'id': u.id,
+        'nome': u.first_name or u.username,
+        'disciplina': u.profile.disciplina if hasattr(u, 'profile') else 'Geral',
+        'total': u.total_revisoes,
+        'nivel': u.profile.get_nivel() if hasattr(u, 'profile') else ''
+    } for u in revisores_qs if u.total_revisoes > 0]
+
+    forum_qs = User.objects.annotate(
+        total_forum=Count('topicos_forum', distinct=True) + Count('comentarios', distinct=True)
+    ).order_by('-total_forum')[:10]
+    
+    top_forum = [{
+        'id': u.id,
+        'nome': u.first_name or u.username,
+        'disciplina': u.profile.disciplina if hasattr(u, 'profile') else 'Geral',
+        'total': u.total_forum,
+        'nivel': u.profile.get_nivel() if hasattr(u, 'profile') else ''
+    } for u in forum_qs if u.total_forum > 0]
+
+    return Response({
+        'top_xp': top_xp,
+        'top_revisores': top_revisores,
+        'top_forum': top_forum
+    })
+
+# NOVA VIEW DE ADMIN DE GAMIFICAÇÃO (PARA RESOLVER O ERRO)
+@api_view(['GET', 'POST'])
+@permission_classes([IsAuthenticated])
+def api_admin_gamificacao(request):
+    """View para o Administrador gerenciar conquistas e auditar o histórico de XP"""
+    if not request.user.is_superuser:
+        return Response({'erro': 'Acesso negado'}, status=403)
+
+    if request.method == 'GET':
+        conquistas = Conquista.objects.all()
+        lista_conquistas = [{
+            'id': c.id,
+            'nome': c.nome,
+            'descricao': c.descricao,
+            'icone': c.icone,
+            'xp_bonus': c.xp_bonus
+        } for c in conquistas]
+
+        historico_recente = RegistroXP.objects.select_related('perfil__user').order_by('-data')[:20]
+        lista_historico = [{
+            'usuario': h.perfil.user.username,
+            'quantidade': h.quantidade,
+            'descricao': h.descricao,
+            'data': h.data.strftime('%d/%m/%Y %H:%M')
+        } for h in historico_recente]
+
+        return Response({
+            'conquistas_disponiveis': lista_conquistas,
+            'auditoria_xp': lista_historico
+        })
+
+    elif request.method == 'POST':
+        data = request.data
+        try:
+            Conquista.objects.create(
+                nome=data.get('nome'),
+                descricao=data.get('descricao'),
+                icone=data.get('icone', 'award'),
+                xp_bonus=int(data.get('xp_bonus', 0))
+            )
+            return Response({'mensagem': 'Conquista criada com sucesso!'}, status=201)
+        except Exception as e:
+            return Response({'erro': 'Erro ao criar conquista.'}, status=400)
+
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def api_admin_delete_badge(request, pk):
+    """Exclui uma badge cadastrada no sistema"""
+    if not request.user.is_superuser:
+        return Response({'erro': 'Acesso negado'}, status=403)
+        
+    conquista = get_object_or_404(Conquista, id=pk)
+    conquista.delete()
+    return Response({'mensagem': 'Badge excluída com sucesso.'})            

@@ -22,11 +22,14 @@ import Revisao from './pages/FormRevisao';
 import Ajuda from './pages/Ajuda';
 import Profile from './pages/Profile'; 
 import AprovacaoContas from './pages/AprovacaoContas';
+import Ranking from './pages/Ranking';
 
 // --- NOVAS PÁGINAS DO FÓRUM E ADMIN ---
 import Forum from './pages/Forum/Forum';
 import TopicoDetalhe from './pages/Forum/TopicoDetalhe';
-import Admin from './pages/Admin'; // <--- IMPORTAÇÃO DA NOVA PÁGINA ADMIN
+import Admin from './pages/Admin'; 
+import CentralAdmin from './pages/CentralAdmin';
+import GamificacaoAdmin from './pages/GamificacaoAdmin'; // <--- IMPORTANTE: Crie este arquivo conforme a dica anterior
 
 // --- PÁGINA DE EDIÇÃO ---
 import EditarProducao from './EditarProducao';
@@ -66,6 +69,9 @@ function App() {
                 <Route path="revisao" element={<RevisaoDuploCego />} />
                 <Route path="revisao/:id" element={<Revisao />} />          
                 <Route path="ajuda" element={<Ajuda />} />
+                
+                {/* --- ROTA DE GAMIFICAÇÃO (USUÁRIO) --- */}
+                <Route path="ranking" element={<Ranking />} />
 
                 {/* --- ROTAS DO FÓRUM --- */}
                 <Route path="forum" element={<Forum />} />
@@ -75,8 +81,12 @@ function App() {
                 <Route path="editar-producao/:id" element={<EditarProducao />} />
 
                 {/* --- ROTAS DE ADMINISTRAÇÃO --- */}
+                <Route path="central-admin" element={<CentralAdmin />} /> 
                 <Route path="aprovacoes" element={<AprovacaoContas />} />
-                <Route path="admin" element={<Admin />} /> {/* <--- NOVA ROTA REGISTRADA AQUI */}
+                <Route path="admin" element={<Admin />} /> 
+                
+                {/* NOVA ROTA DE GESTÃO DE GAMIFICAÇÃO (ADMIN) */}
+                <Route path="admin/gamificacao" element={<GamificacaoAdmin />} />
 
             </Route>
 

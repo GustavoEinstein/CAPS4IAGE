@@ -8,9 +8,9 @@ import {
   Globe,
   LifeBuoy,
   BookOpenCheck,
-  UserCheck, 
   MessageSquare, 
-  ShieldAlert, // <--- NOVO ÍCONE PARA O PAINEL DE CONTROLE
+  Settings,
+  Trophy, // <--- NOVO ÍCONE DE TROFÉU PARA O RANKING
   X,
 } from "lucide-react"
 
@@ -129,6 +129,18 @@ function Sidebar({ isOpen, isMobile, onClose }) {
               Fórum de Rascunhos
             </NavLink>
           </li>
+
+          {/* --- NOVO: BOTÃO DO RANKING DE GAMIFICAÇÃO --- */}
+          <li>
+            <NavLink
+              to="/dashboard/ranking"
+              style={getLinkStyle}
+              onClick={isMobile ? onClose : undefined}
+            >
+              <Trophy size={20} style={styles.icon} />
+              Hall da Fama
+            </NavLink>
+          </li>
         </ul>
 
         {/* --- ÁREA EXCLUSIVA PARA O SUPERADMIN --- */}
@@ -138,23 +150,12 @@ function Sidebar({ isOpen, isMobile, onClose }) {
             <ul style={styles.ul}>
               <li>
                 <NavLink
-                  to="/dashboard/aprovacoes"
+                  to="/dashboard/central-admin"
                   style={getLinkStyle}
                   onClick={isMobile ? onClose : undefined}
                 >
-                  <UserCheck size={20} style={styles.icon} />
-                  Aprovação de Contas
-                </NavLink>
-              </li>
-              {/* --- NOVO: PAINEL DE CONTROLE --- */}
-              <li>
-                <NavLink
-                  to="/dashboard/admin"
-                  style={getLinkStyle}
-                  onClick={isMobile ? onClose : undefined}
-                >
-                  <ShieldAlert size={20} style={styles.icon} />
-                  Painel de Controle
+                  <Settings size={20} style={styles.icon} />
+                  Central do Admin
                 </NavLink>
               </li>
             </ul>
