@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react"
 import api from "../services/api" // <--- API REAL
 import { useParams, useNavigate } from "react-router-dom"
+import { useOutletContext, useLocation } from "react-router-dom"
 import {
   ArrowLeft,
   Calendar,
@@ -64,7 +65,7 @@ const DetalharProducao = () => {
       try {
         // Busca os dados REAIS do backend (Histórico ou Feed)
         const response = await api.get(`api/production/${id}/`)
-        console.log("Dados da Produção:", response.data)
+        //console.log("Dados da Produção:", response.data)
         setData(response.data)
       } catch (error) {
         console.error("Erro ao carregar:", error)
@@ -169,7 +170,31 @@ const DetalharProducao = () => {
                   </span>
                 </div>
               </div>
-
+              {/* [NOVO] BANNER DE DERIVAÇÃO / INSPIRAÇÃO */}
+              {data.producao_base && (
+                <div style={{
+                  backgroundColor: "#E3F2FD", 
+                  borderLeft: "4px solid #1565C0", 
+                  padding: "12px 15px", 
+                  borderRadius: "6px", 
+                  marginBottom: "25px", 
+                  display: "flex", 
+                  alignItems: "center", 
+                  gap: "10px"
+                }}>
+                  <Bookmark size={20} color="#1565C0" />
+                  <span style={{ fontSize: "14px", color: "#1A237E" }}>
+                    Esta prática foi inspirada no material: <strong>
+                      <a 
+                        href={`/dashboard/producao/${data.producao_base.id}`} 
+                        style={{ color: "#1565C0", textDecoration: "underline" }}
+                      >
+                        {data.producao_base.titulo || "Acessar produção original"}
+                      </a>
+                    </strong>
+                  </span>
+                </div>
+              )}
               <div style={styles.techSheet}>
                 <div style={styles.techItem}>
                   <div style={styles.iconCircle}>
@@ -310,9 +335,22 @@ const DetalharProducao = () => {
                   Nenhum arquivo anexado.
                 </p>
               )}
+<button 
+                // APONTE DIRETAMENTE PARA O FORMULÁRIO MANUAL
+                onClick={() => navigate("/dashboard/catalogar/manual", { state: { baseData: data } })} 
+                style={{ 
+                  ...styles.downloadBtn, 
+                  backgroundColor: "#E8F5E9", 
+                  color: "#2E7D32", 
+                  border: "1px solid #C8E6C9",
+                  marginTop: "10px" 
+                }}
+              >
+                <Bookmark size={18} color="#2E7D32" /> Referenciar Prática
+              </button>
             </div>
           </div>
-        </div>
+        </div>  
       </div>
     </div>
   )

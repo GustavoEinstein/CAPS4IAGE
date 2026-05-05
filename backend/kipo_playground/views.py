@@ -32,7 +32,7 @@ from django.core.mail import EmailMultiAlternatives
 from django.utils.html import strip_tags
 from django.conf import settings
 from django.views.decorators.csrf import csrf_exempt
-from django.db.models import Count
+from django.db.models import Count, Q
 
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
@@ -568,7 +568,22 @@ def api_review_history(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def api_list_public_feed(request):
+    # Começa buscando todas as aprovadas[cite: 7]
     producoes = Producao.objects.filter(status='Aprovado').order_by('-data_criacao')
+    
+    # --- NOVA LÓGICA DE BUSCA ---
+    # Captura o termo enviado pelo React (ex: ?search=Fração)
+    busca = request.GET.get('search', '')
+    
+    if busca:
+        # Filtra se o termo existir no título, disciplina, categoria ou relato
+        producoes = producoes.filter(
+            Q(titulo__icontains=busca) |
+            Q(disciplina__icontains=busca) |
+            Q(categoria__icontains=busca) |
+            Q(experiencia__icontains=busca)
+        )
+    # ----------------------------
     
     lista = []
     for p in producoes:
@@ -579,12 +594,12 @@ def api_list_public_feed(request):
             'nivel': p.nivel,
             'modelo_ia': p.modelo_ia,
             'categoria': p.categoria,
-            'autor': p.user.first_name or p.user.username,
-            'resumo': p.experiencia[:150] + '...' if p.experiencia else '',
-            'likes': 0
+            'autor': p.user.first_name or p.user.username, #[cite: 7]
+            'resumo': p.experiencia[:150] + '...' if p.experiencia else '', #[cite: 7]
+            'likes': 0 #[cite: 7]
         })
     
-    return Response(lista)
+    return Response(lista) #[cite: 7]
 
 
 #painel de recuperação de senha

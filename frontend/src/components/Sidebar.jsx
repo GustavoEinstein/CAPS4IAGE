@@ -90,7 +90,7 @@ function Sidebar({ isOpen, isMobile, onClose }) {
           </li>
           <li>
             <NavLink
-              to="/dashboard/catalogar-producoes"
+              to="/dashboard/catalogar"
               style={getLinkStyle}
               onClick={isMobile ? onClose : undefined}
             >

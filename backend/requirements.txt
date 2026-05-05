@@ -14,3 +14,4 @@ platformdirs==2.5.2
 sqlparse==0.4.2
 virtualenv==20.16.2
 setuptools==65.5.0
+Pillow

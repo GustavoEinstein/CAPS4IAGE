@@ -139,7 +139,15 @@ class Producao(models.Model):
     arquivo = models.FileField(upload_to='producoes/', blank=True, null=True)
     data_criacao = models.DateTimeField(auto_now_add=True)
     status = models.CharField(max_length=50, default='Em revisão')
-
+# [NOVO] CAMPO DE DERIVAÇÃO / REFERÊNCIA
+    producao_base = models.ForeignKey(
+        'self', 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True, 
+        related_name='derivacoes',
+        help_text="Indica se esta prática foi baseada na produção de outro professor."
+    )
     def __str__(self):
         return f"{self.titulo} - {self.user.username} ({self.status})"
 

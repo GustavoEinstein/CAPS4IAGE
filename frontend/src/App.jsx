@@ -15,7 +15,9 @@ import Dashboard from "./Dashboard";
 import MainContent from './components/MainContent';
 import DetalheProducao from './pages/DetalharProducao';
 import VisualizarMinhaProducao from './pages/VisualizarMinhaProducao';
-import CatalogarProducoes from "./pages/CatalogarProducoes";
+import FormularioManual from "./pages/formularios/FormularioManual";
+import SelecionarMetodo from './pages/SelecionarMetodo';
+import BuscarBase from './pages/BuscarBase';
 import MinhasProducoes from './pages/MinhasProducoes';
 import RevisaoDuploCego from './pages/RevisaoDuploCego';
 import Revisao from './pages/FormRevisao'; 
@@ -64,7 +66,9 @@ function App() {
                 <Route path="minha-producao/:id" element={<VisualizarMinhaProducao />} />
 
                 {/* Funcionalidades de Produção */}
-                <Route path="catalogar-producoes" element={<CatalogarProducoes />} />
+                <Route path="/dashboard/catalogar" element={<SelecionarMetodo />} />
+                <Route path="/dashboard/catalogar/base" element={<BuscarBase />} />
+                <Route path="/dashboard/catalogar/manual" element={<FormularioManual />} />
                 <Route path="minhas-producoes" element={<MinhasProducoes />} />
                 <Route path="revisao" element={<RevisaoDuploCego />} />
                 <Route path="revisao/:id" element={<Revisao />} />          

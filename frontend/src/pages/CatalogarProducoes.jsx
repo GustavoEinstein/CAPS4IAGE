@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react"
 import api from "../services/api"
-import { useNavigate, useOutletContext } from "react-router-dom"
+import { useNavigate, useOutletContext, useLocation } from "react-router-dom"
 import { useSpeechRecognition } from "../hooks/useSpeechRecognition"
 import { processTranscript } from "../services/aiProcessing"
 import Swal from 'sweetalert2' 
@@ -25,26 +25,31 @@ import {
   Volume2,
   Trash2,
   Check,
-  Send
+  Send,
+  Search,
+  Copy,
+  Bookmark
 } from "lucide-react"
 
 const CatalogarProducoes = () => {
   const [mode, setMode] = useState("selecao")
-  const [voiceDraft, setVoiceDraft] = useState(null)
+  const [draftData, setDraftData] = useState(null) // Reutilizável para Voz ou Base
   const navigate = useNavigate()
   const { isMobile } = useOutletContext() || { isMobile: false }
 
   if (mode === "selecao")
     return <SelectionScreen onSelect={setMode} isMobile={isMobile} navigate={navigate} />
+  if (mode === "selecao_base")
+    return <BaseSearchScreen onBack={() => setMode("selecao")} onSelectBase={(data) => { setDraftData(data); setMode("manual"); }} />
   if (mode === "manual")
-    return <ManualFormSplit onBack={() => setMode("selecao")} navigate={navigate} isMobile={isMobile} initialData={voiceDraft} />
+    return <ManualFormSplit onBack={() => setMode("selecao")} navigate={navigate} isMobile={isMobile} initialData={draftData} />
   if (mode === "voz")
-    return <VoiceFormV2 onBack={() => setMode("selecao")} onUseDraft={(draft) => { setVoiceDraft(draft); setMode("manual") }} isMobile={isMobile} />
+    return <VoiceFormV2 onBack={() => setMode("selecao")} onUseDraft={(draft) => { setDraftData(draft); setMode("manual") }} isMobile={isMobile} />
   
   return null
 }
 
-// --- 1. TELA DE SELEÇÃO ---
+// --- 1. TELA DE SELEÇÃO ATUALIZADA ---
 const SelectionScreen = ({ onSelect, isMobile, navigate }) => {
   return (
     <div style={styles.fullPageWrapper}>
@@ -58,23 +63,127 @@ const SelectionScreen = ({ onSelect, isMobile, navigate }) => {
             Escolha a forma mais confortável para registrar sua atividade.
           </p>
         </div>
-        <div style={{ ...styles.selectionGrid, flexDirection: isMobile ? "column" : "row" }}>
+        <div style={{ ...styles.selectionGrid, flexDirection: isMobile ? "column" : "row", flexWrap: "wrap" }}>
+          
           <div style={styles.selectionCard} onClick={() => onSelect("manual")}>
             <div style={styles.iconCircleBlue}>
               <Keyboard size={32} color="#1565C0" />
             </div>
-            <h3 style={styles.cardTitle}>Preenchimento Manual</h3>
-            <p style={styles.cardDesc}>
-              Preencha o formulário detalhado com duas colunas.
-            </p>
+            <h3 style={styles.cardTitle}>Começar do Zero</h3>
+            <p style={styles.cardDesc}>Preencha o formulário detalhado manualmente.</p>
             <span style={styles.fakeLink}>Ir para formulário &rarr;</span>
           </div>
+
+          {/* NOVO CARD: DERIVAÇÃO */}
+          <div style={{...styles.selectionCard, border: "2px solid #E8F5E9"}} onClick={() => onSelect("selecao_base")}>
+            <div style={{...styles.iconCircleBlue, backgroundColor: "#E8F5E9"}}>
+              <Bookmark size={32} color="#2E7D32" />
+            </div>
+            <h3 style={styles.cardTitle}>Basear em Colega</h3>
+            <p style={styles.cardDesc}>Use uma prática validada como ponto de partida.</p>
+            <span style={{...styles.fakeLink, color: "#2E7D32"}}>Buscar práticas &rarr;</span>
+          </div>
+
+          <div style={styles.selectionCard} onClick={() => onSelect("voz")}>
+            <div style={styles.iconCirclePurple}>
+              <Mic size={32} color="#7B1FA2" />
+            </div>
+            <h3 style={styles.cardTitle}>Ditado Inteligente</h3>
+            <p style={styles.cardDesc}>Fale como foi sua aula e a IA preenche para você.</p>
+            <span style={{...styles.fakeLink, color: "#7B1FA2"}}>Usar microfone &rarr;</span>
+          </div>
+
         </div>
       </div>
     </div>
   )
 }
 
+// --- NOVO: TELA DE BUSCA PARA DERIVAÇÃO ---
+// --- 2. TELA DE BUSCA PARA DERIVAÇÃO ---
+const BaseSearchScreen = ({ onBack, onSelectBase }) => {
+  const [busca, setBusca] = useState("")
+  const [resultados, setResultados] = useState([])
+  const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    if (!busca.trim()) {
+      setResultados([]);
+      return;
+    }
+
+    setLoading(true);
+    const delayBusca = setTimeout(async () => {
+      try {
+        // MUDE AQUI: Coloque a rota exata da sua view api_list_public_feed
+        const url = `api/public/feed/?search=${busca}`; 
+        const response = await api.get(url);
+        setResultados(response.data.results || response.data);
+      } catch (error) {
+        console.error("Erro na busca automática", error);
+      } finally {
+        setLoading(false);
+      }
+    }, 500);
+
+    return () => clearTimeout(delayBusca);
+  }, [busca]);
+
+  const handleSelect = (prod) => {
+    Swal.fire({
+      title: 'Usar como base?',
+      text: `Você vai criar uma nova prática baseada em "${prod.titulo}".`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Sim, usar esta',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#1565C0'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        onSelectBase({
+          ...prod,
+          titulo: `Derivação: ${prod.titulo}`, 
+          producao_base: prod.id, 
+          arquivo: null, 
+        })
+      }
+    })
+  }
+
+  return (
+    <div style={styles.fullPageWrapper}>
+      <div style={styles.containerCenter}>
+        <button onClick={onBack} style={styles.backButtonSimple}>
+          <ArrowLeft size={20} /> Voltar
+        </button>
+        <div style={{ ...styles.headerCenter, marginBottom: "30px" }}>
+          <h2 style={styles.titleCenter}>Buscar Prática Base</h2>
+        </div>
+        <div style={{ display: "flex", gap: "10px", width: "100%", maxWidth: "600px", marginBottom: "30px", position: "relative" }}>
+          <input 
+            type="text" 
+            placeholder="Buscar por título, disciplina... (Busca automática)" 
+            value={busca}
+            onChange={(e) => setBusca(e.target.value)}
+            style={{ ...styles.input, flex: 1, paddingRight: "40px" }}
+          />
+          {loading && <div style={{ position: "absolute", right: "15px", top: "12px", color: "#1565C0", fontSize: "12px", fontWeight: "bold" }}>Buscando...</div>}
+        </div>
+        <div style={{ width: "100%", maxWidth: "800px", display: "flex", flexDirection: "column", gap: "15px" }}>
+          {resultados.map(prod => (
+            <div key={prod.id} style={{ ...styles.mainCard, padding: "20px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div>
+                <h4 style={{ margin: "0 0 5px 0", color: "#1565C0" }}>{prod.titulo}</h4>
+                <p style={{ margin: 0, fontSize: "13px", color: "#546E7A" }}>{prod.disciplina} • {prod.nivel}</p>
+              </div>
+              <button onClick={() => handleSelect(prod)} style={{ ...styles.draftButton, padding: "8px 16px", fontSize: "13px" }}>Selecionar</button>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
 // --- 2. FORMULÁRIO MANUAL ---
 const ManualFormSplit = ({ onBack, navigate, isMobile, initialData }) => {
   const storedDisc = localStorage.getItem("user_disciplina") || "Geral"
@@ -94,6 +203,7 @@ const ManualFormSplit = ({ onBack, navigate, isMobile, initialData }) => {
     experiencia: "",
     resultados: "",
     arquivo: null,
+    producao_base: "",
   })
 
   const [formData, setFormData] = useState(getInitialFormData)
@@ -166,6 +276,10 @@ const ManualFormSplit = ({ onBack, navigate, isMobile, initialData }) => {
         if (key === "recursos") formData.recursos.forEach((r) => dataToSend.append("recursos", r))
         else if (key === "arquivo" && formData.arquivo) dataToSend.append("arquivo", formData.arquivo)
         else if (key === "nivel") dataToSend.append("nivel_ensino", formData.nivel)
+      else if (formData[key] !== null && formData[key] !== "") {
+          // Garante que valores vazios não quebrem a chave estrangeira
+          dataToSend.append(key, formData[key])
+        }
         else dataToSend.append(key, formData[key])
       })
       
@@ -206,6 +320,12 @@ const ManualFormSplit = ({ onBack, navigate, isMobile, initialData }) => {
               
               {/* ESQUERDA */}
               <div style={{ ...styles.leftCol, width: isMobile ? "100%" : "35%" }}>
+                {formData.producao_base && (
+                  <div style={{ backgroundColor: "#E8F5E9", padding: "10px", borderRadius: "8px", marginBottom: "15px", fontSize: "12px", color: "#2E7D32", fontWeight: "bold" }}>
+                    <Bookmark size={14} style={{ marginRight: "5px" }} />
+                    Herdando dados de prática existente
+                  </div>
+                )}
                 <h3 style={styles.sectionTitle}>
                   <FileText size={20} color="#1565C0" /> Ficha Técnica
                 </h3>
