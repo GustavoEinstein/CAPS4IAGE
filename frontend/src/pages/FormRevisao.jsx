@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import api from '../services/api'; 
 import { useOutletContext, useParams, useNavigate } from 'react-router-dom';
-import { Alert } from '../utils/alerts'; 
+import Swal from 'sweetalert2'; // <--- IMPORTAÇÃO DO SWAL ADICIONADA AQUI
 import { 
     Star, CheckCircle2, Bot, Download, ArrowLeft, Clock, Wrench, 
     BookOpen, Target, Lightbulb, ThumbsUp, ThumbsDown, ShieldAlert, FileText, User, 
-    AlertTriangle, Lock, PenTool, Eye, Cpu, Terminal // <--- Ícones novos adicionados aqui
+    AlertTriangle, Lock, PenTool, Eye, Cpu, Terminal 
 } from 'lucide-react';
 
 const Revisao = () => {
@@ -56,7 +56,7 @@ const Revisao = () => {
                 setProducaoEmRevisao(response.data);
             } catch (error) {
                 console.error("Erro ao carregar:", error);
-                alert("Erro ao carregar detalhes.");
+                Swal.fire('Erro', 'Não foi possível carregar os detalhes.', 'error');
                 navigate('/dashboard/revisao');
             } finally {
                 setLoading(false);
@@ -71,8 +71,15 @@ const Revisao = () => {
 
     const handleSubmit = async (veredito) => {
         if (!isFormComplete) return;
+        
+        // --- POP-UP DE ALERTA PARA REJEIÇÃO SEM MOTIVO ---
         if (veredito === false && !avaliacao.pontosMelhoria.trim()) {
-            alert("Para rejeitar, é OBRIGATÓRIO preencher as sugestões de melhoria.");
+            Swal.fire({
+                icon: 'warning',
+                title: 'Atenção',
+                text: 'Para rejeitar a prática, é OBRIGATÓRIO preencher as Sugestões de Melhoria para orientar o colega.',
+                confirmButtonColor: '#F57C00'
+            });
             return;
         }
 
@@ -89,10 +96,43 @@ const Revisao = () => {
                 nota_inclusao: avaliacao.notaInclusao,
                 nota_inovacao: avaliacao.notaInovacao
             });
-            alert(veredito ? "Produção Aprovada!" : "Devolvida para correção.");
-            navigate('/dashboard/revisao');
+            
+            // --- LÓGICA DOS POP-UPS DE REVISÃO (1/2 ou 2/2) ---
+            if (veredito) { 
+                // Pega o número atual de aprovações (antes da requisição que acabou de ser feita)
+                const currentApprovals = producaoEmRevisao.total_aprovacoes || 0;
+                
+                if (currentApprovals === 0) {
+                    // É o primeiro revisor a aprovar
+                    Swal.fire({
+                        icon: 'info',
+                        title: 'Avaliação Registrada! (1/2)',
+                        html: 'Sua aprovação foi salva com sucesso!<br><br>Como o sistema exige a revisão em <b>duplo-cego</b>, outro colega da área também precisará aprovar para que a prática seja finalmente publicada.',
+                        confirmButtonColor: '#1565C0',
+                        confirmButtonText: 'Continuar revisando'
+                    }).then(() => navigate('/dashboard/revisao'));
+                } else {
+                    // É o segundo revisor a aprovar (Prática agora vai para o feed público)
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Prática Publicada! (2/2)',
+                        html: 'Excelente trabalho! Você foi o <b>segundo revisor</b> a aprovar este material.<br><br>A prática acaba de ser <b>publicada no Fórum Público</b> da comunidade!',
+                        confirmButtonColor: '#2E7D32',
+                        confirmButtonText: 'Que legal!'
+                    }).then(() => navigate('/dashboard/revisao'));
+                }
+            } else { 
+                // Se a prática foi rejeitada
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Devolvido para Correção',
+                    text: 'A prática foi devolvida ao autor com as suas sugestões de melhoria.',
+                    confirmButtonColor: '#C62828'
+                }).then(() => navigate('/dashboard/revisao'));
+            }
+
         } catch (error) {
-            alert("Erro ao salvar revisão.");
+            Swal.fire('Erro', 'Ocorreu um problema ao salvar sua revisão.', 'error');
         } finally {
             setIsSubmitting(false);
         }
@@ -300,9 +340,7 @@ const styles = {
     bnccBox: { backgroundColor: '#FFF8E1', borderLeft: '4px solid #FFC107', padding: '15px', borderRadius: '6px', color: '#4E342E', fontSize: '14px', lineHeight: '1.5' },
     textBody: { fontSize: '15px', lineHeight: '1.6', color: '#455A64', whiteSpace: 'pre-wrap' },
     
-    // --- ESTILO NOVO PARA A CAIXA DE PROMPTS ---
     promptBox: { backgroundColor: '#F8FAFC', padding: '15px', borderRadius: '8px', borderLeft: '4px solid #8B5CF6', color: '#475569', fontSize: '14px', fontStyle: 'italic', whiteSpace: 'pre-wrap', lineHeight: '1.6' },
-
     resultsBox: { backgroundColor: '#E8F5E9', border: '1px solid #C8E6C9', padding: '15px', borderRadius: '8px', color: '#1B5E20', fontSize: '14px', fontStyle: 'italic', whiteSpace: 'pre-wrap' },
 
     downloadContainer: { marginTop: '25px', padding: '12px 15px', backgroundColor: '#F8F9FA', borderRadius: '10px', border: '1px solid #E0E0E0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '15px' },

@@ -304,6 +304,8 @@ def api_list_my_productions(request):
         ultima_avaliacao = p.avaliacoes.order_by('-data_avaliacao').first()
         feedback = ultima_avaliacao.feedback_revisao if ultima_avaliacao else None
 
+        total_aprovacoes = p.avaliacoes.filter(aprovado=True).count()
+
         lista.append({
             'id': p.id,
             'titulo': p.titulo,
@@ -311,7 +313,8 @@ def api_list_my_productions(request):
             'data': p.data_criacao.strftime('%d/%m/%Y'),
             'status': p.status,
             'modelo_ia': p.modelo_ia,
-            'feedback_revisor': feedback
+            'feedback_revisor': feedback,
+            'total_aprovacoes': total_aprovacoes 
         })
     
     return Response(lista)
@@ -336,24 +339,55 @@ def api_get_production_details(request, pk):
         
         arquivo_url = request.build_absolute_uri(p.arquivo.url) if p.arquivo else None
 
-        avaliacoes = p.avaliacoes.all()
-        ultima_avaliacao = avaliacoes.order_by('-data_avaliacao').first()
+        # --- NOVA LÓGICA DE EXTRAÇÃO DE NOTAS E AVALIAÇÕES ---
+        avaliacoes = p.avaliacoes.all().order_by('data_avaliacao')
+        avaliacoes_detalhadas = []
         
-        notas = None
-        feedback_texto = None
+        for i, aval in enumerate(avaliacoes):
+            raw_feedback = aval.feedback_revisao or ""
+            pontos_fortes = ""
+            pontos_melhoria = ""
+            
+            # Fatiamento inteligente do texto
+            if "SUGESTÕES DE MELHORIA:" in raw_feedback:
+                parts = raw_feedback.split("SUGESTÕES DE MELHORIA:")
+                pontos_fortes = parts[0].replace("PONTOS FORTES:", "").strip()
+                pontos_melhoria = parts[1].strip()
+            else:
+                pontos_fortes = raw_feedback
+                
+            avaliacoes_detalhadas.append({
+                'ordem': i + 1,
+                'aprovado': aval.aprovado,
+                'pontos_fortes': pontos_fortes,
+                'pontos_melhoria': pontos_melhoria,
+                'data': aval.data_avaliacao.strftime('%d/%m/%Y') if aval.data_avaliacao else '',
+                'notas': {
+                    'coerencia': aval.nota_coerencia,
+                    'qualidade': aval.nota_qualidade,
+                    'metodologia': aval.nota_metodologia,
+                    'avaliacao': aval.nota_avaliacao,
+                    'inclusao': aval.nota_inclusao,
+                    'inovacao': aval.nota_inovacao
+                }
+            })
 
-        if ultima_avaliacao:
-            feedback_texto = ultima_avaliacao.feedback_revisao
-            notas = {
-                'coerencia': ultima_avaliacao.nota_coerencia,
-                'qualidade': ultima_avaliacao.nota_qualidade,
-                'metodologia': ultima_avaliacao.nota_metodologia,
-                'avaliacao': ultima_avaliacao.nota_avaliacao,
-                'inclusao': ultima_avaliacao.nota_inclusao,
-                'inovacao': ultima_avaliacao.nota_inovacao
-            }
+        # Mantém compatibilidade com o formato antigo pra não quebrar as outras telas
+        ultima_avaliacao = avaliacoes.last()
+        notas = avaliacoes_detalhadas[-1]['notas'] if avaliacoes_detalhadas else None
+        feedback_texto = ultima_avaliacao.feedback_revisao if ultima_avaliacao else None
 
         lista_recursos = [r.strip() for r in p.recursos.split(',')] if p.recursos else []
+
+        dados_referencia = None
+        if p.producao_base:
+            dados_referencia = {
+                'id': p.producao_base.id,
+                'titulo': p.producao_base.titulo,
+                'autor': f"Prof. de {p.producao_base.disciplina}" 
+            }
+
+        total_aprovacoes = avaliacoes.filter(aprovado=True).count()
 
         data = {
             'id': p.id,
@@ -378,7 +412,10 @@ def api_get_production_details(request, pk):
             'is_aprovado': p.status == 'Aprovado' or p.status == 'Concluído',
             'feedback_texto': feedback_texto, 
             'notas': notas,
-            'total_avaliacoes': avaliacoes.count()
+            'avaliacoes_detalhadas': avaliacoes_detalhadas, # NOVO CAMPO: Lista completa
+            'total_avaliacoes': avaliacoes.count(),
+            'total_aprovacoes': total_aprovacoes,
+            'producao_base': dados_referencia 
         }
         return Response(data)
         
@@ -425,6 +462,7 @@ def api_update_production(request, pk):
             p.status = 'Rascunho'
         else:
             p.status = 'Em revisão' 
+            # A MÁGICA ACONTECE AQUI: Deleta o histórico passado para permitir 2 novos revisores!
             p.avaliacoes.all().delete()
             
         p.save()
@@ -568,22 +606,17 @@ def api_review_history(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def api_list_public_feed(request):
-    # Começa buscando todas as aprovadas[cite: 7]
     producoes = Producao.objects.filter(status='Aprovado').order_by('-data_criacao')
     
-    # --- NOVA LÓGICA DE BUSCA ---
-    # Captura o termo enviado pelo React (ex: ?search=Fração)
     busca = request.GET.get('search', '')
     
     if busca:
-        # Filtra se o termo existir no título, disciplina, categoria ou relato
         producoes = producoes.filter(
             Q(titulo__icontains=busca) |
             Q(disciplina__icontains=busca) |
             Q(categoria__icontains=busca) |
             Q(experiencia__icontains=busca)
         )
-    # ----------------------------
     
     lista = []
     for p in producoes:
@@ -594,12 +627,12 @@ def api_list_public_feed(request):
             'nivel': p.nivel,
             'modelo_ia': p.modelo_ia,
             'categoria': p.categoria,
-            'autor': p.user.first_name or p.user.username, #[cite: 7]
-            'resumo': p.experiencia[:150] + '...' if p.experiencia else '', #[cite: 7]
-            'likes': 0 #[cite: 7]
+            'autor': p.user.first_name or p.user.username, 
+            'resumo': p.experiencia[:150] + '...' if p.experiencia else '', 
+            'likes': 0 
         })
     
-    return Response(lista) #[cite: 7]
+    return Response(lista) 
 
 
 #painel de recuperação de senha
@@ -1008,4 +1041,4 @@ def api_admin_delete_badge(request, pk):
         
     conquista = get_object_or_404(Conquista, id=pk)
     conquista.delete()
-    return Response({'mensagem': 'Badge excluída com sucesso.'})            
+    return Response({'mensagem': 'Badge excluída com sucesso.'})

@@ -33,7 +33,7 @@ import {
 
 const CatalogarProducoes = () => {
   const [mode, setMode] = useState("selecao")
-  const [draftData, setDraftData] = useState(null) // Reutilizável para Voz ou Base
+  const [draftData, setDraftData] = useState(null) 
   const navigate = useNavigate()
   const { isMobile } = useOutletContext() || { isMobile: false }
 
@@ -49,7 +49,6 @@ const CatalogarProducoes = () => {
   return null
 }
 
-// --- 1. TELA DE SELEÇÃO ATUALIZADA ---
 const SelectionScreen = ({ onSelect, isMobile, navigate }) => {
   return (
     <div style={styles.fullPageWrapper}>
@@ -74,7 +73,6 @@ const SelectionScreen = ({ onSelect, isMobile, navigate }) => {
             <span style={styles.fakeLink}>Ir para formulário &rarr;</span>
           </div>
 
-          {/* NOVO CARD: DERIVAÇÃO */}
           <div style={{...styles.selectionCard, border: "2px solid #E8F5E9"}} onClick={() => onSelect("selecao_base")}>
             <div style={{...styles.iconCircleBlue, backgroundColor: "#E8F5E9"}}>
               <Bookmark size={32} color="#2E7D32" />
@@ -99,8 +97,6 @@ const SelectionScreen = ({ onSelect, isMobile, navigate }) => {
   )
 }
 
-// --- NOVO: TELA DE BUSCA PARA DERIVAÇÃO ---
-// --- 2. TELA DE BUSCA PARA DERIVAÇÃO ---
 const BaseSearchScreen = ({ onBack, onSelectBase }) => {
   const [busca, setBusca] = useState("")
   const [resultados, setResultados] = useState([])
@@ -115,8 +111,7 @@ const BaseSearchScreen = ({ onBack, onSelectBase }) => {
     setLoading(true);
     const delayBusca = setTimeout(async () => {
       try {
-        // MUDE AQUI: Coloque a rota exata da sua view api_list_public_feed
-        const url = `api/public/feed/?search=${busca}`; 
+        const url = `api/public-feed/?search=${busca}`; 
         const response = await api.get(url);
         setResultados(response.data.results || response.data);
       } catch (error) {
@@ -184,7 +179,7 @@ const BaseSearchScreen = ({ onBack, onSelectBase }) => {
     </div>
   )
 }
-// --- 2. FORMULÁRIO MANUAL ---
+
 const ManualFormSplit = ({ onBack, navigate, isMobile, initialData }) => {
   const storedDisc = localStorage.getItem("user_disciplina") || "Geral"
   
@@ -277,7 +272,6 @@ const ManualFormSplit = ({ onBack, navigate, isMobile, initialData }) => {
         else if (key === "arquivo" && formData.arquivo) dataToSend.append("arquivo", formData.arquivo)
         else if (key === "nivel") dataToSend.append("nivel_ensino", formData.nivel)
       else if (formData[key] !== null && formData[key] !== "") {
-          // Garante que valores vazios não quebrem a chave estrangeira
           dataToSend.append(key, formData[key])
         }
         else dataToSend.append(key, formData[key])
@@ -285,13 +279,18 @@ const ManualFormSplit = ({ onBack, navigate, isMobile, initialData }) => {
       
       await api.post(url, dataToSend, { headers: { "Content-Type": "multipart/form-data" } })
       
+      // --- POP-UP MODIFICADO ---
       Swal.fire({
           icon: 'success',
-          title: isDraft ? 'Rascunho Salvo!' : 'Prática Enviada!',
-          text: isDraft ? 'Você pode continuar editando esta prática depois em "Minhas Produções".' : 'Sua produção foi enviada para a fila de revisão.',
-          confirmButtonColor: '#1565C0'
+          title: isDraft ? 'Rascunho Salvo!' : 'Prática Enviada com Sucesso!',
+          html: isDraft 
+            ? 'Você pode continuar editando esta prática depois em <b>"Minhas Produções"</b>.' 
+            : 'Sua produção foi enviada para a fila de revisão!<br><br>⏳ <b>Próximos passos:</b><br>2 colegas da sua área irão avaliar o seu material de forma anônima (duplo-cego).',
+          confirmButtonColor: '#1565C0',
+          confirmButtonText: 'Entendi'
+      }).then(() => {
+          navigate("/dashboard/minhas-producoes");
       });
-      navigate("/dashboard/minhas-producoes")
       
     } catch (error) {
       console.error("Erro:", error)

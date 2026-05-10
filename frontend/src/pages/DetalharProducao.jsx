@@ -19,38 +19,10 @@ import {
   User,
   Bookmark,
   ShieldCheck,
-  Package, // <--- ADICIONADO AQUI!
+  Package, 
+  Cpu, // <--- ADICIONADO AQUI
+  Terminal // <--- ADICIONADO AQUI
 } from "lucide-react"
-
-const handleDownload = async () => {
-  if (!data.arquivo) return;
-
-  try {
-    // 1. Removemos o domínio da URL para o Axios não duplicar a base
-    const urlRelativa = data.arquivo.replace('https://teia.cic.unb.br/kipo_playground/', '');
-    
-    // 2. Fazemos a requisição via Axios para enviar o Token JWT automaticamente
-    const response = await api.get(urlRelativa, {
-      responseType: 'blob', // Essencial para baixar PDFs/Imagens
-    });
-
-    // 3. Criamos o link de download temporário
-    const urlBlob = window.URL.createObjectURL(new Blob([response.data]));
-    const link = document.createElement('a');
-    link.href = urlBlob;
-    link.setAttribute('download', `producao-${data.id}.pdf`);
-    document.body.appendChild(link);
-    link.click();
-    
-    // Limpeza de memória
-    link.remove();
-    window.URL.revokeObjectURL(urlBlob);
-  } catch (error) {
-    console.error("Erro no download:", error);
-    // O seu interceptador no api.js vai te deslogar se o erro for 401
-  }
-};
-
 
 const DetalharProducao = () => {
   const { id } = useParams()
@@ -60,12 +32,41 @@ const DetalharProducao = () => {
   const [loading, setLoading] = useState(true)
   const [isSaved, setIsSaved] = useState(false) // Estado local para botão de salvar
 
+  // CORREÇÃO: A função handleDownload precisa ficar DENTRO do componente para acessar a variável 'data'
+  const handleDownload = async () => {
+    if (!data || !data.arquivo) return;
+
+    try {
+      // 1. Removemos o domínio da URL para o Axios não duplicar a base
+      const urlRelativa = data.arquivo.replace('https://teia.cic.unb.br/kipo_playground/', '');
+      
+      // 2. Fazemos a requisição via Axios para enviar o Token JWT automaticamente
+      const response = await api.get(urlRelativa, {
+        responseType: 'blob', // Essencial para baixar PDFs/Imagens
+      });
+
+      // 3. Criamos o link de download temporário
+      const urlBlob = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = urlBlob;
+      link.setAttribute('download', `producao-${data.id}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      
+      // Limpeza de memória
+      link.remove();
+      window.URL.revokeObjectURL(urlBlob);
+    } catch (error) {
+      console.error("Erro no download:", error);
+      // O seu interceptador no api.js vai te deslogar se o erro for 401
+    }
+  };
+
   useEffect(() => {
     const fetchDetails = async () => {
       try {
         // Busca os dados REAIS do backend (Histórico ou Feed)
         const response = await api.get(`api/production/${id}/`)
-        //console.log("Dados da Produção:", response.data)
         setData(response.data)
       } catch (error) {
         console.error("Erro ao carregar:", error)
@@ -88,7 +89,6 @@ const DetalharProducao = () => {
   if (!data) return null
 
   // --- CONFIGURAÇÃO DE STATUS ---
-  // Verifica se está aprovado ou rejeitado para exibir o badge correto
   const isRejected =
     data.status &&
     (data.status.toLowerCase().includes("rejeitado") ||
@@ -170,7 +170,8 @@ const DetalharProducao = () => {
                   </span>
                 </div>
               </div>
-              {/* [NOVO] BANNER DE DERIVAÇÃO / INSPIRAÇÃO */}
+              
+              {/* BANNER DE DERIVAÇÃO / INSPIRAÇÃO */}
               {data.producao_base && (
                 <div style={{
                   backgroundColor: "#E3F2FD", 
@@ -195,6 +196,7 @@ const DetalharProducao = () => {
                   </span>
                 </div>
               )}
+              
               <div style={styles.techSheet}>
                 <div style={styles.techItem}>
                   <div style={styles.iconCircle}>
@@ -238,6 +240,24 @@ const DetalharProducao = () => {
                   <BookOpen size={16} /> Alinhamento BNCC
                 </h4>
                 <p style={styles.bnccText}>{data.bncc}</p>
+              </div>
+
+              {/* --- NOVO CAMPO: BNCC Computação --- */}
+              <div style={styles.section}>
+                  <h3 style={styles.sectionTitle}><Cpu size={20} /> BNCC Computação</h3>
+                  <div style={{ ...styles.bnccBox, backgroundColor: '#E3F2FD', borderLeft: '4px solid #1565C0' }}>
+                      <p style={{ ...styles.bnccText, color: '#0D47A1' }}>
+                        {data.bncc_computacao || "Nenhuma habilidade de computação registrada."}
+                      </p>
+                  </div>
+              </div>
+
+              {/* --- NOVO CAMPO: Prompts Utilizados --- */}
+              <div style={styles.section}>
+                  <h3 style={styles.sectionTitle}><Terminal size={20} /> Prompts Utilizados na IA</h3>
+                  <div style={styles.promptBox}>
+                      {data.prompts_ia || "Nenhum prompt foi registrado nesta produção."}
+                  </div>
               </div>
 
               <div style={styles.section}>
@@ -320,9 +340,9 @@ const DetalharProducao = () => {
                       <span style={styles.fileMeta}>Baixar arquivo</span>
                     </div>
                   </div>
-<button onClick={handleDownload} style={styles.downloadBtn}>
-  <Download size={18} /> Baixar Roteiro
-</button>
+                  <button onClick={handleDownload} style={styles.downloadBtn}>
+                    <Download size={18} /> Baixar Roteiro
+                  </button>
                 </>
               ) : (
                 <p
@@ -335,8 +355,7 @@ const DetalharProducao = () => {
                   Nenhum arquivo anexado.
                 </p>
               )}
-<button 
-                // APONTE DIRETAMENTE PARA O FORMULÁRIO MANUAL
+              <button 
                 onClick={() => navigate("/dashboard/catalogar/manual", { state: { baseData: data } })} 
                 style={{ 
                   ...styles.downloadBtn, 
@@ -503,6 +522,18 @@ const styles = {
     lineHeight: "1.5",
     wordBreak: "break-word",
     overflowWrap: "break-word",
+  },
+
+  promptBox: {
+    backgroundColor: "#F8FAFC",
+    padding: "15px",
+    borderRadius: "8px",
+    borderLeft: "4px solid #8B5CF6",
+    color: "#475569",
+    fontSize: "14px",
+    fontStyle: "italic",
+    whiteSpace: "pre-wrap",
+    lineHeight: "1.6",
   },
 
   section: { marginBottom: "30px" },

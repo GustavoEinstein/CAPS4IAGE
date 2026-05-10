@@ -7,7 +7,7 @@ import {
     XCircle, Wrench, Lightbulb, Target, Download, FileText, User, Package, Star,
     Send, MapPin, Search, AlertCircle, RefreshCw, File, ChevronRight,
     BarChart3, ShieldAlert, ThumbsUp, AlertTriangle, 
-    Terminal, Cpu // <--- Ícones novos adicionados aqui
+    Terminal, Cpu, Bookmark, ShieldCheck // <--- Importações completas!
 } from 'lucide-react';
 
 const VisualizarMinhaProducao = () => {
@@ -67,7 +67,7 @@ const VisualizarMinhaProducao = () => {
     const TimelineCard = () => {
         const steps = [
             { id: 1, label: "Envio Realizado", date: data.created_at || data.data, status: "done" },
-            { id: 2, label: "Revisão por Pares", date: isPending ? "Em andamento..." : "Concluída", status: isPending ? "current" : "done" },
+            { id: 2, label: `Revisão por Pares (${data.total_aprovacoes || 0}/2)`, date: isPending ? "Em andamento..." : "Concluída", status: isPending ? "current" : "done" },
             { id: 3, label: "Resultado Final", date: (isApproved || isRejected) ? (isApproved ? "Aprovado" : "Devolvido") : "Aguardando", status: (isApproved || isRejected) ? (isApproved ? "approved" : "rejected") : "waiting" }
         ];
 
@@ -144,18 +144,61 @@ const VisualizarMinhaProducao = () => {
                                 </div>
                             </div>
 
+                            {data.producao_base && (
+                              <div style={{
+                                backgroundColor: "#E3F2FD", 
+                                borderLeft: "4px solid #1565C0", 
+                                padding: "12px 15px", 
+                                borderRadius: "6px", 
+                                marginBottom: "25px", 
+                                display: "flex", 
+                                alignItems: "center", 
+                                gap: "10px"
+                              }}>
+                                <Bookmark size={20} color="#1565C0" />
+                                <span style={{ fontSize: "14px", color: "#1A237E" }}>
+                                  Esta prática foi inspirada no material: <strong>
+                                    <a 
+                                      href={`/dashboard/producao/${data.producao_base.id}`} 
+                                      style={{ color: "#1565C0", textDecoration: "underline" }}
+                                    >
+                                      {data.producao_base.titulo || "Acessar produção original"}
+                                    </a>
+                                  </strong>
+                                </span>
+                              </div>
+                            )}
+
                             <div style={styles.techSheet}>
                                 <div style={styles.techItem}>
-                                    <span style={styles.techLabel}>Metodologia</span>
-                                    <span style={styles.techValue}>{data.metodologia || '-'}</span>
+                                    <div style={styles.iconCircle}>
+                                        <Wrench size={18} color={theme.main} />
+                                    </div>
+                                    <div>
+                                        <span style={{ ...styles.techLabel, color: theme.main }}>Metodologia</span>
+                                        <span style={styles.techValue}>{data.metodologia || '-'}</span>
+                                    </div>
                                 </div>
                                 <div style={styles.techItem}>
-                                    <span style={styles.techLabel}>Duração</span>
-                                    <span style={styles.techValue}>{data.duracao || '-'}</span>
+                                    <div style={styles.iconCircle}>
+                                        <Clock size={18} color={theme.main} />
+                                    </div>
+                                    <div>
+                                        <span style={{ ...styles.techLabel, color: theme.main }}>Duração</span>
+                                        <span style={styles.techValue}>{data.duracao || '-'}</span>
+                                    </div>
                                 </div>
                                 <div style={styles.techItem}>
-                                    <span style={styles.techLabel}>Recursos</span>
-                                    <span style={styles.techValue}>{data.recursos || '-'}</span>
+                                    <div style={styles.iconCircle}>
+                                        <Package size={18} color={theme.main} />
+                                    </div>
+                                    <div>
+                                        <span style={{ ...styles.techLabel, color: theme.main }}>Recursos</span>
+                                        {/* CORREÇÃO DO ESPAÇAMENTO DOS RECURSOS AQUI */}
+                                        <span style={styles.techValue}>
+                                            {data.recursos ? data.recursos.split(',').map(r => r.trim()).join(', ') : '-'}
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
 
@@ -164,13 +207,11 @@ const VisualizarMinhaProducao = () => {
                                 <p style={styles.textBody}>{data.bncc || "Não informado."}</p>
                             </div>
 
-                            {/* --- NOVO CAMPO: BNCC Computação --- */}
                             <div style={styles.section}>
                                 <h3 style={styles.sectionTitle}><Cpu size={18}/> BNCC Computação</h3>
                                 <p style={styles.textBody}>{data.bncc_computacao || "Nenhuma habilidade de computação registrada."}</p>
                             </div>
 
-                            {/* --- NOVO CAMPO: Prompts Utilizados --- */}
                             <div style={styles.section}>
                                 <h3 style={styles.sectionTitle}><Terminal size={18}/> Prompts Utilizados na IA</h3>
                                 <div style={styles.promptBox}>
@@ -188,6 +229,7 @@ const VisualizarMinhaProducao = () => {
                                 <div style={styles.resultsBox}>{data.resultados || "Sem resultados registrados."}</div>
                             </div>
                             
+                            {/* RENDERIZAÇÃO DO NOVO PARECER TÉCNICO COMPLETO */}
                             <ParecerTecnico producao={data} />
 
                         </div>
@@ -204,7 +246,54 @@ const VisualizarMinhaProducao = () => {
                         )}
 
                         <div style={{...styles.sidebarCard, marginTop: '20px'}}>
-                            <h3 style={styles.sidebarTitle}>Arquivo</h3>
+                            
+                            <h3 style={styles.sidebarTitle}>Status da Avaliação</h3>
+
+                            {isRejected && (
+                                <div style={styles.statusBoxRejected}>
+                                    <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "10px" }}>
+                                        <XCircle size={20} color="#C62828" />
+                                        <span style={styles.statusTitleRejected}>AJUSTES NECESSÁRIOS</span>
+                                    </div>
+                                    <p style={{...styles.statusDesc, marginBottom: '12px'}}>
+                                        Sua prática foi analisada e precisa de correções antes de ser publicada.
+                                    </p>
+                                </div>
+                            )}
+
+                            {!isApproved && !isRejected && (
+                                <div style={styles.statusBoxPending}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
+                                        <Clock size={20} color="#EF6C00" />
+                                        <span style={styles.statusTitlePending}>AGUARDANDO VALIDAÇÃO</span>
+                                    </div>
+                                    
+                                    <div style={{ backgroundColor: 'rgba(255,255,255,0.6)', padding: '10px', borderRadius: '6px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <span style={{ fontSize: '12px', fontWeight: '700', color: '#E65100', textTransform: 'uppercase' }}>Aprovações:</span>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                                            <span style={{ fontSize: '16px', fontWeight: '900', color: '#E65100' }}>{data.total_aprovacoes || 0}/2</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <p style={{...styles.statusDesc, marginTop: '10px'}}>
+                                        Sua prática está na fila e será avaliada por 2 colegas (revisão cega).
+                                    </p>
+                                </div>
+                            )}
+
+                            {isApproved && (
+                                <div style={styles.statusBoxApproved}>
+                                    <ShieldCheck size={24} color="#2E7D32" />
+                                    <div>
+                                        <span style={styles.statusTitleApproved}>PUBLICADA!</span>
+                                        <p style={styles.statusDesc}>Prática validada e disponível na comunidade.</p>
+                                    </div>
+                                </div>
+                            )}
+
+                            <div style={styles.divider}></div>
+
+                            <h3 style={styles.sidebarTitle}>Arquivos e Anexos</h3>
                             {data.arquivo ? (
                                 <div style={styles.downloadContainer}>
                                     <div style={styles.fileInfoBox}>
@@ -224,6 +313,19 @@ const VisualizarMinhaProducao = () => {
                                     <p>Nenhum arquivo anexado.</p>
                                 </div>
                             )}
+                            
+                            <button 
+                              onClick={() => navigate("/dashboard/catalogar/manual", { state: { baseData: data } })} 
+                              style={{ 
+                                ...styles.downloadBtn, 
+                                backgroundColor: "#E8F5E9", 
+                                color: "#2E7D32", 
+                                border: "1px solid #C8E6C9",
+                                marginTop: "15px" 
+                              }}
+                            >
+                              <Bookmark size={18} color="#2E7D32" /> Referenciar Prática
+                            </button>
                         </div>
 
                     </div>
@@ -233,113 +335,138 @@ const VisualizarMinhaProducao = () => {
     );
 };
 
+// ============================================================================
+// NOVO COMPONENTE: PARECER TÉCNICO EMBUTIDO E MELHORADO
+// ============================================================================
 const ParecerTecnico = ({ producao }) => {
-    if (!producao) return null;
+    if (!producao || (!producao.revisao_realizada && (!producao.avaliacoes_detalhadas || producao.avaliacoes_detalhadas.length === 0))) return null;
 
-    const temRevisao = producao.revisao_realizada || (producao.notas && producao.notas.coerencia > 0) || producao.nota_coerencia > 0;
+    const avaliacoes = producao.avaliacoes_detalhadas || [];
     
-    if (!temRevisao) return null;
-
-    const notas = producao.notas || {
-        coerencia: producao.nota_coerencia,
-        qualidade: producao.nota_qualidade,
-        metodologia: producao.nota_metodologia,
-        avaliacao: producao.nota_avaliacao,
-        inclusao: producao.nota_inclusao,
-        inovacao: producao.nota_inovacao
-    };
-
-    const feedbackTexto = producao.feedback_texto || producao.feedback_revisor || producao.feedback_revisao;
-    
-    const statusLower = producao.status ? producao.status.toLowerCase() : "";
-    const isAprovado = statusLower.includes('aprovado') || statusLower.includes('concluído') || producao.is_aprovado;
-
-    const pStyles = {
-        container: {
-            marginTop: '40px',
-            borderTop: '1px solid #E0E0E0',
-            paddingTop: '30px'
-        },
-        headerTitle: {
-            fontSize: '18px', fontWeight: '800', color: '#37474F', marginBottom: '20px',
-            display: 'flex', alignItems: 'center', gap: '10px'
-        },
-        statusBadge: {
-            fontSize: '12px', fontWeight: '800', padding: '6px 12px', borderRadius: '20px',
-            backgroundColor: isAprovado ? '#E8F5E9' : '#FFEBEE',
-            color: isAprovado ? '#2E7D32' : '#C62828',
-            display: 'inline-flex', alignItems: 'center', gap: '6px', marginBottom: '20px'
-        },
-        grid: {
-            display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '15px 30px', marginBottom: '25px'
-        },
-        scoreRow: {
-            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-            borderBottom: '1px solid #F5F5F5', paddingBottom: '8px'
-        },
-        label: { fontSize: '13px', color: '#546E7A', fontWeight: '600' },
-        stars: { display: 'flex', alignItems: 'center' },
-        val: { fontSize: '13px', fontWeight: '800', marginLeft: '8px', minWidth: '24px', textAlign: 'right' },
-        
-        feedbackBox: {
-            backgroundColor: '#FAFAFA', borderRadius: '8px', padding: '20px', borderLeft: '4px solid #90A4AE'
-        },
-        feedbackTitle: { fontSize: '14px', fontWeight: '700', color: '#455A64', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '8px' },
-        feedbackText: { fontSize: '14px', lineHeight: '1.6', color: '#37474F', whiteSpace: 'pre-wrap' } 
-    };
-
-    const ScoreItem = ({ label, valor }) => (
-        <div style={pStyles.scoreRow}>
-            <span style={pStyles.label}>{label}</span>
-            <div style={pStyles.stars}>
-                {[1, 2, 3, 4, 5].map(v => (
-                    <Star 
-                        key={v} size={14} 
-                        fill={v <= valor ? (valor <= 2 ? "#EF5350" : "#FFB300") : "#E0E0E0"} 
-                        color="transparent" 
-                        style={{ marginRight: 2 }}
-                    />
-                ))}
-                <span style={{...pStyles.val, color: valor <= 2 ? '#D32F2F' : '#2E7D32'}}>{valor}/5</span>
-            </div>
-        </div>
-    );
-
     return (
-        <div style={pStyles.container}>
-            <div style={{display:'flex', justifyContent:'space-between', alignItems:'flex-start'}}>
-                <h3 style={pStyles.headerTitle}>
-                    <BarChart3 size={20} color="#1565C0" />
-                    Parecer Técnico da Curadoria
-                </h3>
-                <div style={pStyles.statusBadge}>
-                    {isAprovado ? <><CheckCircle2 size={14}/> APROVADO</> : <><ShieldAlert size={14}/> AJUSTES NECESSÁRIOS</>}
+        <div style={styles.ptContainer}>
+            <div style={styles.ptMainHeader}>
+                <BarChart3 size={24} color="#1565C0" />
+                <div>
+                    <h3 style={styles.ptMainTitle}>Histórico de Revisão</h3>
+                    <p style={styles.ptMainSubtitle}>Veja o detalhamento do que os avaliadores acharam da sua prática.</p>
                 </div>
             </div>
 
-            <div style={pStyles.grid}>
-                <ScoreItem label="Coerência Pedagógica" valor={notas.coerencia} />
-                <ScoreItem label="Qualidade do Prompt" valor={notas.qualidade} />
-                <ScoreItem label="Metodologia Ativa" valor={notas.metodologia} />
-                <ScoreItem label="Critérios de Avaliação" valor={notas.avaliacao} />
-                <ScoreItem label="Inclusão e Acessibilidade" valor={notas.inclusao} />
-                <ScoreItem label="Grau de Inovação" valor={notas.inovacao} />
-            </div>
+            <div style={styles.ptCardsWrapper}>
+                {avaliacoes.map((aval) => (
+                    <ReviewCard key={aval.ordem} avaliacao={aval} />
+                ))}
 
-            {feedbackTexto && (
-                <div style={pStyles.feedbackBox}>
-                    <div style={pStyles.feedbackTitle}>
-                        <FileText size={16} /> Detalhes da Análise:
-                    </div>
-                    <div style={pStyles.feedbackText}>
-                        {feedbackTexto}
-                    </div>
-                </div>
-            )}
+                {/* Ghost Card aguardando o segundo revisor */}
+                {avaliacoes.length === 1 && !producao.status.toLowerCase().includes('rejeitado') && (
+                    <GhostCard />
+                )}
+            </div>
         </div>
     );
 };
 
+const ReviewCard = ({ avaliacao }) => {
+    const isAprovado = avaliacao.aprovado;
+    const { notas, pontos_fortes, pontos_melhoria, ordem } = avaliacao;
+
+    return (
+        <div style={styles.rcCard(isAprovado)}>
+            <div style={styles.rcHeader(isAprovado)}>
+                <div style={styles.rcHeaderTitle(isAprovado)}>
+                    {isAprovado ? <CheckCircle2 size={22}/> : <ShieldAlert size={22}/>}
+                    <span>PARECER DO {ordem}º AVALIADOR</span>
+                </div>
+                <div style={styles.rcBadge(isAprovado)}>
+                    {isAprovado ? 'APROVADO' : 'AJUSTES NECESSÁRIOS'}
+                </div>
+            </div>
+
+            <div style={styles.rcContent}>
+                <div style={styles.rcSectionTitle}>
+                    <BarChart3 size={16} color="#546E7A"/> 
+                    Notas Atribuídas
+                </div>
+                <div style={styles.rcGridScores}>
+                    <ScoreItem label="Coerência Pedagógica" valor={notas.coerencia} />
+                    <ScoreItem label="Qualidade do Prompt" valor={notas.qualidade} />
+                    <ScoreItem label="Metodologia Ativa" valor={notas.metodologia} />
+                    <ScoreItem label="Critérios de Avaliação" valor={notas.avaliacao} />
+                    <ScoreItem label="Inclusão e Acessibilidade" valor={notas.inclusao} />
+                    <ScoreItem label="Inovação e Criatividade" valor={notas.inovacao} />
+                </div>
+
+                <hr style={styles.rcDivider} />
+
+                <div style={styles.rcSectionTitle}>
+                    <User size={16} color="#546E7A"/> 
+                    Comentários do Revisor
+                </div>
+                <div style={styles.rcFeedbackGrid}>
+                    {pontos_fortes && (
+                        <div style={styles.rcFeedbackBoxSuccess}>
+                            <div style={styles.rcFeedbackLabelSuccess}><ThumbsUp size={16}/> Pontos Fortes</div>
+                            <div style={styles.rcFeedbackTextSuccess}>{pontos_fortes}</div>
+                        </div>
+                    )}
+                    {pontos_melhoria && (
+                        <div style={styles.rcFeedbackBoxDanger}>
+                            <div style={styles.rcFeedbackLabelDanger}><AlertTriangle size={16}/> Sugestões de Melhoria</div>
+                            <div style={styles.rcFeedbackTextDanger}>{pontos_melhoria}</div>
+                        </div>
+                    )}
+                    {!pontos_fortes && !pontos_melhoria && avaliacao.feedback_texto && (
+                         <div style={styles.rcFeedbackBoxNeutral}>
+                            <div style={styles.rcFeedbackTextNeutral}>{avaliacao.feedback_texto}</div>
+                        </div>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+};
+
+const GhostCard = () => (
+    <div style={styles.gcCard}>
+        <div style={styles.gcHeader}>
+            <div style={styles.gcTitle}>
+                <Clock size={22} color="#90A4AE" />
+                <span>AGUARDANDO 2º AVALIADOR</span>
+            </div>
+            <div style={styles.gcBadge}>NA FILA</div>
+        </div>
+        <div style={styles.gcContent}>
+            <p style={styles.gcText}>
+                Esta produção já recebeu a sua primeira avaliação e agora aguarda o parecer de mais um colega educador para ser finalizada no formato de duplo-cego.
+            </p>
+        </div>
+    </div>
+);
+
+const ScoreItem = ({ label, valor }) => (
+    <div style={styles.rcScoreRow}>
+        <span style={styles.rcLabel}>{label}</span>
+        <div style={styles.rcStarsContainer}>
+            {[1, 2, 3, 4, 5].map((star) => (
+                <Star
+                    key={star}
+                    size={14}
+                    fill={star <= valor ? (valor <= 2 ? "#EF5350" : "#FFB300") : "#E0E0E0"}
+                    color="transparent" 
+                    style={{ marginRight: 2 }}
+                />
+            ))}
+            <span style={{...styles.rcNumberValue, color: valor <= 2 ? '#D32F2F' : '#2E7D32'}}>
+                {valor}/5
+            </span>
+        </div>
+    </div>
+);
+
+// ============================================================================
+// ESTILOS GERAIS
+// ============================================================================
 const styles = {
     fullPageWrapper: { backgroundColor: '#F0F2F5', minHeight: '100vh', width: '100%', boxSizing: 'border-box', paddingTop: '20px' },
     container: { maxWidth: '1100px', margin: '0 auto', padding: '0 20px 40px 20px' },
@@ -361,18 +488,18 @@ const styles = {
     dateText: { display:'flex', alignItems: 'center', gap: '5px', fontSize: '12px', color: '#90A4AE' },
 
     techSheet: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '15px', marginBottom: '30px', padding: '15px', backgroundColor: '#FAFAFA', borderRadius: '8px' },
-    techItem: { display: 'flex', flexDirection: 'column' },
-    techLabel: { fontSize: '10px', textTransform: 'uppercase', color: '#90A4AE', fontWeight: '700' },
-    techValue: { fontSize: '13px', color: '#37474F', fontWeight: '600' },
+    techItem: { display: 'flex', alignItems: 'flex-start', gap: '10px' },
+    iconCircle: { width: '32px', height: '32px', borderRadius: '50%', backgroundColor: '#FFFFFF', border: '1px solid #E0E0E0', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
+    techLabel: { display: 'block', fontSize: '10px', textTransform: 'uppercase', fontWeight: '800', color: '#90A4AE', marginBottom: '2px' },
+    techValue: { fontSize: '13px', color: '#37474F', fontWeight: '600', wordBreak: 'break-word' },
 
     section: { marginBottom: '30px' },
     sectionTitle: { fontSize: '16px', fontWeight: '800', color: '#37474F', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '8px' },
+    bnccBox: { backgroundColor: '#FFF8E1', borderLeft: '4px solid #FFC107', padding: '15px', borderRadius: '6px', color: '#4E342E', fontSize: '14px', lineHeight: '1.5' },
     textBody: { fontSize: '15px', lineHeight: '1.6', color: '#455A64', whiteSpace: 'pre-wrap' },
     
-    // --- ESTILO NOVO PARA A CAIXA DE PROMPTS ---
     promptBox: { backgroundColor: '#F8FAFC', padding: '15px', borderRadius: '8px', borderLeft: '4px solid #8B5CF6', color: '#475569', fontSize: '14px', fontStyle: 'italic', whiteSpace: 'pre-wrap', lineHeight: '1.6' },
-
-    resultsBox: { backgroundColor: '#E8F5E9', padding: '15px', borderRadius: '8px', borderLeft: '4px solid #1565C0', color: '#333', fontSize: '14px', fontStyle: 'italic', whiteSpace: 'pre-wrap' },
+    resultsBox: { backgroundColor: '#E8F5E9', border: '1px solid #C8E6C9', padding: '15px', borderRadius: '8px', color: '#1B5E20', fontSize: '14px', fontStyle: 'italic', whiteSpace: 'pre-wrap' },
 
     timelineCard: { backgroundColor: 'white', border: '1px solid #E0E0E0', borderRadius: '12px', padding: '20px', boxShadow: '0 2px 5px rgba(0,0,0,0.03)' },
     sectionTitleSmall: { fontSize: '12px', textTransform: 'uppercase', color: '#90A4AE', fontWeight: '800', marginBottom: '15px' },
@@ -387,7 +514,7 @@ const styles = {
     stepDate: { fontSize: '11px', color: '#90A4AE' },
 
     sidebarCard: { backgroundColor: 'white', border: '1px solid #E0E0E0', borderRadius: '12px', padding: '20px' },
-    sidebarTitle: { margin: '0 0 15px 0', fontSize: '12px', textTransform: 'uppercase', fontWeight: '800', color: '#90A4AE', borderBottom: '1px solid #F5F5F5', paddingBottom: '8px' },
+    sidebarTitle: { margin: '0 0 15px 0', fontSize: '12px', textTransform: 'uppercase', fontWeight: '800', color: '#90A4AE', borderBottom: '1px solid #EEE', paddingBottom: '8px' },
     editButton: { marginTop: '12px', width: '100%', padding: '10px', backgroundColor: '#C62828', color: 'white', border: 'none', borderRadius: '6px', fontWeight: '700', fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' },
 
     downloadContainer: { display: 'flex', flexDirection: 'column', gap: '15px' },
@@ -395,7 +522,57 @@ const styles = {
     fileName: { display: 'block', fontSize: '13px', fontWeight: '700', color: '#333', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%' },
     fileType: { fontSize: '11px', color: '#90A4AE' },
     downloadBtnPrimary: { backgroundColor: '#1565C0', color: 'white', border: 'none', width: '100%', padding: '12px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', cursor: 'pointer', fontSize: '14px', fontWeight: '700', boxShadow: '0 4px 12px rgba(21, 101, 192, 0.2)', transition: 'background 0.2s' },
-    emptyState: { textAlign: 'center', padding: '15px', color: '#B0BEC5', fontSize: '13px', fontStyle: 'italic', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '5px' }
+    emptyState: { textAlign: 'center', padding: '15px', color: '#B0BEC5', fontSize: '13px', fontStyle: 'italic', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '5px' },
+    divider: { height: "1px", backgroundColor: "#EEE", margin: "20px 0" },
+
+    statusBoxApproved: { display: "flex", alignItems: "center", gap: "12px", padding: "15px", backgroundColor: "#E8F5E9", borderRadius: "8px", border: "1px solid #C8E6C9" },
+    statusTitleApproved: { display: "block", fontSize: "14px", fontWeight: "900", color: "#2E7D32", marginBottom: "2px" },
+    
+    statusBoxPending: { display: "flex", flexDirection: "column", padding: "15px", backgroundColor: "#FFF3E0", borderRadius: "8px", border: "1px solid #FFE0B2" },
+    statusTitlePending: { display: "block", fontSize: "14px", fontWeight: "900", color: "#EF6C00" },
+    
+    statusBoxRejected: { display: "flex", flexDirection: "column", padding: "15px", backgroundColor: "#FFEBEE", borderRadius: "8px", border: "1px solid #FFCDD2" },
+    statusTitleRejected: { fontSize: "13px", fontWeight: "900", color: "#C62828" },
+    
+    statusDesc: { fontSize: "12px", color: "#546E7A", margin: 0, lineHeight: "1.4" },
+    
+    downloadBtn: { width: "100%", padding: "12px", backgroundColor: "#1565C0", color: "white", border: "none", borderRadius: "8px", fontWeight: "600", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", fontSize: "14px" },
+
+    // --- ESTILOS DO NOVO PARECER TÉCNICO ---
+    ptContainer: { marginTop: '40px', borderTop: '1px solid #E0E0E0', paddingTop: '30px' },
+    ptMainHeader: { display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' },
+    ptMainTitle: { fontSize: '20px', fontWeight: '800', color: '#1A237E', margin: '0 0 4px 0' },
+    ptMainSubtitle: { fontSize: '14px', color: '#546E7A', margin: 0 },
+    ptCardsWrapper: { display: 'flex', flexDirection: 'column', gap: '20px' },
+
+    rcCard: (aprovado) => ({ backgroundColor: '#FFFFFF', borderRadius: '12px', border: aprovado ? '1px solid #A5D6A7' : '1px solid #EF9A9A', boxShadow: '0 4px 15px rgba(0,0,0,0.05)', overflow: 'hidden' }),
+    rcHeader: (aprovado) => ({ backgroundColor: aprovado ? '#E8F5E9' : '#FFEBEE', padding: '15px 25px', borderBottom: aprovado ? '1px solid #C8E6C9' : '1px solid #FFCDD2', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }),
+    rcHeaderTitle: (aprovado) => ({ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '15px', fontWeight: '900', letterSpacing: '0.5px', color: aprovado ? '#2E7D32' : '#C62828' }),
+    rcBadge: (aprovado) => ({ fontSize: '11px', fontWeight: '800', letterSpacing: '1px', backgroundColor: aprovado ? '#C8E6C9' : '#FFCDD2', color: aprovado ? '#1B5E20' : '#B71C1C', padding: '6px 12px', borderRadius: '20px' }),
+    rcContent: { padding: '25px' },
+    rcSectionTitle: { fontSize: '13px', fontWeight: '800', color: '#78909C', marginBottom: '15px', display: 'flex', alignItems: 'center', gap: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' },
+    rcGridScores: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '12px 30px' },
+    rcScoreRow: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#FAFAFA', padding: '8px 12px', borderRadius: '8px', border: '1px solid #F0F0F0' },
+    rcLabel: { fontSize: '13px', color: '#455A64', fontWeight: '600' },
+    rcStarsContainer: { display: 'flex', alignItems: 'center' },
+    rcNumberValue: { fontSize: '13px', fontWeight: '800', marginLeft: '8px', minWidth: '25px', textAlign: 'right' },
+    rcDivider: { border: 'none', borderTop: '1px dashed #CFD8DC', margin: '25px 0' },
+    rcFeedbackGrid: { display: 'flex', flexDirection: 'column', gap: '15px' },
+    rcFeedbackBoxSuccess: { backgroundColor: '#F1F8E9', borderRadius: '8px', padding: '15px', borderLeft: '4px solid #7CB342' },
+    rcFeedbackLabelSuccess: { display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', fontWeight: '800', color: '#33691E', marginBottom: '8px', textTransform: 'uppercase' },
+    rcFeedbackTextSuccess: { fontSize: '14px', color: '#33691E', lineHeight: '1.6', whiteSpace: 'pre-wrap', fontFamily: 'inherit' },
+    rcFeedbackBoxDanger: { backgroundColor: '#FFF3E0', borderRadius: '8px', padding: '15px', borderLeft: '4px solid #FF9800' },
+    rcFeedbackLabelDanger: { display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', fontWeight: '800', color: '#E65100', marginBottom: '8px', textTransform: 'uppercase' },
+    rcFeedbackTextDanger: { fontSize: '14px', color: '#E65100', lineHeight: '1.6', whiteSpace: 'pre-wrap', fontFamily: 'inherit' },
+    rcFeedbackBoxNeutral: { backgroundColor: '#FAFAFA', borderRadius: '8px', padding: '15px', borderLeft: '4px solid #90A4AE' },
+    rcFeedbackTextNeutral: { fontSize: '14px', color: '#455A64', lineHeight: '1.6', whiteSpace: 'pre-wrap', fontFamily: 'inherit' },
+
+    gcCard: { backgroundColor: '#FAFAFA', borderRadius: '12px', border: '2px dashed #CFD8DC', overflow: 'hidden', opacity: 0.8 },
+    gcHeader: { backgroundColor: '#F5F7FA', padding: '15px 25px', borderBottom: '1px solid #ECEFF1', display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
+    gcTitle: { display: 'flex', alignItems: 'center', gap: '8px', fontSize: '15px', fontWeight: '900', letterSpacing: '0.5px', color: '#90A4AE' },
+    gcBadge: { fontSize: '11px', fontWeight: '800', letterSpacing: '1px', backgroundColor: '#ECEFF1', color: '#90A4AE', padding: '6px 12px', borderRadius: '20px' },
+    gcContent: { padding: '25px', textAlign: 'center' },
+    gcText: { margin: 0, fontSize: '14px', color: '#78909C', lineHeight: '1.6' }
 };
 
 export default VisualizarMinhaProducao;

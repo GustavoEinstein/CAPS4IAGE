@@ -10,7 +10,8 @@ import {
   BookOpenCheck,
   MessageSquare, 
   Settings,
-  Trophy, // <--- NOVO ÍCONE DE TROFÉU PARA O RANKING
+  Trophy, 
+  ClipboardList, // <--- NOVO ÍCONE ADICIONADO AQUI
   X,
 } from "lucide-react"
 
@@ -130,7 +131,6 @@ function Sidebar({ isOpen, isMobile, onClose }) {
             </NavLink>
           </li>
 
-          {/* --- NOVO: BOTÃO DO RANKING DE GAMIFICAÇÃO --- */}
           <li>
             <NavLink
               to="/dashboard/ranking"
@@ -164,6 +164,20 @@ function Sidebar({ isOpen, isMobile, onClose }) {
 
         <div style={{ marginTop: "auto" }}>
           <ul style={styles.ul}>
+            {/* --- NOVO: BOTÃO DE AVALIAR O SISTEMA --- */}
+            <li>
+              <a
+                href="https://forms.gle/hTbpQGN9zHkFXEHk6"
+                target="_blank"
+                rel="noopener noreferrer"
+                style={styles.link}
+                onClick={isMobile ? onClose : undefined}
+              >
+                <ClipboardList size={20} style={styles.icon} />
+                Avaliar o Sistema
+              </a>
+            </li>
+            
             <li>
               <NavLink
                 to="/dashboard/ajuda"
