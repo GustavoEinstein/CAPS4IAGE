@@ -12,9 +12,9 @@ const DetalharProducao = () => {
   const { id } = useParams()
   const navigate = useNavigate()
   
-  // 1. LENDO A ETIQUETA SECRETA DA URL
-  const location = useLocation();
-  const fromHistory = location.state?.fromHistory || false;
+  // PEGANDO A ETIQUETA SECRETA DA URL
+  const location = useLocation()
+  const fromHistory = location.state?.fromHistory || false
 
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -71,8 +71,12 @@ const DetalharProducao = () => {
   }
   const theme = getTheme(data.disciplina)
 
-  // 2. A LÓGICA FINAL DE QUEM PODE VER A AVALIAÇÃO
-  const podeVerParecer = data.is_dono || data.is_admin || (data.is_revisor && fromHistory);
+  // =======================================================================
+  // A LÓGICA FINAL DE QUEM PODE VER A AVALIAÇÃO NA COMUNIDADE:
+  // Somente o SuperAdmin ou o Revisor que veio do próprio histórico!
+  // O dono não vê as notas aqui (ele vê pela aba Minhas Produções).
+  // =======================================================================
+  const podeVerParecer = data.is_admin || (data.is_revisor && fromHistory);
 
   return (
     <div style={styles.fullPageWrapper}>
@@ -129,11 +133,15 @@ const DetalharProducao = () => {
                 </div>
               </div>
 
+              {/* CORREÇÃO DO TEXTO INVISÍVEL AQUI */}
               <div style={styles.section}>
                 <h3 style={styles.sectionTitle}><BookOpen size={18}/> Alinhamento BNCC</h3>
-                <div style={styles.bnccBox}>{data.bncc || "Não informado."}</div>
+                <div style={styles.bnccBox}>
+                    <p style={styles.bnccText}>{data.bncc || "Não informado."}</p>
+                </div>
               </div>
 
+              {/* CORREÇÃO DO TEXTO INVISÍVEL AQUI */}
               <div style={styles.section}>
                   <h3 style={styles.sectionTitle}><Cpu size={20} /> BNCC Computação</h3>
                   <div style={{ ...styles.bnccBox, backgroundColor: '#E3F2FD', borderLeft: '4px solid #1565C0' }}>
@@ -158,7 +166,7 @@ const DetalharProducao = () => {
                 <div style={styles.resultsBox}>{data.resultados}</div>
               </div>
               
-              {/* O COMPONENTE COM A TRAVA ABSOLUTA */}
+              {/* O COMPONENTE COM A TRAVA ABSOLUTA E DUPLA DE PRIVACIDADE */}
               {podeVerParecer && (
                   <ParecerTecnico producao={data} />
               )}
@@ -215,7 +223,6 @@ const DetalharProducao = () => {
 }
 
 const ParecerTecnico = ({ producao }) => {
-    // Retorna nulo se a lista de avaliações vier vazia (backend esvaziou ou não existe)
     if (!producao || !producao.avaliacoes_detalhadas || producao.avaliacoes_detalhadas.length === 0) {
         return null;
     }
@@ -236,8 +243,8 @@ const ParecerTecnico = ({ producao }) => {
                     <ReviewCard key={aval.ordem} avaliacao={aval} />
                 ))}
                 
-                {/* 3. CARD FANTASMA AGORA SÓ APARECE PARA O DONO OU ADMIN */}
-                {avaliacoes.length === 1 && (producao.is_dono || producao.is_admin) && !producao.status.toLowerCase().includes('rejeitado') && (
+                {/* GHOST CARD APENAS PARA DONO E ADMIN QUANDO SÓ TEM 1 AVALIAÇÃO */}
+                {producao.total_avaliacoes === 1 && (producao.is_dono || producao.is_admin) && !producao.status.toLowerCase().includes('rejeitado') && (
                     <GhostCard />
                 )}
             </div>
@@ -331,11 +338,15 @@ const styles = {
   techValue: { fontSize: "13px", color: "#37474F", fontWeight: "600", wordBreak: "break-word", overflowWrap: "break-word" },
   section: { marginBottom: "30px" },
   sectionTitle: { fontSize: "16px", fontWeight: "800", color: "#37474F", marginBottom: "10px", display: "flex", alignItems: "center", gap: "8px" },
+  
   bnccBox: { backgroundColor: "#FFF8E1", borderLeft: "4px solid #FFC107", padding: "15px", borderRadius: "6px", marginBottom: "30px", wordBreak: "break-word", overflowWrap: "break-word" },
-  bnccText: { margin: 0, fontSize: "14px", color: "#3E2723", lineHeight: "1.5", wordBreak: "break-word", overflowWrap: "break-word" },
+  
+  // GARANTINDO QUE O TEXTO DA BNCC RECEBA A COR ESCURA E AS QUEBRAS DE LINHA
+  bnccText: { margin: 0, fontSize: "15px", color: "#3E2723", lineHeight: "1.6", wordBreak: "break-word", overflowWrap: "break-word", whiteSpace: "pre-wrap" },
+  
   promptBox: { backgroundColor: "#F8FAFC", padding: "15px", borderRadius: "8px", borderLeft: "4px solid #8B5CF6", color: "#475569", fontSize: "14px", fontStyle: "italic", whiteSpace: "pre-wrap", wordBreak: "break-word", overflowWrap: "break-word" },
   textBody: { fontSize: "15px", lineHeight: "1.6", color: "#455A64", whiteSpace: "pre-wrap", wordBreak: "break-word", overflowWrap: "break-word" },
-  resultsBox: { backgroundColor: "#E8F5E9", padding: "15px", borderRadius: "8px", border: "1px solid #C8E6C9", color: "#1B5E20", fontSize: "14px", fontStyle: "italic", wordBreak: "break-word", overflowWrap: "break-word" },
+  resultsBox: { backgroundColor: "#E8F5E9", padding: "15px", borderRadius: "8px", border: "1px solid #C8E6C9", color: "#1B5E20", fontSize: "14px", fontStyle: "italic", wordBreak: "break-word", overflowWrap: "break-word", whiteSpace: "pre-wrap" },
   sidebarCard: { backgroundColor: "white", border: "1px solid #E0E0E0", borderRadius: "12px", padding: "20px" },
   sidebarTitle: { fontSize: "12px", textTransform: "uppercase", fontWeight: "800", color: "#90A4AE", borderBottom: "1px solid #EEE", paddingBottom: "8px" },
   statusBoxApproved: { display: "flex", alignItems: "center", gap: "12px", padding: "15px", backgroundColor: "#E8F5E9", borderRadius: "8px", border: "1px solid #C8E6C9" },

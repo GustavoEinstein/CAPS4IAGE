@@ -201,14 +201,21 @@ const VisualizarMinhaProducao = () => {
                                 </div>
                             </div>
 
+                            {/* --- CORREÇÃO DO TEXTO DA BNCC APLICADA AQUI --- */}
                             <div style={styles.section}>
                                 <h3 style={styles.sectionTitle}><BookOpen size={18}/> Intencionalidade (BNCC)</h3>
-                                <p style={styles.textBody}>{data.bncc || "Não informado."}</p>
+                                <div style={styles.bnccBox}>
+                                    <p style={styles.bnccText}>{data.bncc || "Não informado."}</p>
+                                </div>
                             </div>
 
                             <div style={styles.section}>
                                 <h3 style={styles.sectionTitle}><Cpu size={18}/> BNCC Computação</h3>
-                                <p style={styles.textBody}>{data.bncc_computacao || "Nenhuma habilidade de computação registrada."}</p>
+                                <div style={{ ...styles.bnccBox, backgroundColor: '#E3F2FD', borderLeftColor: '#1565C0' }}>
+                                    <p style={{ ...styles.bnccText, color: '#0D47A1' }}>
+                                        {data.bncc_computacao || "Nenhuma habilidade de computação registrada."}
+                                    </p>
+                                </div>
                             </div>
 
                             <div style={styles.section}>
@@ -228,7 +235,6 @@ const VisualizarMinhaProducao = () => {
                                 <div style={styles.resultsBox}>{data.resultados || "Sem resultados registrados."}</div>
                             </div>
                             
-                            {/* O componente de Parecer Técnico agora tem trava de segurança absoluta */}
                             <ParecerTecnico producao={data} />
 
                         </div>
@@ -294,7 +300,6 @@ const VisualizarMinhaProducao = () => {
 
                             <h3 style={styles.sidebarTitle}>Arquivos e Links</h3>
                             
-                            {/* RENDERIZADOR DO ARQUIVO ANEXADO */}
                             {data.arquivo && (
                                 <div style={styles.downloadContainer}>
                                     <div style={styles.fileInfoBox}>
@@ -310,7 +315,6 @@ const VisualizarMinhaProducao = () => {
                                 </div>
                             )}
 
-                            {/* RENDERIZADOR DO NOVO LINK EXTERNO */}
                             {data.link_material && (
                                 <div style={{...styles.downloadContainer, marginTop: data.arquivo ? '15px' : '0'}}>
                                     <div style={styles.fileInfoBox}>
@@ -328,7 +332,6 @@ const VisualizarMinhaProducao = () => {
                                 </div>
                             )}
 
-                            {/* ESTADO VAZIO */}
                             {!data.arquivo && !data.link_material && (
                                 <div style={styles.emptyState}>
                                     <File size={24} color="#CFD8DC"/>
@@ -361,12 +364,9 @@ const VisualizarMinhaProducao = () => {
 // NOVO COMPONENTE: PARECER TÉCNICO EMBUTIDO E MELHORADO
 // ============================================================================
 const ParecerTecnico = ({ producao }) => {
-    // TRAVA DE PRIVACIDADE ABSOLUTA: Se não houver array de avaliações, não renderiza nada!
-    if (!producao || !producao.avaliacoes_detalhadas || producao.avaliacoes_detalhadas.length === 0) {
-        return null;
-    }
+    if (!producao || (!producao.revisao_realizada && (!producao.avaliacoes_detalhadas || producao.avaliacoes_detalhadas.length === 0))) return null;
 
-    const avaliacoes = producao.avaliacoes_detalhadas;
+    const avaliacoes = producao.avaliacoes_detalhadas || [];
     
     return (
         <div style={styles.ptContainer}>
@@ -520,9 +520,12 @@ const styles = {
 
     section: { marginBottom: '30px' },
     sectionTitle: { fontSize: '16px', fontWeight: '800', color: '#37474F', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '8px' },
-    bnccBox: { backgroundColor: '#FFF8E1', borderLeft: '4px solid #FFC107', padding: '15px', borderRadius: '6px', color: '#4E342E', fontSize: '14px', lineHeight: '1.5', wordBreak: 'break-word', overflowWrap: 'break-word' },
-    textBody: { fontSize: '15px', lineHeight: '1.6', color: '#455A64', whiteSpace: 'pre-wrap', wordBreak: 'break-word', overflowWrap: 'break-word' },
     
+    // CORREÇÕES DE ESTILO DA BNCC APLICADAS AQUI:
+    bnccBox: { backgroundColor: "#FFF8E1", borderLeft: "4px solid #FFC107", padding: "15px", borderRadius: "6px", marginBottom: "30px", wordBreak: "break-word", overflowWrap: "break-word" },
+    bnccText: { margin: 0, fontSize: "15px", color: "#3E2723", lineHeight: "1.6", wordBreak: "break-word", overflowWrap: "break-word", whiteSpace: "pre-wrap" },
+    
+    textBody: { fontSize: '15px', lineHeight: '1.6', color: '#455A64', whiteSpace: 'pre-wrap', wordBreak: 'break-word', overflowWrap: 'break-word' },
     promptBox: { backgroundColor: '#F8FAFC', padding: '15px', borderRadius: '8px', borderLeft: '4px solid #8B5CF6', color: '#475569', fontSize: '14px', fontStyle: 'italic', whiteSpace: 'pre-wrap', lineHeight: '1.6', wordBreak: 'break-word', overflowWrap: 'break-word' },
     resultsBox: { backgroundColor: '#E8F5E9', border: '1px solid #C8E6C9', padding: '15px', borderRadius: '8px', color: '#1B5E20', fontSize: '14px', fontStyle: 'italic', whiteSpace: 'pre-wrap', wordBreak: 'break-word', overflowWrap: 'break-word' },
 
