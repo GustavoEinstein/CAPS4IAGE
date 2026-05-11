@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import api from '../services/api'; 
 import { useOutletContext, useParams, useNavigate } from 'react-router-dom';
-import Swal from 'sweetalert2'; // <--- IMPORTAÇÃO DO SWAL ADICIONADA AQUI
+import Swal from 'sweetalert2';
 import { 
     Star, CheckCircle2, Bot, Download, ArrowLeft, Clock, Wrench, 
-    BookOpen, Target, Lightbulb, ThumbsUp, ThumbsDown, ShieldAlert, FileText, User, 
+    BookOpen, Target, Lightbulb, ThumbsUp, ShieldAlert, FileText, User, 
     AlertTriangle, Lock, PenTool, Eye, Cpu, Terminal 
 } from 'lucide-react';
 
@@ -71,8 +71,6 @@ const Revisao = () => {
 
     const handleSubmit = async (veredito) => {
         if (!isFormComplete) return;
-        
-        // --- POP-UP DE ALERTA PARA REJEIÇÃO SEM MOTIVO ---
         if (veredito === false && !avaliacao.pontosMelhoria.trim()) {
             Swal.fire({
                 icon: 'warning',
@@ -97,13 +95,10 @@ const Revisao = () => {
                 nota_inovacao: avaliacao.notaInovacao
             });
             
-            // --- LÓGICA DOS POP-UPS DE REVISÃO (1/2 ou 2/2) ---
             if (veredito) { 
-                // Pega o número atual de aprovações (antes da requisição que acabou de ser feita)
                 const currentApprovals = producaoEmRevisao.total_aprovacoes || 0;
                 
                 if (currentApprovals === 0) {
-                    // É o primeiro revisor a aprovar
                     Swal.fire({
                         icon: 'info',
                         title: 'Avaliação Registrada! (1/2)',
@@ -112,7 +107,6 @@ const Revisao = () => {
                         confirmButtonText: 'Continuar revisando'
                     }).then(() => navigate('/dashboard/revisao'));
                 } else {
-                    // É o segundo revisor a aprovar (Prática agora vai para o feed público)
                     Swal.fire({
                         icon: 'success',
                         title: 'Prática Publicada! (2/2)',
@@ -122,7 +116,6 @@ const Revisao = () => {
                     }).then(() => navigate('/dashboard/revisao'));
                 }
             } else { 
-                // Se a prática foi rejeitada
                 Swal.fire({
                     icon: 'error',
                     title: 'Devolvido para Correção',
@@ -190,6 +183,16 @@ const Revisao = () => {
                     <div style={styles.techSheet}>
                         <div style={styles.techItem}><Wrench size={16} color="#1565C0"/><div><span style={styles.techLabel}>Metodologia</span><span style={styles.techValue}>{producaoEmRevisao.metodologia}</span></div></div>
                         <div style={styles.techItem}><Clock size={16} color="#1565C0"/><div><span style={styles.techLabel}>Duração</span><span style={styles.techValue}>{producaoEmRevisao.duracao}</span></div></div>
+                        <div style={styles.techItem}><Package size={16} color="#1565C0"/><div>
+                            <span style={styles.techLabel}>Recursos</span>
+                            <span style={styles.techValue}>
+                                {Array.isArray(producaoEmRevisao.recursos) 
+                                    ? producaoEmRevisao.recursos.join(', ') 
+                                    : (typeof producaoEmRevisao.recursos === 'string' 
+                                        ? producaoEmRevisao.recursos.split(',').map(r => r.trim()).join(', ') 
+                                        : '-')}
+                            </span>
+                        </div></div>
                     </div>
 
                     <div style={styles.section}>
@@ -197,20 +200,16 @@ const Revisao = () => {
                         <div style={styles.bnccBox}>{producaoEmRevisao.bncc || "Não informado."}</div>
                     </div>
 
-                    {/* --- NOVO CAMPO: BNCC Computação --- */}
                     <div style={styles.section}>
                         <h3 style={styles.sectionTitle}><Cpu size={18}/> BNCC Computação</h3>
-                        <div style={styles.bnccBox}>
-                            {producaoEmRevisao.bncc_computacao || "Nenhuma habilidade de computação registrada."}
+                        <div style={{...styles.bnccBox, backgroundColor: '#E3F2FD', borderLeftColor: '#1565C0'}}>
+                            {producaoEmRevisao.bncc_computacao || "Não informado."}
                         </div>
                     </div>
 
-                    {/* --- NOVO CAMPO: Prompts Utilizados --- */}
                     <div style={styles.section}>
-                        <h3 style={styles.sectionTitle}><Terminal size={18}/> Prompts Utilizados na IA</h3>
-                        <div style={styles.promptBox}>
-                            {producaoEmRevisao.prompts_ia || "Nenhum prompt foi registrado nesta produção."}
-                        </div>
+                        <h3 style={styles.sectionTitle}><Terminal size={18}/> Prompts Utilizados</h3>
+                        <div style={styles.promptBox}>{producaoEmRevisao.prompts_ia || "Nenhum prompt registrado."}</div>
                     </div>
 
                     <div style={styles.section}>
@@ -220,42 +219,40 @@ const Revisao = () => {
 
                     <div style={styles.section}>
                         <h3 style={styles.sectionTitle}><Target size={18}/> Resultados</h3>
-                        <div style={styles.resultsBox}>{producaoEmRevisao.resultados || "Sem resultados registrados."}</div>
+                        <div style={styles.resultsBox}>{producaoEmRevisao.resultados || "Sem resultados."}</div>
                     </div>
 
                     {producaoEmRevisao.arquivo && (
                         <div style={styles.downloadContainer}>
                             <div style={styles.fileInfoBox}>
-                                <div style={styles.fileIconSmall}><FileText size={20} color="#1565C0" /></div>
-                                <div style={{overflow: 'hidden'}}>
-                                    <span style={styles.fileName}>{decodeURIComponent(producaoEmRevisao.arquivo.split('/').pop())}</span>
-                                    <span style={styles.fileType}>Material de Apoio</span>
-                                </div>
+                                <FileText size={20} color="#1565C0" />
+                                <div><span style={styles.fileName}>Material de Apoio</span></div>
                             </div>
-                            <button onClick={handleDownload} style={styles.downloadBtnCompact}>
-                                <Download size={18} /> Baixar Roteiro
-                            </button>
+                            <button onClick={handleDownload} style={styles.downloadBtnCompact}><Download size={18} /> Baixar Arquivo</button>
                         </div>
                     )}
 
-                    {producaoEmRevisao.total_avaliacoes === 1 && producaoEmRevisao.notas && (
+                    {/* MOSTRAR PARECER DO PRIMEIRO REVISOR SE EXISTIR (E TIVER SIDO APROVADO) */}
+                    {producaoEmRevisao.avaliacoes_detalhadas && producaoEmRevisao.avaliacoes_detalhadas.length === 1 && (
                         <div style={styles.firstReviewerBox}>
                             <h3 style={styles.firstReviewerTitle}><Eye size={18}/> Parecer do 1º Revisor</h3>
-                            <p style={{fontSize: '13px', color: '#546E7A', marginTop: '-10px', marginBottom: '15px'}}>
-                                Esta produção já possui uma aprovação. Use as notas abaixo como referência.
-                            </p>
-                            
-                            <div style={styles.firstReviewerGrid}>
-                                <div style={styles.scoreItem}>Coerência: <strong>{producaoEmRevisao.notas.coerencia}/5</strong></div>
-                                <div style={styles.scoreItem}>Prompt: <strong>{producaoEmRevisao.notas.qualidade}/5</strong></div>
-                                <div style={styles.scoreItem}>Metodologia: <strong>{producaoEmRevisao.notas.metodologia}/5</strong></div>
-                                <div style={styles.scoreItem}>Avaliação: <strong>{producaoEmRevisao.notas.avaliacao}/5</strong></div>
-                                <div style={styles.scoreItem}>Inclusão: <strong>{producaoEmRevisao.notas.inclusao}/5</strong></div>
-                                <div style={styles.scoreItem}>Inovação: <strong>{producaoEmRevisao.notas.inovacao}/5</strong></div>
-                            </div>
                             <div style={styles.firstReviewerFeedback}>
-                                <strong style={{color: '#1565C0'}}>Comentários Deixados:</strong>
-                                <p style={{whiteSpace: 'pre-wrap', marginTop: '5px', margin: 0}}>{producaoEmRevisao.feedback_texto}</p>
+                                {producaoEmRevisao.avaliacoes_detalhadas[0].pontos_fortes && (
+                                    <div style={{marginBottom: '10px'}}>
+                                        <strong style={{color: '#2E7D32', fontSize: '13px'}}><ThumbsUp size={14} style={{verticalAlign: 'middle', marginRight: '4px'}}/> PONTOS FORTES:</strong>
+                                        <p style={{margin: '4px 0 0 0', fontSize: '13px', color: '#37474F', wordBreak: 'break-word', whiteSpace: 'pre-wrap'}}>
+                                            {producaoEmRevisao.avaliacoes_detalhadas[0].pontos_fortes}
+                                        </p>
+                                    </div>
+                                )}
+                                {producaoEmRevisao.avaliacoes_detalhadas[0].pontos_melhoria && (
+                                    <div>
+                                        <strong style={{color: '#E65100', fontSize: '13px'}}><AlertTriangle size={14} style={{verticalAlign: 'middle', marginRight: '4px'}}/> SUGESTÕES:</strong>
+                                        <p style={{margin: '4px 0 0 0', fontSize: '13px', color: '#37474F', wordBreak: 'break-word', whiteSpace: 'pre-wrap'}}>
+                                            {producaoEmRevisao.avaliacoes_detalhadas[0].pontos_melhoria}
+                                        </p>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     )}
@@ -268,15 +265,15 @@ const Revisao = () => {
                 </div>
 
                 <div style={styles.reviewSection}>
-                    <h3 style={styles.reviewTitle}>Rúbrica de 6 Eixos</h3>
+                    <h3 style={styles.reviewTitle}>Sua Avaliação</h3>
                     
                     <div style={styles.criteriaGrid}>
                         <CriteriaCard label="Coerência Pedagógica" description="Objetivos claros e alinhados?" fieldName="notaCoerencia" value={avaliacao.notaCoerencia} />
                         <CriteriaCard label="Qualidade do Prompt" description="Uso intencional da IA?" fieldName="notaQualidade" value={avaliacao.notaQualidade} />
                         <CriteriaCard label="Metodologia Ativa" description="Aluno protagonista?" fieldName="notaMetodologia" value={avaliacao.notaMetodologia} />
                         <CriteriaCard label="Avaliação" description="Critérios de verificação?" fieldName="notaAvaliacao" value={avaliacao.notaAvaliacao} />
-                        <CriteriaCard label="Inclusão" description="Acessível a todos?" fieldName="notaInclusao" value={avaliacao.notaInclusao} />
-                        <CriteriaCard label="Inovação" description="Criatividade no uso?" fieldName="notaInovacao" value={avaliacao.notaInovacao} />
+                        <CriteriaCard label="Inclusão e Acessibilidade" description="Acessível a todos?" fieldName="notaInclusao" value={avaliacao.notaInclusao} />
+                        <CriteriaCard label="Inovação e Criatividade" description="Ideias originais?" fieldName="notaInovacao" value={avaliacao.notaInovacao} />
                     </div>
 
                     <div style={styles.feedbackGrid}>
@@ -314,55 +311,45 @@ const Revisao = () => {
 };
 
 const styles = {
-    fullPageWrapper: { backgroundColor: '#F0F2F5', minHeight: '100vh', width: '100%', boxSizing: 'border-box', padding: '20px' },
-    container: { maxWidth: '1000px', margin: '0 auto', width: '100%', paddingBottom: '60px' },
+    fullPageWrapper: { backgroundColor: '#F0F2F5', minHeight: '100vh', padding: '20px' },
+    container: { maxWidth: '1000px', margin: '0 auto', paddingBottom: '60px' },
     topBar: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' },
-    backButton: { display: 'flex', alignItems: 'center', gap: '8px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '14px', color: '#546E7A', fontWeight: '700' },
-    pageTitle: { fontSize: '24px', fontWeight: '800', color: '#1A237E', margin: '0 0 4px 0' },
+    backButton: { display: 'flex', alignItems: 'center', gap: '8px', background: 'none', border: 'none', cursor: 'pointer', color: '#546E7A', fontWeight: '700' },
+    pageTitle: { fontSize: '24px', fontWeight: '800', color: '#1A237E', margin: 0 },
     pageSubtitle: { fontSize: '14px', color: '#546E7A', margin: 0 },
-
-    materialCard: { backgroundColor: '#FFFFFF', borderRadius: '16px', padding: '40px', boxShadow: '0 2px 10px rgba(0,0,0,0.03)', border: '1px solid #E0E0E0', marginBottom: '30px' },
+    materialCard: { backgroundColor: '#FFFFFF', borderRadius: '16px', padding: '40px', border: '1px solid #E0E0E0', marginBottom: '30px' },
     materialHeader: { marginBottom: '25px', borderBottom: '1px solid #F0F0F0', paddingBottom: '20px' },
     badgesRow: { display: 'flex', gap: '10px', marginBottom: '12px' },
-    badgeDisc: { backgroundColor: '#E3F2FD', color: '#1565C0', padding: '5px 10px', borderRadius: '6px', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase' },
+    badgeDisc: { backgroundColor: '#E3F2FD', color: '#1565C0', padding: '5px 10px', borderRadius: '6px', fontSize: '11px', fontWeight: '800' },
     badgeLevel: { backgroundColor: '#F5F5F5', color: '#616161', padding: '5px 10px', borderRadius: '6px', fontSize: '11px', fontWeight: '700' },
-    materialTitle: { fontSize: '28px', fontWeight: '800', color: '#333', margin: '0 0 10px 0', lineHeight: '1.2' },
+    materialTitle: { fontSize: '28px', fontWeight: '800', color: '#333', margin: '0 0 10px 0', wordBreak: 'break-word', overflowWrap: 'break-word' },
     metaInfo: { display: 'flex', gap: '15px', color: '#78909C', fontSize: '13px' },
     metaItem: { display: 'flex', alignItems: 'center', gap: '5px' },
-
-    techSheet: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '30px', padding: '15px', backgroundColor: '#FAFAFA', borderRadius: '10px' },
+    techSheet: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '20px', marginBottom: '30px', padding: '15px', backgroundColor: '#FAFAFA', borderRadius: '10px' },
     techItem: { display: 'flex', gap: '10px', alignItems: 'flex-start' },
-    techLabel: { display: 'block', fontSize: '10px', textTransform: 'uppercase', color: '#90A4AE', fontWeight: '800', marginBottom: '2px' },
-    techValue: { fontSize: '14px', color: '#37474F', fontWeight: '600' },
-
+    techLabel: { display: 'block', fontSize: '10px', textTransform: 'uppercase', color: '#90A4AE', fontWeight: '800' },
+    techValue: { fontSize: '14px', color: '#37474F', fontWeight: '600', wordBreak: 'break-word', overflowWrap: 'break-word' },
     section: { marginBottom: '30px' },
     sectionTitle: { fontSize: '16px', fontWeight: '800', color: '#37474F', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '8px' },
-    bnccBox: { backgroundColor: '#FFF8E1', borderLeft: '4px solid #FFC107', padding: '15px', borderRadius: '6px', color: '#4E342E', fontSize: '14px', lineHeight: '1.5' },
-    textBody: { fontSize: '15px', lineHeight: '1.6', color: '#455A64', whiteSpace: 'pre-wrap' },
-    
-    promptBox: { backgroundColor: '#F8FAFC', padding: '15px', borderRadius: '8px', borderLeft: '4px solid #8B5CF6', color: '#475569', fontSize: '14px', fontStyle: 'italic', whiteSpace: 'pre-wrap', lineHeight: '1.6' },
-    resultsBox: { backgroundColor: '#E8F5E9', border: '1px solid #C8E6C9', padding: '15px', borderRadius: '8px', color: '#1B5E20', fontSize: '14px', fontStyle: 'italic', whiteSpace: 'pre-wrap' },
-
-    downloadContainer: { marginTop: '25px', padding: '12px 15px', backgroundColor: '#F8F9FA', borderRadius: '10px', border: '1px solid #E0E0E0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '15px' },
-    fileInfoBox: { display: 'flex', alignItems: 'center', gap: '10px', flex: 1, minWidth: 0 },
-    fileIconSmall: { backgroundColor: 'white', padding: '6px', borderRadius: '6px', border: '1px solid #E0E0E0', display: 'flex', alignItems: 'center', justifyContent: 'center' },
-    fileName: { display: 'block', fontSize: '13px', fontWeight: '700', color: '#333', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%' },
-    fileType: { fontSize: '11px', color: '#90A4AE' },
-    downloadBtnCompact: { backgroundColor: '#1565C0', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', cursor: 'pointer', fontSize: '12px', fontWeight: '700', boxShadow: '0 2px 5px rgba(21, 101, 192, 0.2)', transition: 'background 0.2s', whiteSpace: 'nowrap' },
-
+    bnccBox: { backgroundColor: '#FFF8E1', borderLeft: '4px solid #FFC107', padding: '15px', borderRadius: '6px', fontSize: '14px', wordBreak: 'break-word', overflowWrap: 'break-word' },
+    textBody: { fontSize: '15px', lineHeight: '1.6', color: '#455A64', whiteSpace: 'pre-wrap', wordBreak: 'break-word', overflowWrap: 'break-word' },
+    promptBox: { backgroundColor: '#F8FAFC', padding: '15px', borderRadius: '8px', borderLeft: '4px solid #8B5CF6', fontStyle: 'italic', wordBreak: 'break-word', overflowWrap: 'break-word' },
+    resultsBox: { backgroundColor: '#E8F5E9', border: '1px solid #C8E6C9', padding: '15px', borderRadius: '8px', fontStyle: 'italic', wordBreak: 'break-word', overflowWrap: 'break-word' },
+    downloadContainer: { marginTop: '25px', padding: '12px 15px', backgroundColor: '#F8F9FA', borderRadius: '10px', border: '1px solid #E0E0E0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
+    fileInfoBox: { display: 'flex', alignItems: 'center', gap: '10px' },
+    fileName: { fontSize: '13px', fontWeight: '700' },
+    downloadBtnCompact: { backgroundColor: '#1565C0', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', fontWeight: '700' },
     firstReviewerBox: { backgroundColor: '#F8FBFF', border: '1px solid #BBDEFB', borderRadius: '12px', padding: '20px', marginTop: '30px' },
-    firstReviewerTitle: { fontSize: '15px', fontWeight: '800', color: '#1565C0', margin: '0 0 15px 0', display: 'flex', alignItems: 'center', gap: '8px' },
-    firstReviewerGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '10px', marginBottom: '15px' },
-    scoreItem: { backgroundColor: '#FFFFFF', padding: '8px 12px', borderRadius: '6px', border: '1px solid #E3F2FD', fontSize: '12px', color: '#455A64', display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
-    firstReviewerFeedback: { backgroundColor: '#FFFFFF', padding: '15px', borderRadius: '8px', border: '1px solid #E3F2FD', fontSize: '13px', color: '#37474F' },
-
+    firstReviewerTitle: { fontSize: '15px', fontWeight: '800', color: '#1565C0', marginBottom: '15px', display: 'flex', alignItems: 'center', gap: '8px' },
+    firstReviewerFeedback: { backgroundColor: '#FFFFFF', padding: '15px', borderRadius: '8px', border: '1px solid #E3F2FD' },
+    
     stepSeparator: { display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '30px', opacity: 0.8 },
     stepLine: { flex: 1, height: '1px', backgroundColor: '#B0BEC5' },
     stepLabel: { fontSize: '14px', fontWeight: '700', color: '#546E7A', textTransform: 'uppercase', letterSpacing: '1px', display: 'flex', alignItems: 'center', gap: '8px' },
 
     reviewSection: { backgroundColor: 'white', borderRadius: '16px', padding: '40px', boxShadow: '0 4px 20px rgba(0,0,0,0.05)', border: '1px solid #E0E0E0' },
-    reviewTitle: { fontSize: '18px', fontWeight: '800', color: '#1A237E', margin: '0 0 20px 0', borderBottom: '1px solid #F5F5F5', paddingBottom: '15px' },
-
+    reviewTitle: { fontSize: '18px', fontWeight: '800', color: '#1A237E', marginBottom: '20px' },
+    
     criteriaGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '15px', marginBottom: '30px' },
     criteriaCard: { border: '1px solid #E0E0E0', borderRadius: '10px', padding: '15px', backgroundColor: '#FAFAFA' },
     criteriaHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '5px' },
@@ -373,10 +360,8 @@ const styles = {
     scoreBadge: { fontSize: '14px', fontWeight: '800', minWidth: '20px', textAlign: 'center' },
 
     feedbackGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px', marginBottom: '30px' },
-    
     feedbackBoxSuccess: { backgroundColor: '#F1F8E9', border: '1px solid #C5E1A5', borderRadius: '10px', padding: '15px' },
     feedbackLabelSuccess: { color: '#2E7D32', fontSize: '12px', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px' },
-    
     feedbackBoxDanger: { backgroundColor: '#FFEBEE', border: '1px solid #FFCDD2', borderRadius: '10px', padding: '15px' },
     feedbackLabelDanger: { color: '#C62828', fontSize: '12px', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px' },
 
@@ -387,7 +372,6 @@ const styles = {
     
     btnApprovePrimary: { flex: 1, padding: '14px', borderRadius: '8px', border: 'none', backgroundColor: '#2E7D32', color: 'white', fontWeight: '800', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontSize: '14px', boxShadow: '0 4px 12px rgba(46, 125, 50, 0.3)' },
     btnApproveSecondary: { flex: 1, padding: '14px', borderRadius: '8px', border: '1px solid #C8E6C9', backgroundColor: '#F1F8E9', color: '#2E7D32', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontSize: '14px', opacity: 0.6 },
-
     btnRejectPrimary: { flex: 1, padding: '14px', borderRadius: '8px', border: 'none', backgroundColor: '#C62828', color: 'white', fontWeight: '800', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontSize: '14px', boxShadow: '0 4px 12px rgba(198, 40, 40, 0.3)' },
     btnRejectSecondary: { flex: 1, padding: '14px', borderRadius: '8px', border: '1px solid #FFCDD2', backgroundColor: '#FFEBEE', color: '#C62828', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontSize: '14px', opacity: 0.6 }
 };

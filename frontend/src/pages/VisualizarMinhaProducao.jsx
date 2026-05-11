@@ -7,7 +7,7 @@ import {
     XCircle, Wrench, Lightbulb, Target, Download, FileText, User, Package, Star,
     Send, MapPin, Search, AlertCircle, RefreshCw, File, ChevronRight,
     BarChart3, ShieldAlert, ThumbsUp, AlertTriangle, 
-    Terminal, Cpu, Bookmark, ShieldCheck // <--- Importações completas!
+    Terminal, Cpu, Bookmark, ShieldCheck, Link, ExternalLink
 } from 'lucide-react';
 
 const VisualizarMinhaProducao = () => {
@@ -194,9 +194,8 @@ const VisualizarMinhaProducao = () => {
                                     </div>
                                     <div>
                                         <span style={{ ...styles.techLabel, color: theme.main }}>Recursos</span>
-                                        {/* CORREÇÃO DO ESPAÇAMENTO DOS RECURSOS AQUI */}
                                         <span style={styles.techValue}>
-                                            {data.recursos ? data.recursos.split(',').map(r => r.trim()).join(', ') : '-'}
+                                            {Array.isArray(data.recursos) ? data.recursos.join(', ') : (data.recursos || '-')}
                                         </span>
                                     </div>
                                 </div>
@@ -229,7 +228,7 @@ const VisualizarMinhaProducao = () => {
                                 <div style={styles.resultsBox}>{data.resultados || "Sem resultados registrados."}</div>
                             </div>
                             
-                            {/* RENDERIZAÇÃO DO NOVO PARECER TÉCNICO COMPLETO */}
+                            {/* O componente de Parecer Técnico agora tem trava de segurança absoluta */}
                             <ParecerTecnico producao={data} />
 
                         </div>
@@ -293,24 +292,47 @@ const VisualizarMinhaProducao = () => {
 
                             <div style={styles.divider}></div>
 
-                            <h3 style={styles.sidebarTitle}>Arquivos e Anexos</h3>
-                            {data.arquivo ? (
+                            <h3 style={styles.sidebarTitle}>Arquivos e Links</h3>
+                            
+                            {/* RENDERIZADOR DO ARQUIVO ANEXADO */}
+                            {data.arquivo && (
                                 <div style={styles.downloadContainer}>
                                     <div style={styles.fileInfoBox}>
                                         <FileText size={32} color="#1565C0" style={{flexShrink: 0}} />
                                         <div style={{overflow: 'hidden'}}>
                                             <span style={styles.fileName}>{decodeURIComponent(data.arquivo.split('/').pop())}</span>
-                                            <span style={styles.fileType}>Documento PDF/DOCX</span>
+                                            <span style={styles.fileType}>Documento Anexado</span>
                                         </div>
                                     </div>
                                     <button onClick={handleDownload} style={styles.downloadBtnPrimary}>
-                                        <Download size={18} /> Baixar Roteiro
+                                        <Download size={18} /> Baixar Arquivo
                                     </button>
                                 </div>
-                            ) : (
+                            )}
+
+                            {/* RENDERIZADOR DO NOVO LINK EXTERNO */}
+                            {data.link_material && (
+                                <div style={{...styles.downloadContainer, marginTop: data.arquivo ? '15px' : '0'}}>
+                                    <div style={styles.fileInfoBox}>
+                                        <Link size={32} color="#1565C0" style={{flexShrink: 0}} />
+                                        <div style={{overflow: 'hidden'}}>
+                                            <span style={styles.fileName}>Link Externo</span>
+                                            <span style={styles.fileType}>Acessar material online</span>
+                                        </div>
+                                    </div>
+                                    <a href={data.link_material} target="_blank" rel="noopener noreferrer" style={{textDecoration: 'none', width: '100%'}}>
+                                        <button style={{...styles.downloadBtnPrimary, width: '100%'}}>
+                                            <ExternalLink size={18} /> Abrir Link
+                                        </button>
+                                    </a>
+                                </div>
+                            )}
+
+                            {/* ESTADO VAZIO */}
+                            {!data.arquivo && !data.link_material && (
                                 <div style={styles.emptyState}>
                                     <File size={24} color="#CFD8DC"/>
-                                    <p>Nenhum arquivo anexado.</p>
+                                    <p>Nenhum material anexado.</p>
                                 </div>
                             )}
                             
@@ -321,7 +343,7 @@ const VisualizarMinhaProducao = () => {
                                 backgroundColor: "#E8F5E9", 
                                 color: "#2E7D32", 
                                 border: "1px solid #C8E6C9",
-                                marginTop: "15px" 
+                                marginTop: "20px" 
                               }}
                             >
                               <Bookmark size={18} color="#2E7D32" /> Referenciar Prática
@@ -339,9 +361,12 @@ const VisualizarMinhaProducao = () => {
 // NOVO COMPONENTE: PARECER TÉCNICO EMBUTIDO E MELHORADO
 // ============================================================================
 const ParecerTecnico = ({ producao }) => {
-    if (!producao || (!producao.revisao_realizada && (!producao.avaliacoes_detalhadas || producao.avaliacoes_detalhadas.length === 0))) return null;
+    // TRAVA DE PRIVACIDADE ABSOLUTA: Se não houver array de avaliações, não renderiza nada!
+    if (!producao || !producao.avaliacoes_detalhadas || producao.avaliacoes_detalhadas.length === 0) {
+        return null;
+    }
 
-    const avaliacoes = producao.avaliacoes_detalhadas || [];
+    const avaliacoes = producao.avaliacoes_detalhadas;
     
     return (
         <div style={styles.ptContainer}>
@@ -482,7 +507,7 @@ const styles = {
     badgesRow: { display: 'flex', gap: '8px', marginBottom: '8px' },
     badge: { padding: '4px 10px', borderRadius: '6px', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase' },
     badgeNeutral: { backgroundColor: '#F5F5F5', color: '#616161', padding: '4px 10px', borderRadius: '6px', fontSize: '11px', fontWeight: '700' },
-    title: { fontSize: '26px', fontWeight: '800', color: '#1A237E', margin: 0, lineHeight: '1.2' },
+    title: { fontSize: '26px', fontWeight: '800', color: '#1A237E', margin: 0, lineHeight: '1.2', wordBreak: 'break-word', overflowWrap: 'break-word' },
     metaRow: { display: 'flex', alignItems: 'center', gap: '15px', marginTop: '12px' },
     iaTag: { display:'flex', alignItems: 'center', gap: '5px', fontSize: '12px', color: '#546E7A', backgroundColor: '#F5F5F5', padding: '4px 8px', borderRadius: '6px', fontWeight: '600' },
     dateText: { display:'flex', alignItems: 'center', gap: '5px', fontSize: '12px', color: '#90A4AE' },
@@ -491,15 +516,15 @@ const styles = {
     techItem: { display: 'flex', alignItems: 'flex-start', gap: '10px' },
     iconCircle: { width: '32px', height: '32px', borderRadius: '50%', backgroundColor: '#FFFFFF', border: '1px solid #E0E0E0', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
     techLabel: { display: 'block', fontSize: '10px', textTransform: 'uppercase', fontWeight: '800', color: '#90A4AE', marginBottom: '2px' },
-    techValue: { fontSize: '13px', color: '#37474F', fontWeight: '600', wordBreak: 'break-word' },
+    techValue: { fontSize: '13px', color: '#37474F', fontWeight: '600', wordBreak: 'break-word', overflowWrap: 'break-word' },
 
     section: { marginBottom: '30px' },
     sectionTitle: { fontSize: '16px', fontWeight: '800', color: '#37474F', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '8px' },
-    bnccBox: { backgroundColor: '#FFF8E1', borderLeft: '4px solid #FFC107', padding: '15px', borderRadius: '6px', color: '#4E342E', fontSize: '14px', lineHeight: '1.5' },
-    textBody: { fontSize: '15px', lineHeight: '1.6', color: '#455A64', whiteSpace: 'pre-wrap' },
+    bnccBox: { backgroundColor: '#FFF8E1', borderLeft: '4px solid #FFC107', padding: '15px', borderRadius: '6px', color: '#4E342E', fontSize: '14px', lineHeight: '1.5', wordBreak: 'break-word', overflowWrap: 'break-word' },
+    textBody: { fontSize: '15px', lineHeight: '1.6', color: '#455A64', whiteSpace: 'pre-wrap', wordBreak: 'break-word', overflowWrap: 'break-word' },
     
-    promptBox: { backgroundColor: '#F8FAFC', padding: '15px', borderRadius: '8px', borderLeft: '4px solid #8B5CF6', color: '#475569', fontSize: '14px', fontStyle: 'italic', whiteSpace: 'pre-wrap', lineHeight: '1.6' },
-    resultsBox: { backgroundColor: '#E8F5E9', border: '1px solid #C8E6C9', padding: '15px', borderRadius: '8px', color: '#1B5E20', fontSize: '14px', fontStyle: 'italic', whiteSpace: 'pre-wrap' },
+    promptBox: { backgroundColor: '#F8FAFC', padding: '15px', borderRadius: '8px', borderLeft: '4px solid #8B5CF6', color: '#475569', fontSize: '14px', fontStyle: 'italic', whiteSpace: 'pre-wrap', lineHeight: '1.6', wordBreak: 'break-word', overflowWrap: 'break-word' },
+    resultsBox: { backgroundColor: '#E8F5E9', border: '1px solid #C8E6C9', padding: '15px', borderRadius: '8px', color: '#1B5E20', fontSize: '14px', fontStyle: 'italic', whiteSpace: 'pre-wrap', wordBreak: 'break-word', overflowWrap: 'break-word' },
 
     timelineCard: { backgroundColor: 'white', border: '1px solid #E0E0E0', borderRadius: '12px', padding: '20px', boxShadow: '0 2px 5px rgba(0,0,0,0.03)' },
     sectionTitleSmall: { fontSize: '12px', textTransform: 'uppercase', color: '#90A4AE', fontWeight: '800', marginBottom: '15px' },
@@ -517,11 +542,11 @@ const styles = {
     sidebarTitle: { margin: '0 0 15px 0', fontSize: '12px', textTransform: 'uppercase', fontWeight: '800', color: '#90A4AE', borderBottom: '1px solid #EEE', paddingBottom: '8px' },
     editButton: { marginTop: '12px', width: '100%', padding: '10px', backgroundColor: '#C62828', color: 'white', border: 'none', borderRadius: '6px', fontWeight: '700', fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' },
 
-    downloadContainer: { display: 'flex', flexDirection: 'column', gap: '15px' },
-    fileInfoBox: { display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', backgroundColor: '#F8F9FA', borderRadius: '8px', border: '1px solid #E0E0E0' },
+    downloadContainer: { display: 'flex', flexDirection: 'column', gap: '10px', padding: '12px', backgroundColor: '#F8F9FA', borderRadius: '10px', border: '1px solid #E0E0E0' },
+    fileInfoBox: { display: 'flex', alignItems: 'center', gap: '12px' },
     fileName: { display: 'block', fontSize: '13px', fontWeight: '700', color: '#333', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%' },
     fileType: { fontSize: '11px', color: '#90A4AE' },
-    downloadBtnPrimary: { backgroundColor: '#1565C0', color: 'white', border: 'none', width: '100%', padding: '12px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', cursor: 'pointer', fontSize: '14px', fontWeight: '700', boxShadow: '0 4px 12px rgba(21, 101, 192, 0.2)', transition: 'background 0.2s' },
+    downloadBtnPrimary: { backgroundColor: '#1565C0', color: 'white', border: 'none', width: '100%', padding: '10px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', cursor: 'pointer', fontSize: '13px', fontWeight: '700', boxShadow: '0 4px 12px rgba(21, 101, 192, 0.2)', transition: 'background 0.2s' },
     emptyState: { textAlign: 'center', padding: '15px', color: '#B0BEC5', fontSize: '13px', fontStyle: 'italic', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '5px' },
     divider: { height: "1px", backgroundColor: "#EEE", margin: "20px 0" },
 
@@ -558,14 +583,17 @@ const styles = {
     rcNumberValue: { fontSize: '13px', fontWeight: '800', marginLeft: '8px', minWidth: '25px', textAlign: 'right' },
     rcDivider: { border: 'none', borderTop: '1px dashed #CFD8DC', margin: '25px 0' },
     rcFeedbackGrid: { display: 'flex', flexDirection: 'column', gap: '15px' },
+    
     rcFeedbackBoxSuccess: { backgroundColor: '#F1F8E9', borderRadius: '8px', padding: '15px', borderLeft: '4px solid #7CB342' },
     rcFeedbackLabelSuccess: { display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', fontWeight: '800', color: '#33691E', marginBottom: '8px', textTransform: 'uppercase' },
-    rcFeedbackTextSuccess: { fontSize: '14px', color: '#33691E', lineHeight: '1.6', whiteSpace: 'pre-wrap', fontFamily: 'inherit' },
+    rcFeedbackTextSuccess: { fontSize: '14px', color: '#33691E', lineHeight: '1.6', whiteSpace: 'pre-wrap', fontFamily: 'inherit', wordBreak: 'break-word', overflowWrap: 'break-word' },
+    
     rcFeedbackBoxDanger: { backgroundColor: '#FFF3E0', borderRadius: '8px', padding: '15px', borderLeft: '4px solid #FF9800' },
     rcFeedbackLabelDanger: { display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', fontWeight: '800', color: '#E65100', marginBottom: '8px', textTransform: 'uppercase' },
-    rcFeedbackTextDanger: { fontSize: '14px', color: '#E65100', lineHeight: '1.6', whiteSpace: 'pre-wrap', fontFamily: 'inherit' },
+    rcFeedbackTextDanger: { fontSize: '14px', color: '#E65100', lineHeight: '1.6', whiteSpace: 'pre-wrap', fontFamily: 'inherit', wordBreak: 'break-word', overflowWrap: 'break-word' },
+
     rcFeedbackBoxNeutral: { backgroundColor: '#FAFAFA', borderRadius: '8px', padding: '15px', borderLeft: '4px solid #90A4AE' },
-    rcFeedbackTextNeutral: { fontSize: '14px', color: '#455A64', lineHeight: '1.6', whiteSpace: 'pre-wrap', fontFamily: 'inherit' },
+    rcFeedbackTextNeutral: { fontSize: '14px', color: '#455A64', lineHeight: '1.6', whiteSpace: 'pre-wrap', fontFamily: 'inherit', wordBreak: 'break-word', overflowWrap: 'break-word' },
 
     gcCard: { backgroundColor: '#FAFAFA', borderRadius: '12px', border: '2px dashed #CFD8DC', overflow: 'hidden', opacity: 0.8 },
     gcHeader: { backgroundColor: '#F5F7FA', padding: '15px 25px', borderBottom: '1px solid #ECEFF1', display: 'flex', justifyContent: 'space-between', alignItems: 'center' },

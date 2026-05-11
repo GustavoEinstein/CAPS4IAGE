@@ -4,7 +4,7 @@ import { useNavigate, useOutletContext, useLocation } from "react-router-dom"
 import Swal from 'sweetalert2' 
 import {
   ArrowLeft, Save, UploadCloud, Lock, BookOpen, Wrench, Clock, Package, 
-  Lightbulb, Target, FileText, CheckCircle2, Layers, X, Bookmark, Send, Check
+  Lightbulb, Target, FileText, CheckCircle2, Layers, X, Bookmark, Send, Check, Link
 } from "lucide-react"
 
 // --- DADOS MOCKADOS DA BNCC (Temporário até os JSONs ficarem prontos) ---
@@ -34,7 +34,8 @@ const FormularioManual = () => {
         disciplina: base.disciplina && base.disciplina !== "Outra" ? base.disciplina : storedDisc,
         producao_base: base.id, // Guarda o ID da prática original
         arquivo: null, // Não copia o arquivo do colega
-        recursos: Array.isArray(base.recursos) ? base.recursos : (typeof base.recursos === 'string' ? base.recursos.split(',').map(r => r.trim()) : [])
+        recursos: Array.isArray(base.recursos) ? base.recursos : (typeof base.recursos === 'string' ? base.recursos.split(',').map(r => r.trim()) : []),
+        link_material: base.link_material || "" // <-- NOVO CAMPO ADICIONADO AQUI
       };
     }
     
@@ -43,7 +44,8 @@ const FormularioManual = () => {
       titulo: "", disciplina: storedDisc !== "Outra" ? storedDisc : "Geral",
       nivel: "", modelo_ia: "", prompts_ia: "", categoria: "",
       bncc: "", bncc_computacao: "", metodologia: "", duracao: "",
-      recursos: [], experiencia: "", resultados: "", arquivo: null, producao_base: ""
+      recursos: [], experiencia: "", resultados: "", arquivo: null, producao_base: "",
+      link_material: "" // <-- NOVO CAMPO ADICIONADO AQUI
     }
   });
 
@@ -183,7 +185,14 @@ const FormularioManual = () => {
               
               <div style={styles.inputGroup}>
                 <label style={styles.label}>Título</label>
-                <input type="text" name="titulo" value={formData.titulo} onChange={handleChange} style={styles.input} />
+                <input 
+                  type="text" 
+                  name="titulo" 
+                  value={formData.titulo} 
+                  onChange={handleChange} 
+                  style={styles.input} 
+                  placeholder="Ex: Dilemas Éticos com IA" 
+                />
               </div>
               <div style={styles.inputGroup}>
                 <label style={styles.label}>Disciplina</label>
@@ -227,12 +236,26 @@ const FormularioManual = () => {
               </div>
               <div style={styles.inputGroup}>
                 <label style={styles.label}>Modelo de IA</label>
-                <input type="text" name="modelo_ia" value={formData.modelo_ia} onChange={handleChange} style={styles.input} />
+                <input 
+                  type="text" 
+                  name="modelo_ia" 
+                  value={formData.modelo_ia} 
+                  onChange={handleChange} 
+                  style={styles.input} 
+                  placeholder="Ex: ChatGPT-4, Gemini, Claude..." 
+                />
               </div>
               <div style={styles.inputGroup}>
                 <label style={styles.label}>Prompts Utilizados</label>
-                <textarea name="prompts_ia" value={formData.prompts_ia} onChange={handleChange} style={{ ...styles.textarea, minHeight: "80px" }} />
+                <textarea 
+                  name="prompts_ia" 
+                  value={formData.prompts_ia} 
+                  onChange={handleChange} 
+                  style={{ ...styles.textarea, minHeight: "80px" }} 
+                  placeholder="Ex: 'Atue como um professor do ensino médio e crie uma lista de exercícios sobre...'" 
+                />
               </div>
+              
               <div style={styles.uploadSection}>
                 <label style={styles.label}><UploadCloud size={16} /> Anexar Material</label>
                 <div style={styles.uploadContainer}>
@@ -250,6 +273,23 @@ const FormularioManual = () => {
                   </label>
                 </div>
               </div>
+
+              {/* NOVO CAMPO: LINK EXTERNO ADICIONADO AQUI */}
+              <div style={{ ...styles.inputGroup, marginTop: "15px" }}>
+                <label style={styles.label}><Link size={14} /> Link Externo (Opcional)</label>
+                <input 
+                  type="url" 
+                  name="link_material" 
+                  value={formData.link_material} 
+                  onChange={handleChange} 
+                  style={styles.input} 
+                  placeholder="Ex: https://youtu.be/..." 
+                />
+                <span style={{ fontSize: "11px", color: "#78909C", marginTop: "4px" }}>
+                  Caso o material seja muito pesado (ex: vídeos {">"} 50MB), cole o link do YouTube ou Drive aqui.
+                </span>
+              </div>
+
             </div>
 
             {!isMobile && <div style={styles.verticalDivider}></div>}
@@ -261,7 +301,15 @@ const FormularioManual = () => {
               <div style={styles.inputGroup}>
                 <label style={styles.label}>BNCC / Objetivos</label>
                 <div style={{ position: "relative", marginBottom: "10px" }}>
-                  <input type="text" placeholder="🔍 Busque por código ou palavra-chave..." value={bnccBusca} onChange={(e) => { setBnccBusca(e.target.value); setMostrarOpcoesBncc(true); }} onFocus={() => setMostrarOpcoesBncc(true)} onBlur={() => setTimeout(() => setMostrarOpcoesBncc(false), 200)} style={styles.input} />
+                  <input 
+                    type="text" 
+                    placeholder="🔍 Busque por código ou palavra-chave..." 
+                    value={bnccBusca} 
+                    onChange={(e) => { setBnccBusca(e.target.value); setMostrarOpcoesBncc(true); }} 
+                    onFocus={() => setMostrarOpcoesBncc(true)} 
+                    onBlur={() => setTimeout(() => setMostrarOpcoesBncc(false), 200)} 
+                    style={styles.input} 
+                  />
                   {mostrarOpcoesBncc && bnccBusca && (
                     <div style={styles.autocompleteDropdown}>
                       {bnccFiltradas.length > 0 ? (
@@ -274,22 +322,50 @@ const FormularioManual = () => {
                     </div>
                   )}
                 </div>
-                <textarea name="bncc" value={formData.bncc} onChange={handleChange} style={styles.textarea} rows="3" />
+                <textarea 
+                  name="bncc" 
+                  value={formData.bncc} 
+                  onChange={handleChange} 
+                  style={styles.textarea} 
+                  rows="3" 
+                  placeholder="Cite os códigos e objetivos de aprendizagem da BNCC relacionados..." 
+                />
               </div>
 
               <div style={styles.inputGroup}>
                 <label style={styles.label}>BNCC Computação</label>
-                <textarea name="bncc_computacao" value={formData.bncc_computacao} onChange={handleChange} style={styles.textarea} rows="2" />
+                <textarea 
+                  name="bncc_computacao" 
+                  value={formData.bncc_computacao} 
+                  onChange={handleChange} 
+                  style={styles.textarea} 
+                  rows="2" 
+                  placeholder="Cite as habilidades e competências de computação da BNCC envolvidas..." 
+                />
               </div>
               
               <div style={styles.gridThree}>
                 <div style={styles.inputGroup}>
                   <label style={styles.label}><Wrench size={14} /> Metodologia</label>
-                  <input type="text" name="metodologia" value={formData.metodologia} onChange={handleChange} style={styles.input} />
+                  <input 
+                    type="text" 
+                    name="metodologia" 
+                    value={formData.metodologia} 
+                    onChange={handleChange} 
+                    style={styles.input} 
+                    placeholder="Ex: Sala Invertida, PBL..." 
+                  />
                 </div>
                 <div style={styles.inputGroup}>
                   <label style={styles.label}><Clock size={14} /> Duração</label>
-                  <input type="text" name="duracao" value={formData.duracao} onChange={handleChange} style={styles.input} />
+                  <input 
+                    type="text" 
+                    name="duracao" 
+                    value={formData.duracao} 
+                    onChange={handleChange} 
+                    style={styles.input} 
+                    placeholder="Ex: 50 min, 2 aulas..." 
+                  />
                 </div>
               </div>
 
@@ -302,7 +378,14 @@ const FormularioManual = () => {
                   })}
                 </div>
                 <div style={styles.addResourceRow}>
-                  <input type="text" placeholder="Outro recurso (Enter)..." value={customResource} onChange={(e) => setCustomResource(e.target.value)} onKeyDown={addCustomResource} style={{ ...styles.input, flex: 1 }} />
+                  <input 
+                    type="text" 
+                    placeholder="Outro recurso (Enter)..." 
+                    value={customResource} 
+                    onChange={(e) => setCustomResource(e.target.value)} 
+                    onKeyDown={addCustomResource} 
+                    style={{ ...styles.input, flex: 1 }} 
+                  />
                 </div>
                 {formData.recursos.some((r) => !RECURSOS_COMUNS.includes(r)) && (
                   <div style={{ marginTop: "10px", display: "flex", gap: "6px", flexWrap: "wrap" }}>
@@ -315,11 +398,24 @@ const FormularioManual = () => {
 
               <div style={styles.inputGroup}>
                 <label style={styles.label}><Lightbulb size={14} /> Relato da Experiência</label>
-                <textarea name="experiencia" value={formData.experiencia} onChange={handleChange} style={{ ...styles.textarea, minHeight: "100px" }} />
+                <textarea 
+                  name="experiencia" 
+                  value={formData.experiencia} 
+                  onChange={handleChange} 
+                  style={{ ...styles.textarea, minHeight: "100px" }} 
+                  placeholder="Descreva como foi a aplicação em sala de aula, o engajamento dos alunos e os desafios encontrados..." 
+                />
               </div>
               <div style={styles.inputGroup}>
                 <label style={styles.label}><Target size={14} /> Resultados</label>
-                <textarea name="resultados" value={formData.resultados} onChange={handleChange} style={styles.textarea} rows="2" />
+                <textarea 
+                  name="resultados" 
+                  value={formData.resultados} 
+                  onChange={handleChange} 
+                  style={styles.textarea} 
+                  rows="2" 
+                  placeholder="Quais foram as evidências de aprendizagem? O que os alunos produziram ou demonstraram?" 
+                />
               </div>
               
               <div style={styles.formFooter}>

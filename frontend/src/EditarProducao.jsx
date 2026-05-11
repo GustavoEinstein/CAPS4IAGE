@@ -19,7 +19,8 @@ import {
     Plus, 
     X,
     Loader2,
-    Send
+    Send,
+    Link as LinkIcon
 } from 'lucide-react';
 
 const EditarProducao = () => {
@@ -46,7 +47,8 @@ const EditarProducao = () => {
         recursos: [], 
         experiencia: '', 
         resultados: '',
-        arquivo: null 
+        arquivo: null,
+        link_material: '' // <-- NOVO CAMPO
     });
     
     const [existingFile, setExistingFile] = useState(null);
@@ -59,13 +61,14 @@ const EditarProducao = () => {
                 const response = await api.get(`api/production/${id}/`);
                 const d = response.data;
                 
-                // CORREÇÃO: Verifica se é string antes de dar o split
                 let recursosArray = [];
                 if (d.recursos && typeof d.recursos === 'string') {
                     recursosArray = d.recursos.split(',').map(r => r.trim()).filter(r => r !== "");
+                } else if (Array.isArray(d.recursos)) {
+                    recursosArray = d.recursos;
                 }
 
-                setIsDraftStatus(d.status === 'Rascunho');
+                setIsDraftStatus(d.status === 'Rascunho' || d.status === 'Correção solicitada');
 
                 setFormData({
                     titulo: d.titulo || '', 
@@ -80,7 +83,8 @@ const EditarProducao = () => {
                     recursos: recursosArray, 
                     experiencia: d.experiencia || '', 
                     resultados: d.resultados || '',
-                    arquivo: null
+                    arquivo: null,
+                    link_material: d.link_material || '' // Carrega o link se existir
                 });
                 
                 if (d.arquivo) {
@@ -129,18 +133,16 @@ const EditarProducao = () => {
         }
     };
 
-    // --- 3. SALVAR EDIÇÃO (RASCUNHO VS REVISÃO) ---
+    // --- 3. SALVAR EDIÇÃO ---
     const handleUpdate = async (isDraft) => {
-        
         if (!isDraft) {
             if (!formData.titulo || !formData.nivel || !formData.categoria || !formData.experiencia) {
-                Swal.fire('Campos Incompletos', 'Para enviar para revisão, preencha Título, Nível, Categoria e Relato. Se quiser terminar depois, continue salvando como Rascunho.', 'warning');
+                Swal.fire('Campos Incompletos', 'Preencha os campos obrigatórios para enviar para revisão.', 'warning');
                 return;
             }
         }
 
         setSubmitting(true);
-        
         const dataToSend = new FormData();
         
         dataToSend.append('is_draft', isDraft);
@@ -155,6 +157,7 @@ const EditarProducao = () => {
         dataToSend.append('duracao', formData.duracao);
         dataToSend.append('experiencia', formData.experiencia);
         dataToSend.append('resultados', formData.resultados);
+        dataToSend.append('link_material', formData.link_material); // <-- Envia o link
 
         formData.recursos.forEach(r => dataToSend.append('recursos', r));
 
@@ -169,15 +172,14 @@ const EditarProducao = () => {
             
             Swal.fire({
                 icon: 'success',
-                title: isDraft ? 'Rascunho Atualizado!' : 'Prática Reenviada!',
-                text: isDraft ? 'Suas alterações foram salvas.' : 'Produção corrigida e enviada para a fila de revisão!',
+                title: isDraft ? 'Alterações Salvas!' : 'Prática Reenviada!',
                 confirmButtonColor: '#1565C0'
             });
             navigate('/dashboard/minhas-producoes');
             
         } catch (error) {
             console.error(error);
-            Swal.fire("Erro", "Erro ao atualizar produção. Tente novamente.", "error");
+            Swal.fire("Erro", "Erro ao atualizar produção.", "error");
         } finally {
             setSubmitting(false);
         }
@@ -197,7 +199,7 @@ const EditarProducao = () => {
                 
                 <div style={styles.topBar}>
                     <button onClick={() => navigate(-1)} style={styles.backButton}>
-                        <ArrowLeft size={20} /> Cancelar
+                        <ArrowLeft size={20} /> Voltar
                     </button>
                     <div style={{textAlign: isMobile ? 'left' : 'right'}}>
                         <h1 style={styles.pageTitle}>{isDraftStatus ? "Continuar Editando" : "Editar Prática"}</h1>
@@ -217,7 +219,7 @@ const EditarProducao = () => {
                                 
                                 <div style={styles.inputGroup}>
                                     <label style={styles.label}>Título <span style={styles.asterisk}>*</span></label>
-                                    <input type="text" name="titulo" value={formData.titulo} onChange={handleChange} style={styles.input} />
+                                    <input type="text" name="titulo" value={formData.titulo} onChange={handleChange} style={styles.input} placeholder="Ex: Dilemas Éticos com IA" />
                                 </div>
                                 
                                 <div style={styles.inputGroup}>
@@ -240,7 +242,7 @@ const EditarProducao = () => {
                                 </div>
                                 
                                 <div style={styles.inputGroup}>
-                                    <label style={styles.label}><Layers size={14}/> Categoria / Conteúdo <span style={styles.asterisk}>*</span></label>
+                                    <label style={styles.label}><Layers size={14}/> Categoria <span style={styles.asterisk}>*</span></label>
                                     <select name="categoria" value={formData.categoria} onChange={handleChange} style={styles.input}>
                                         <option value="">O que foi criado?</option>
                                         <optgroup label="Planejamento">
@@ -253,6 +255,7 @@ const EditarProducao = () => {
                                             <option value="Slide / Apresentação">Slide / Apresentação</option>
                                             <option value="Lista de Exercícios">Lista de Exercícios</option>
                                             <option value="Quiz / Questões">Quiz / Banco de Questões</option>
+                                            <option value="Imagens / Vídeos">Imagens / Vídeos</option>
                                         </optgroup>
                                         <optgroup label="Atividades Práticas">
                                             <option value="Estudo de Caso">Estudo de Caso</option>
@@ -263,8 +266,8 @@ const EditarProducao = () => {
                                 </div>
                                 
                                 <div style={styles.inputGroup}>
-                                    <label style={styles.label}>Modelo de IA Utilizado</label>
-                                    <input type="text" name="modelo_ia" value={formData.modelo_ia} onChange={handleChange} style={styles.input} />
+                                    <label style={styles.label}>Modelo de IA</label>
+                                    <input type="text" name="modelo_ia" value={formData.modelo_ia} onChange={handleChange} style={styles.input} placeholder="Ex: ChatGPT-4, Gemini, Claude..." />
                                 </div>
 
                                 <div style={styles.inputGroup}>
@@ -274,11 +277,12 @@ const EditarProducao = () => {
                                         value={formData.prompts_ia}
                                         onChange={handleChange}
                                         style={{ ...styles.textarea, minHeight: "80px" }}
+                                        placeholder="Ex: 'Atue como um professor do ensino médio e crie uma lista de exercícios sobre...'"
                                     />
                                 </div>
                                 
                                 <div style={styles.uploadSection}>
-                                    <label style={styles.label}><UploadCloud size={16}/> Anexar Arquivo</label>
+                                    <label style={styles.label}><UploadCloud size={16}/> Arquivo Anexado</label>
                                     <div style={styles.uploadContainer}>
                                         <input type="file" id="file-upload" onChange={handleFileChange} style={{display: 'none'}} />
                                         <label htmlFor="file-upload" style={styles.uploadLabel}>
@@ -291,19 +295,33 @@ const EditarProducao = () => {
                                                 existingFile ? (
                                                     <div style={styles.fileSelected}>
                                                         <FileText size={28} color="#1565C0" />
-                                                        <span style={styles.fileName}>Manter atual (ou clique para trocar)</span>
+                                                        <span style={styles.fileName}>Manter atual (clique para trocar)</span>
                                                     </div>
                                                 ) : (
                                                     <>
-                                                        <div style={styles.uploadIconCircle}>
-                                                            <UploadCloud size={20} color="#1565C0" />
-                                                        </div>
+                                                        <div style={styles.uploadIconCircle}><UploadCloud size={20} color="#1565C0" /></div>
                                                         <span style={styles.uploadTextMain}>Substituir Arquivo</span>
                                                     </>
                                                 )
                                             )}
                                         </label>
                                     </div>
+                                </div>
+
+                                {/* NOVO CAMPO: LINK EXTERNO */}
+                                <div style={{ ...styles.inputGroup, marginTop: "15px" }}>
+                                    <label style={styles.label}><LinkIcon size={14} /> Link Externo (Opcional)</label>
+                                    <input 
+                                        type="url" 
+                                        name="link_material" 
+                                        value={formData.link_material} 
+                                        onChange={handleChange} 
+                                        style={styles.input} 
+                                        placeholder="Ex: https://youtu.be/..." 
+                                    />
+                                    <span style={{ fontSize: "11px", color: "#78909C", marginTop: "4px" }}>
+                                        Cole o link do YouTube ou Drive caso o material seja pesado.
+                                    </span>
                                 </div>
                             </div>
                             
@@ -315,23 +333,22 @@ const EditarProducao = () => {
                                 
                                 <div style={styles.inputGroup}>
                                     <label style={styles.label}>BNCC / Objetivos</label>
-                                    <textarea name="bncc" value={formData.bncc} onChange={handleChange} style={styles.textarea} rows="2" />
+                                    <textarea name="bncc" value={formData.bncc} onChange={handleChange} style={styles.textarea} rows="2" placeholder="Cite os códigos e objetivos da BNCC relacionados..." />
                                 </div>
                                 
                                 <div style={styles.gridThree}>
                                     <div style={styles.inputGroup}>
                                         <label style={styles.label}><Wrench size={14}/> Metodologia</label>
-                                        <input type="text" name="metodologia" value={formData.metodologia} onChange={handleChange} style={styles.input} />
+                                        <input type="text" name="metodologia" value={formData.metodologia} onChange={handleChange} style={styles.input} placeholder="Ex: Sala Invertida, PBL..." />
                                     </div>
                                     <div style={styles.inputGroup}>
                                         <label style={styles.label}><Clock size={14}/> Duração</label>
-                                        <input type="text" name="duracao" value={formData.duracao} onChange={handleChange} style={styles.input} />
+                                        <input type="text" name="duracao" value={formData.duracao} onChange={handleChange} style={styles.input} placeholder="Ex: 50 min, 2 aulas..." />
                                     </div>
                                 </div>
                                 
                                 <div style={styles.inputGroup}>
-                                    <label style={styles.label}><Package size={14}/> Recursos Utilizados</label>
-                                    
+                                    <label style={styles.label}><Package size={14}/> Recursos Didáticos</label>
                                     <div style={styles.resourcesGrid}>
                                         {RECURSOS_COMUNS.map(res => (
                                             <button 
@@ -371,19 +388,18 @@ const EditarProducao = () => {
                                 
                                 <div style={styles.inputGroup}>
                                     <label style={styles.label}><Lightbulb size={14}/> Relato da Experiência <span style={styles.asterisk}>*</span></label>
-                                    <textarea name="experiencia" value={formData.experiencia} onChange={handleChange} style={{...styles.textarea, minHeight: '100px'}} />
+                                    <textarea name="experiencia" value={formData.experiencia} onChange={handleChange} style={{...styles.textarea, minHeight: '100px'}} placeholder="Descreva como foi a aplicação em sala de aula..." />
                                 </div>
                                 
                                 <div style={styles.inputGroup}>
                                     <label style={styles.label}><Target size={14}/> Resultados / Evidências</label>
-                                    <textarea name="resultados" value={formData.resultados} onChange={handleChange} style={styles.textarea} rows="2" />
+                                    <textarea name="resultados" value={formData.resultados} onChange={handleChange} style={styles.textarea} rows="2" placeholder="O que os alunos produziram ou demonstraram?" />
                                 </div>
                                 
-                                {/* --- BOTÕES DUPLOS --- */}
                                 <div style={styles.formFooter}>
                                     {isDraftStatus && (
                                         <button type="button" disabled={submitting} onClick={() => handleUpdate(true)} style={styles.draftButton}>
-                                            <Save size={18} /> Salvar Alterações (Rascunho)
+                                            <Save size={18} /> Salvar Alterações
                                         </button>
                                     )}
                                     
@@ -436,7 +452,6 @@ const styles = {
     pageTitle: { fontSize: '24px', color: '#1565C0', fontWeight: '800', margin: '0 0 4px 0' },
     pageSubtitle: { fontSize: '14px', color: '#546E7A', margin: 0 },
     gridThree: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '20px' },
-    
     formFooter: { marginTop: '30px', display: 'flex', justifyContent: 'flex-end', gap: '15px', flexWrap: 'wrap' },
     draftButton: { backgroundColor: "white", color: "#1565C0", border: "1px solid #1565C0", borderRadius: "8px", padding: "12px 24px", fontSize: "15px", fontWeight: "bold", cursor: "pointer", display: "flex", alignItems: "center", gap: "8px", transition: "background 0.2s" },
     submitButton: { backgroundColor: '#1565C0', color: 'white', border: 'none', borderRadius: '8px', padding: '14px 40px', fontSize: '15px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px', boxShadow: '0 4px 12px rgba(21, 101, 192, 0.25)', transition: 'transform 0.2s' },

@@ -28,7 +28,10 @@ import {
   Send,
   Search,
   Copy,
-  Bookmark
+  Bookmark,
+  Terminal,
+  Cpu,
+  Bot
 } from "lucide-react"
 
 const CatalogarProducoes = () => {
@@ -36,6 +39,9 @@ const CatalogarProducoes = () => {
   const [draftData, setDraftData] = useState(null) 
   const navigate = useNavigate()
   const { isMobile } = useOutletContext() || { isMobile: false }
+
+  // LOG DE DEPURAÇÃO - Vai aparecer no console do navegador (F12)
+  console.log("🟢 CatalogarProducoes.jsx foi carregado com sucesso!");
 
   if (mode === "selecao")
     return <SelectionScreen onSelect={setMode} isMobile={isMobile} navigate={navigate} />
@@ -210,6 +216,7 @@ const ManualFormSplit = ({ onBack, navigate, isMobile, initialData }) => {
     setFormData((prev) => ({
       ...prev,
       ...initialData,
+      titulo: initialData.titulo || prev.titulo,
       disciplina: initialData.disciplina && initialData.disciplina !== "Outra" ? initialData.disciplina : prev.disciplina,
       recursos: Array.isArray(initialData.recursos) ? initialData.recursos : prev.recursos,
       arquivo: null,
@@ -233,10 +240,11 @@ const ManualFormSplit = ({ onBack, navigate, isMobile, initialData }) => {
 
   const toggleRecurso = (recurso) => {
     setFormData((prev) => {
-      const exists = prev.recursos.includes(recurso)
+      const currentRecursos = prev.recursos || [];
+      const exists = currentRecursos.includes(recurso)
       return exists
-        ? { ...prev, recursos: prev.recursos.filter((r) => r !== recurso) }
-        : { ...prev, recursos: [...prev.recursos, recurso] }
+        ? { ...prev, recursos: currentRecursos.filter((r) => r !== recurso) }
+        : { ...prev, recursos: [...currentRecursos, recurso] }
     })
   }
 
@@ -244,15 +252,15 @@ const ManualFormSplit = ({ onBack, navigate, isMobile, initialData }) => {
     if ((e.key === "Enter" || e.type === "click") && customResource.trim()) {
       e.preventDefault()
       const val = customResource.trim()
-      if (!formData.recursos.includes(val)) {
-        setFormData((prev) => ({ ...prev, recursos: [...prev.recursos, val] }))
+      const currentRecursos = formData.recursos || [];
+      if (!currentRecursos.includes(val)) {
+        setFormData((prev) => ({ ...prev, recursos: [...currentRecursos, val] }))
       }
       setCustomResource("")
     }
   }
 
   const handleSubmit = async (isDraft) => {
-    
     if (!isDraft) {
         if (!formData.titulo || !formData.nivel || !formData.categoria || !formData.experiencia || !formData.bncc_computacao) {
             Swal.fire('Campos Incompletos', 'Para enviar para revisão, preencha Título, Nível, Categoria, Relato e BNCC Computação. Se quiser terminar depois, você pode "Salvar como Rascunho".', 'warning');
@@ -268,18 +276,20 @@ const ManualFormSplit = ({ onBack, navigate, isMobile, initialData }) => {
       dataToSend.append("is_draft", isDraft);
 
       Object.keys(formData).forEach((key) => {
-        if (key === "recursos") formData.recursos.forEach((r) => dataToSend.append("recursos", r))
+        if (key === "recursos") {
+            const recs = formData.recursos || [];
+            recs.forEach((r) => dataToSend.append("recursos", r))
+        }
         else if (key === "arquivo" && formData.arquivo) dataToSend.append("arquivo", formData.arquivo)
-        else if (key === "nivel") dataToSend.append("nivel_ensino", formData.nivel)
-      else if (formData[key] !== null && formData[key] !== "") {
+        else if (key === "nivel") dataToSend.append("nivel_ensino", formData.nivel || '')
+        else if (formData[key] !== null && formData[key] !== "") {
           dataToSend.append(key, formData[key])
         }
-        else dataToSend.append(key, formData[key])
+        else dataToSend.append(key, formData[key] || '')
       })
       
       await api.post(url, dataToSend, { headers: { "Content-Type": "multipart/form-data" } })
       
-      // --- POP-UP MODIFICADO ---
       Swal.fire({
           icon: 'success',
           title: isDraft ? 'Rascunho Salvo!' : 'Prática Enviada com Sucesso!',
@@ -308,7 +318,8 @@ const ManualFormSplit = ({ onBack, navigate, isMobile, initialData }) => {
             <ArrowLeft size={20} /> Voltar
           </button>
           <div style={{ textAlign: isMobile ? "left" : "right" }}>
-            <h1 style={styles.pageTitle}>Detalhes da Prática</h1>
+            {/* ATENÇÃO AQUI: Mudei o título para provar qual arquivo está rodando */}
+            <h1 style={styles.pageTitle}>Detalhes da Prática (V2)</h1>
             <p style={styles.pageSubtitle}>Revise os dados da sua catalogação.</p>
           </div>
         </div>
@@ -320,7 +331,7 @@ const ManualFormSplit = ({ onBack, navigate, isMobile, initialData }) => {
               {/* ESQUERDA */}
               <div style={{ ...styles.leftCol, width: isMobile ? "100%" : "35%" }}>
                 {formData.producao_base && (
-                  <div style={{ backgroundColor: "#E8F5E9", padding: "10px", borderRadius: "8px", marginBottom: "15px", fontSize: "12px", color: "#2E7D32", fontWeight: "bold" }}>
+                  <div style={{ backgroundColor: "#E8F5E9", padding: "10px", borderRadius: "8px", marginBottom: "15px", fontSize: "12px", color: "#2E7D32", fontWeight: "bold", display: "flex", alignItems: "center" }}>
                     <Bookmark size={14} style={{ marginRight: "5px" }} />
                     Herdando dados de prática existente
                   </div>
@@ -334,10 +345,10 @@ const ManualFormSplit = ({ onBack, navigate, isMobile, initialData }) => {
                   <input
                     type="text"
                     name="titulo"
-                    value={formData.titulo}
+                    value={formData.titulo || ""}
                     onChange={handleChange}
                     style={styles.input}
-                    placeholder="Ex: Dilemas Éticos"
+                    placeholder="Ex: Dilemas Éticos com IA"
                   />
                 </div>
                 
@@ -345,14 +356,14 @@ const ManualFormSplit = ({ onBack, navigate, isMobile, initialData }) => {
                   <label style={styles.label}>Disciplina</label>
                   <div style={styles.lockedInputWrapper}>
                     <Lock size={16} color="#78909C" style={{ marginLeft: "12px" }} />
-                    <input type="text" value={formData.disciplina} readOnly style={styles.lockedInput} />
+                    <input type="text" value={formData.disciplina || ""} readOnly style={styles.lockedInput} />
                   </div>
                 </div>
                 
                 <div style={styles.inputGroup}>
                   <label style={styles.label}>Nível</label>
-                  <select name="nivel" value={formData.nivel} onChange={handleChange} style={styles.input}>
-                    <option value="">Selecione...</option>
+                  <select name="nivel" value={formData.nivel || ""} onChange={handleChange} style={styles.input}>
+                    <option value="" disabled hidden>Selecione o nível de ensino...</option>
                     <option value="Fundamental 1">Fundamental 1</option>
                     <option value="Fundamental 2">Fundamental 2</option>
                     <option value="Ensino Médio">Ensino Médio</option>
@@ -364,8 +375,8 @@ const ManualFormSplit = ({ onBack, navigate, isMobile, initialData }) => {
                   <label style={styles.label}>
                     <Layers size={14} /> Conteúdo Gerado
                   </label>
-                  <select name="categoria" value={formData.categoria} onChange={handleChange} style={styles.input}>
-                    <option value="">O que a IA ajudou a criar?</option>
+                  <select name="categoria" value={formData.categoria || ""} onChange={handleChange} style={styles.input}>
+                    <option value="" disabled hidden>O que a IA ajudou a criar?</option>
                     <optgroup label="Planejamento">
                       <option value="Plano de Aula">Plano de Aula / Roteiro</option>
                       <option value="Sequência Didática">Sequência Didática</option>
@@ -391,10 +402,10 @@ const ManualFormSplit = ({ onBack, navigate, isMobile, initialData }) => {
                   <input
                     type="text"
                     name="modelo_ia"
-                    value={formData.modelo_ia}
+                    value={formData.modelo_ia || ""}
                     onChange={handleChange}
                     style={styles.input}
-                    placeholder="Ex: ChatGPT-4"
+                    placeholder="Ex: ChatGPT-4, Gemini, Claude..."
                   />
                 </div>
 
@@ -402,10 +413,10 @@ const ManualFormSplit = ({ onBack, navigate, isMobile, initialData }) => {
                   <label style={styles.label}>Prompts Utilizados</label>
                   <textarea
                     name="prompts_ia"
-                    value={formData.prompts_ia}
+                    value={formData.prompts_ia || ""}
                     onChange={handleChange}
                     style={{ ...styles.textarea, minHeight: "80px" }}
-                    placeholder="Ex: 'Atue como um professor do ensino médio e crie...'"
+                    placeholder="Ex: 'Atue como um professor do ensino médio e crie uma lista de exercícios sobre...'"
                   />
                 </div>
 
@@ -446,11 +457,11 @@ const ManualFormSplit = ({ onBack, navigate, isMobile, initialData }) => {
                   <label style={styles.label}>BNCC / Objetivos</label>
                   <textarea
                     name="bncc"
-                    value={formData.bncc}
+                    value={formData.bncc || ""}
                     onChange={handleChange}
                     style={styles.textarea}
                     rows="2"
-                    placeholder="Cite os códigos e objetivos..."
+                    placeholder="Cite os códigos e objetivos de aprendizagem da BNCC relacionados..."
                   />
                 </div>
 
@@ -458,22 +469,36 @@ const ManualFormSplit = ({ onBack, navigate, isMobile, initialData }) => {
                   <label style={styles.label}>BNCC Computação</label>
                   <textarea
                     name="bncc_computacao"
-                    value={formData.bncc_computacao}
+                    value={formData.bncc_computacao || ""}
                     onChange={handleChange}
                     style={styles.textarea}
                     rows="2"
-                    placeholder="Cite as habilidades/competências de computação..."
+                    placeholder="Cite as habilidades e competências de computação da BNCC envolvidas..."
                   />
                 </div>
                 
                 <div style={styles.gridThree}>
                   <div style={styles.inputGroup}>
                     <label style={styles.label}><Wrench size={14} /> Metodologia</label>
-                    <input type="text" name="metodologia" value={formData.metodologia} onChange={handleChange} style={styles.input} placeholder="Ex: Sala Invertida" />
+                    <input
+                      type="text"
+                      name="metodologia"
+                      value={formData.metodologia || ""}
+                      onChange={handleChange}
+                      style={styles.input}
+                      placeholder="Ex: Sala Invertida, PBL..."
+                    />
                   </div>
                   <div style={styles.inputGroup}>
                     <label style={styles.label}><Clock size={14} /> Duração</label>
-                    <input type="text" name="duracao" value={formData.duracao} onChange={handleChange} style={styles.input} placeholder="Ex: 50 min" />
+                    <input
+                      type="text"
+                      name="duracao"
+                      value={formData.duracao || ""}
+                      onChange={handleChange}
+                      style={styles.input}
+                      placeholder="Ex: 50 min, 2 aulas..."
+                    />
                   </div>
                 </div>
 
@@ -481,7 +506,7 @@ const ManualFormSplit = ({ onBack, navigate, isMobile, initialData }) => {
                   <label style={styles.label}><Package size={14} /> Recursos Didáticos</label>
                   <div style={styles.resourcesGrid}>
                     {RECURSOS_COMUNS.map((res) => {
-                      const isSelected = formData.recursos.includes(res)
+                      const isSelected = (formData.recursos || []).includes(res)
                       return (
                         <button key={res} type="button" onClick={() => toggleRecurso(res)} style={{ ...styles.resourceChip, ...(isSelected ? styles.resourceChipActive : {}) }}>
                           {res} {isSelected && <Check size={14} style={{ marginLeft: "4px" }} />}
@@ -490,11 +515,18 @@ const ManualFormSplit = ({ onBack, navigate, isMobile, initialData }) => {
                     })}
                   </div>
                   <div style={styles.addResourceRow}>
-                    <input type="text" placeholder="Outro recurso (Digite e pressione Enter)..." value={customResource} onChange={(e) => setCustomResource(e.target.value)} onKeyDown={addCustomResource} style={{ ...styles.input, flex: 1 }} />
+                    <input
+                      type="text"
+                      placeholder="Outro recurso (Digite e pressione Enter)..."
+                      value={customResource}
+                      onChange={(e) => setCustomResource(e.target.value)}
+                      onKeyDown={addCustomResource}
+                      style={{ ...styles.input, flex: 1 }}
+                    />
                   </div>
-                  {formData.recursos.some((r) => !RECURSOS_COMUNS.includes(r)) && (
+                  {(formData.recursos || []).some((r) => !RECURSOS_COMUNS.includes(r)) && (
                     <div style={{ marginTop: "10px", display: "flex", gap: "6px", flexWrap: "wrap" }}>
-                      {formData.recursos.filter((r) => !RECURSOS_COMUNS.includes(r)).map((res, i) => (
+                      {(formData.recursos || []).filter((r) => !RECURSOS_COMUNS.includes(r)).map((res, i) => (
                           <span key={i} style={styles.customChip}>
                             {res} <button type="button" onClick={() => toggleRecurso(res)} style={styles.removeChipBtn}><X size={12} /></button>
                           </span>
@@ -507,14 +539,27 @@ const ManualFormSplit = ({ onBack, navigate, isMobile, initialData }) => {
                   <label style={styles.label}>
                     <Lightbulb size={14} /> Relato da Experiência
                   </label>
-                  <textarea name="experiencia" value={formData.experiencia} onChange={handleChange} style={{ ...styles.textarea, minHeight: "100px" }} placeholder="Descreva como foi a aplicação em sala..." />
+                  <textarea
+                    name="experiencia"
+                    value={formData.experiencia || ""}
+                    onChange={handleChange}
+                    style={{ ...styles.textarea, minHeight: "100px" }}
+                    placeholder="Descreva como foi a aplicação em sala de aula, o engajamento dos alunos e os desafios encontrados..."
+                  />
                 </div>
                 
                 <div style={styles.inputGroup}>
                   <label style={styles.label}>
                     <Target size={14} /> Resultados
                   </label>
-                  <textarea name="resultados" value={formData.resultados} onChange={handleChange} style={styles.textarea} rows="2" placeholder="Quais foram as evidências de aprendizagem?" />
+                  <textarea
+                    name="resultados"
+                    value={formData.resultados || ""}
+                    onChange={handleChange}
+                    style={styles.textarea}
+                    rows="2"
+                    placeholder="Quais foram as evidências de aprendizagem? O que os alunos produziram ou demonstraram?"
+                  />
                 </div>
                 
                 <div style={styles.formFooter}>
@@ -591,25 +636,12 @@ const VoiceFormV2 = ({ onBack, onUseDraft }) => {
             <div style={styles.iconCirclePurple}>
               <Sparkles size={24} color="#7B1FA2" />
             </div>
-            <h2
-              style={{
-                ...styles.titleCenter,
-                fontSize: "24px",
-                color: "#4A148C",
-              }}
-            >
+            <h2 style={{ ...styles.titleCenter, fontSize: "24px", color: "#4A148C" }}>
               Entrevista com a IA
             </h2>
           </div>
-          <p
-            style={{
-              ...styles.subtitleCenter,
-              maxWidth: "600px",
-              margin: "0 auto 20px auto",
-            }}
-          >
-            Clique no microfone e descreva sua pratica. Depois processe e
-            aplique no formulario manual.
+          <p style={{ ...styles.subtitleCenter, maxWidth: "600px", margin: "0 auto 20px auto" }}>
+            Clique no microfone e descreva sua pratica. Depois processe e aplique no formulario manual.
           </p>
 
           <div style={styles.talkingPoints}>
@@ -618,26 +650,16 @@ const VoiceFormV2 = ({ onBack, onUseDraft }) => {
             </p>
             <ul style={styles.talkingList}>
               <li>Fale pausado e em frases curtas.</li>
-              <li>
-                Dite siglas por extenso: "I A" e tambem "inteligencia
-                artificial".
-              </li>
-              <li>
-                Fale os campos em ordem: titulo, nivel, categoria, metodologia,
-                resultados.
-              </li>
-              <li>
-                Repita termos-chave importantes (ex.: BNCC, ChatGPT, rubrica)
-                duas vezes.
-              </li>
+              <li>Dite siglas por extenso: "I A" e tambem "inteligencia artificial".</li>
+              <li>Fale os campos em ordem: titulo, nivel, categoria, metodologia, resultados.</li>
+              <li>Repita termos-chave importantes (ex.: BNCC, ChatGPT, rubrica) duas vezes.</li>
               <li>Se errar uma frase, pare e repita do inicio da frase.</li>
             </ul>
           </div>
 
           {!isSupported && (
             <div style={styles.errorBox}>
-              Seu navegador nao suporta reconhecimento de voz. Use Chrome, Edge
-              ou Safari.
+              Seu navegador nao suporta reconhecimento de voz. Use Chrome, Edge ou Safari.
             </div>
           )}
 
@@ -665,9 +687,7 @@ const VoiceFormV2 = ({ onBack, onUseDraft }) => {
             </button>
             <p style={styles.micStatus}>
               {isListening ? (
-                <span
-                  style={{ display: "flex", alignItems: "center", gap: "8px" }}
-                >
+                <span style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                   <Volume2 size={18} /> Gravando... (toque para parar)
                 </span>
               ) : (
@@ -675,6 +695,7 @@ const VoiceFormV2 = ({ onBack, onUseDraft }) => {
               )}
             </p>
           </div>
+
           <div style={styles.transcriptionBox}>
             {fullTranscript ? (
               <p style={{ margin: 0, lineHeight: 1.6 }}>
@@ -692,37 +713,20 @@ const VoiceFormV2 = ({ onBack, onUseDraft }) => {
 
           {!!transcript && !isListening && (
             <button onClick={resetTranscript} style={styles.clearButton}>
-              <Trash2 size={16} style={{ marginRight: "6px" }} /> Limpar
-              transcricao
+              <Trash2 size={16} style={{ marginRight: "6px" }} /> Limpar transcricao
             </button>
           )}
 
           {processedData && (
             <div style={styles.reviewBox}>
-              <h4 style={{ margin: "0 0 10px", color: "#37474F" }}>
-                Dados extraidos
-              </h4>
-              <p style={styles.reviewLine}>
-                <strong>Titulo:</strong> {processedData.titulo}
-              </p>
-              <p style={styles.reviewLine}>
-                <strong>Nivel:</strong> {processedData.nivel || "-"}
-              </p>
-              <p style={styles.reviewLine}>
-                <strong>Categoria:</strong> {processedData.categoria || "-"}
-              </p>
-              <p style={styles.reviewLine}>
-                <strong>Metodologia:</strong> {processedData.metodologia || "-"}
-              </p>
-              <p style={styles.reviewLine}>
-                <strong>Modelo IA:</strong> {processedData.modelo_ia || "-"}
-              </p>
+              <h4 style={{ margin: "0 0 10px", color: "#37474F" }}>Dados extraidos</h4>
+              <p style={styles.reviewLine}><strong>Titulo:</strong> {processedData.titulo}</p>
+              <p style={styles.reviewLine}><strong>Nivel:</strong> {processedData.nivel || "-"}</p>
+              <p style={styles.reviewLine}><strong>Categoria:</strong> {processedData.categoria || "-"}</p>
+              <p style={styles.reviewLine}><strong>Metodologia:</strong> {processedData.metodologia || "-"}</p>
+              <p style={styles.reviewLine}><strong>Modelo IA:</strong> {processedData.modelo_ia || "-"}</p>
               <button
-                style={{
-                  ...styles.button,
-                  backgroundColor: "#2E7D32",
-                  marginTop: "12px",
-                }}
+                style={{ ...styles.button, backgroundColor: "#2E7D32", marginTop: "12px" }}
                 onClick={() => onUseDraft(processedData)}
               >
                 <Check size={18} style={{ marginRight: "8px" }} />
@@ -767,7 +771,7 @@ const styles = {
   selectionGrid: { display: "flex", gap: "30px", justifyContent: "center", width: "100%" },
   selectionCard: { flex: 1, backgroundColor: "white", padding: "40px 30px", borderRadius: "20px", border: "1px solid #E0E0E0", boxShadow: "0 4px 15px rgba(0,0,0,0.05)", cursor: "pointer", transition: "all 0.3s ease", display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", minWidth: "280px" },
   iconCircleBlue: { width: "80px", height: "80px", borderRadius: "50%", backgroundColor: "#E3F2FD", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "20px" },
-  iconCirclePurple: { width: "80px", height: "80px", borderRadius: "50%", backgroundColor: "#FFFFFF", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "20px" },
+  iconCirclePurple: { width: "80px", height: "80px", borderRadius: "50%", borderRadius: "50%", backgroundColor: "#FFFFFF", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "20px" },
   cardTitle: { fontSize: "20px", fontWeight: "700", color: "#333", marginBottom: "15px" },
   cardDesc: { fontSize: "14px", color: "#666", lineHeight: "1.6", marginBottom: "25px", flex: 1 },
   fakeLink: { fontSize: "14px", fontWeight: "700", color: "#1565C0" },
@@ -802,11 +806,9 @@ const styles = {
   pageTitle: { fontSize: "24px", color: "#1565C0", fontWeight: "800", margin: "0 0 4px 0" },
   pageSubtitle: { fontSize: "14px", color: "#546E7A", margin: 0 },
   gridThree: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: "20px" },
-  
   formFooter: { marginTop: "40px", display: "flex", justifyContent: "flex-end", gap: "15px", flexWrap: "wrap" },
   draftButton: { backgroundColor: "white", color: "#1565C0", border: "1px solid #1565C0", borderRadius: "8px", padding: "12px 24px", fontSize: "15px", fontWeight: "bold", cursor: "pointer", display: "flex", alignItems: "center", gap: "8px", transition: "background 0.2s" },
   submitButton: { backgroundColor: "#1565C0", color: "white", border: "none", borderRadius: "8px", padding: "12px 30px", fontSize: "15px", fontWeight: "bold", cursor: "pointer", display: "flex", alignItems: "center", gap: "10px", boxShadow: "0 4px 12px rgba(21, 101, 192, 0.25)", transition: "transform 0.2s" },
-
   voiceContainer: { display: "flex", flexDirection: "column", alignItems: "center" },
   voiceHeader: { display: "flex", flexDirection: "column", alignItems: "center", marginBottom: "20px" },
   micWrapper: { display: "flex", flexDirection: "column", alignItems: "center", gap: "15px", marginBottom: "30px" },

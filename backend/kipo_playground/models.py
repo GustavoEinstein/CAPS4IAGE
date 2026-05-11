@@ -137,9 +137,14 @@ class Producao(models.Model):
     experiencia = models.TextField(blank=True, null=True)
     resultados = models.TextField(blank=True, null=True) 
     arquivo = models.FileField(upload_to='producoes/', blank=True, null=True)
+    
+    # [NOVO] CAMPO PARA SUPORTAR VÍDEOS E ARQUIVOS PESADOS
+    link_material = models.URLField(max_length=500, null=True, blank=True, verbose_name="Link Externo do Material")
+    
     data_criacao = models.DateTimeField(auto_now_add=True)
     status = models.CharField(max_length=50, default='Em revisão')
-# [NOVO] CAMPO DE DERIVAÇÃO / REFERÊNCIA
+    
+    # [NOVO] CAMPO DE DERIVAÇÃO / REFERÊNCIA
     producao_base = models.ForeignKey(
         'self', 
         on_delete=models.SET_NULL, 

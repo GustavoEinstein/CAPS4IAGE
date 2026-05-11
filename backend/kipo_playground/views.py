@@ -285,6 +285,7 @@ def api_create_production(request):
             experiencia=data.get('experiencia', ''), 
             resultados=data.get('resultados', ''),
             arquivo=arquivo,
+            link_material=data.get('link_material', ''),
             status=status_inicial 
         )
         return Response({'mensagem': 'Produção criada com sucesso!', 'id': nova_producao.id}, status=201)
@@ -329,12 +330,13 @@ def api_get_production_details(request, pk):
         is_dono = p.user == request.user
         is_admin = request.user.is_superuser
         is_aprovado = p.status in ['Aprovado', 'Concluído']
-        is_revisor = p.avaliacoes.filter(revisor=request.user).exists() 
+        # Verifica se o usuário logado revisou ESTA produção específica
+        is_revisor_desta_pratica = p.avaliacoes.filter(revisor=request.user).exists() 
         
         minha_disciplina = request.user.profile.disciplina if hasattr(request.user, 'profile') else 'Outra'
         is_potencial_revisor = (p.status == 'Em revisão' and p.disciplina == minha_disciplina and not is_dono)
 
-        if not (is_dono or is_admin or is_aprovado or is_revisor or is_potencial_revisor):
+        if not (is_dono or is_admin or is_aprovado or is_revisor_desta_pratica or is_potencial_revisor):
             return Response({'erro': 'Acesso negado. Esta produção é privada ou ainda está em avaliação.'}, status=403)
         
         arquivo_url = request.build_absolute_uri(p.arquivo.url) if p.arquivo else None
@@ -389,6 +391,10 @@ def api_get_production_details(request, pk):
 
         total_aprovacoes = avaliacoes.filter(aprovado=True).count()
 
+        # --- LÓGICA DE PRIVACIDADE DO PARECER TÉCNICO ---
+        # Só incluímos os dados de revisão se for o dono, um revisor que participou ou admin
+        pode_ver_parecer = is_dono or is_revisor_desta_pratica or is_admin
+
         data = {
             'id': p.id,
             'titulo': p.titulo,
@@ -405,16 +411,20 @@ def api_get_production_details(request, pk):
             'experiencia': p.experiencia,
             'resultados': p.resultados,
             'arquivo': arquivo_url, 
+            'link_material': p.link_material,
             'data': p.data_criacao.strftime('%d/%m/%Y'),
             'status': p.status,
             'autor': p.user.first_name or p.user.username,
-            'revisao_realizada': avaliacoes.exists(), 
+            
+            # Campos condicionados à privacidade
+            'revisao_realizada': avaliacoes.exists() if pode_ver_parecer else False, 
+            'avaliacoes_detalhadas': avaliacoes_detalhadas if pode_ver_parecer else [],
+            'feedback_texto': feedback_texto if pode_ver_parecer else None, 
+            'notas': notas if pode_ver_parecer else None,
+            'total_avaliacoes': avaliacoes.count() if pode_ver_parecer else 0,
+            'total_aprovacoes': total_aprovacoes if pode_ver_parecer else 0,
+
             'is_aprovado': p.status == 'Aprovado' or p.status == 'Concluído',
-            'feedback_texto': feedback_texto, 
-            'notas': notas,
-            'avaliacoes_detalhadas': avaliacoes_detalhadas, # NOVO CAMPO: Lista completa
-            'total_avaliacoes': avaliacoes.count(),
-            'total_aprovacoes': total_aprovacoes,
             'producao_base': dados_referencia 
         }
         return Response(data)
@@ -445,6 +455,7 @@ def api_update_production(request, pk):
         p.duracao = data.get('duracao', p.duracao)
         p.experiencia = data.get('experiencia', p.experiencia)
         p.resultados = data.get('resultados', p.resultados)
+        p.link_material = data.get('link_material', p.link_material)
 
         recursos_input = data.getlist('recursos') if hasattr(data, 'getlist') else data.get('recursos')
         if recursos_input:
