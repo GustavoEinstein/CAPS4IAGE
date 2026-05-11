@@ -261,7 +261,8 @@ const CardHistorico = ({ data, navigate, isMobile }) => {
     return (
         <div 
             style={styles.card} 
-            onClick={() => navigate(`/dashboard/producao/${data.id}`)}
+            // A MÁGICA DE NAVEGAÇÃO SECRETA ACONTECE NESTA LINHA:
+            onClick={() => navigate(`/dashboard/producao/${data.id}`, { state: { fromHistory: true } })}
             onMouseOver={(e) => {
                 e.currentTarget.style.borderColor = '#BBDEFB';
                 e.currentTarget.style.transform = 'translateY(-2px)';
@@ -298,7 +299,14 @@ const CardHistorico = ({ data, navigate, isMobile }) => {
                     </div>
                 </div>
                 <div style={{marginTop: '15px'}}>
-                    <button style={styles.actionButtonSecondary}>
+                    <button 
+                        style={styles.actionButtonSecondary}
+                        // E AQUI NO BOTÃO TAMBÉM:
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/dashboard/producao/${data.id}`, { state: { fromHistory: true } });
+                        }}
+                    >
                         <Eye size={14} /> Ver Detalhes
                     </button>
                 </div>

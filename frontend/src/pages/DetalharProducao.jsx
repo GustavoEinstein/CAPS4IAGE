@@ -1,35 +1,20 @@
 import React, { useState, useEffect } from "react"
 import api from "../services/api" 
-import { useParams, useNavigate } from "react-router-dom"
+import { useParams, useNavigate, useLocation } from "react-router-dom"
 import {
-  ArrowLeft,
-  Calendar,
-  Clock,
-  Bot,
-  BookOpen,
-  CheckCircle2,
-  XCircle,
-  AlertCircle,
-  Wrench,
-  Lightbulb,
-  Target,
-  Download,
-  FileText,
-  User,
-  Bookmark,
-  ShieldCheck,
-  Package,
-  Cpu,
-  Terminal,
-  Star, 
-  BarChart3, 
-  ThumbsUp, 
-  AlertTriangle
+  ArrowLeft, Calendar, Clock, Bot, BookOpen, CheckCircle2,
+  XCircle, AlertCircle, Wrench, Lightbulb, Target, Download,
+  FileText, User, Bookmark, ShieldCheck, Package, Cpu, Terminal,
+  Star, BarChart3, ThumbsUp, AlertTriangle, Link, ExternalLink
 } from "lucide-react"
 
 const DetalharProducao = () => {
   const { id } = useParams()
   const navigate = useNavigate()
+  
+  // 1. LENDO A ETIQUETA SECRETA DA URL
+  const location = useLocation();
+  const fromHistory = location.state?.fromHistory || false;
 
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -85,6 +70,9 @@ const DetalharProducao = () => {
     return themes[disc] || themes["Default"]
   }
   const theme = getTheme(data.disciplina)
+
+  // 2. A LÓGICA FINAL DE QUEM PODE VER A AVALIAÇÃO
+  const podeVerParecer = data.is_dono || data.is_admin || (data.is_revisor && fromHistory);
 
   return (
     <div style={styles.fullPageWrapper}>
@@ -170,7 +158,10 @@ const DetalharProducao = () => {
                 <div style={styles.resultsBox}>{data.resultados}</div>
               </div>
               
-              <ParecerTecnico producao={data} />
+              {/* O COMPONENTE COM A TRAVA ABSOLUTA */}
+              {podeVerParecer && (
+                  <ParecerTecnico producao={data} />
+              )}
               
             </div>
           </div>
@@ -194,10 +185,27 @@ const DetalharProducao = () => {
                 </div>
               )}
               <div style={styles.divider}></div>
-              <h3 style={styles.sidebarTitle}>Downloads</h3>
-              {data.arquivo ? (
-                <button onClick={handleDownload} style={styles.downloadBtn}><Download size={18} /> Baixar Roteiro</button>
-              ) : <p style={{ fontSize: "13px", color: "#999" }}>Nenhum arquivo.</p>}
+              
+              <h3 style={styles.sidebarTitle}>Arquivos e Links</h3>
+              
+              {data.arquivo && (
+                <button onClick={handleDownload} style={styles.downloadBtn}>
+                  <Download size={18} /> Baixar Roteiro
+                </button>
+              )}
+              
+              {data.link_material && (
+                <a href={data.link_material} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }}>
+                  <button style={{ ...styles.downloadBtn, backgroundColor: '#7B1FA2', marginTop: data.arquivo ? '10px' : '0' }}>
+                    <ExternalLink size={18} /> Acessar Link Externo
+                  </button>
+                </a>
+              )}
+
+              {!data.arquivo && !data.link_material && (
+                <p style={{ fontSize: "13px", color: "#999", textAlign: "center" }}>Nenhum material anexado.</p>
+              )}
+
             </div>
           </div>
         </div>  
@@ -207,8 +215,13 @@ const DetalharProducao = () => {
 }
 
 const ParecerTecnico = ({ producao }) => {
-    if (!producao || (!producao.revisao_realizada && (!producao.avaliacoes_detalhadas || producao.avaliacoes_detalhadas.length === 0))) return null;
-    const avaliacoes = producao.avaliacoes_detalhadas || [];
+    // Retorna nulo se a lista de avaliações vier vazia (backend esvaziou ou não existe)
+    if (!producao || !producao.avaliacoes_detalhadas || producao.avaliacoes_detalhadas.length === 0) {
+        return null;
+    }
+
+    const avaliacoes = producao.avaliacoes_detalhadas;
+    
     return (
         <div style={styles.ptContainer}>
             <div style={styles.ptMainHeader}>
@@ -222,7 +235,9 @@ const ParecerTecnico = ({ producao }) => {
                 {avaliacoes.map((aval) => (
                     <ReviewCard key={aval.ordem} avaliacao={aval} />
                 ))}
-                {avaliacoes.length === 1 && !producao.status.toLowerCase().includes('rejeitado') && (
+                
+                {/* 3. CARD FANTASMA AGORA SÓ APARECE PARA O DONO OU ADMIN */}
+                {avaliacoes.length === 1 && (producao.is_dono || producao.is_admin) && !producao.status.toLowerCase().includes('rejeitado') && (
                     <GhostCard />
                 )}
             </div>

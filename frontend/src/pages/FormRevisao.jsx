@@ -5,7 +5,7 @@ import Swal from 'sweetalert2';
 import { 
     Star, CheckCircle2, Bot, Download, ArrowLeft, Clock, Wrench, 
     BookOpen, Target, Lightbulb, ThumbsUp, ShieldAlert, FileText, User, 
-    AlertTriangle, Lock, PenTool, Eye, Cpu, Terminal 
+    AlertTriangle, Lock, PenTool, Eye, Cpu, Terminal, Link, ExternalLink 
 } from 'lucide-react';
 
 const Revisao = () => {
@@ -222,15 +222,46 @@ const Revisao = () => {
                         <div style={styles.resultsBox}>{producaoEmRevisao.resultados || "Sem resultados."}</div>
                     </div>
 
-                    {producaoEmRevisao.arquivo && (
-                        <div style={styles.downloadContainer}>
-                            <div style={styles.fileInfoBox}>
-                                <FileText size={20} color="#1565C0" />
-                                <div><span style={styles.fileName}>Material de Apoio</span></div>
+                    {/* --- INÍCIO DA SEÇÃO DE ARQUIVOS E LINKS --- */}
+                    {(producaoEmRevisao.arquivo || producaoEmRevisao.link_material) && (
+                        <div style={styles.section}>
+                            <h3 style={styles.sectionTitle}><FileText size={18}/> Arquivos e Materiais</h3>
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '15px' }}>
+                                
+                                {producaoEmRevisao.arquivo && (
+                                    <div style={{ ...styles.downloadContainer, marginTop: 0, flex: 1, minWidth: '250px' }}>
+                                        <div style={styles.fileInfoBox}>
+                                            <FileText size={24} color="#1565C0" />
+                                            <div>
+                                                <span style={styles.fileName}>Material de Apoio (Anexo)</span>
+                                            </div>
+                                        </div>
+                                        <button onClick={handleDownload} style={styles.downloadBtnCompact}>
+                                            <Download size={18} style={{marginRight: '6px'}}/> Baixar Arquivo
+                                        </button>
+                                    </div>
+                                )}
+
+                                {producaoEmRevisao.link_material && (
+                                    <div style={{ ...styles.downloadContainer, marginTop: 0, flex: 1, minWidth: '250px', backgroundColor: '#F3E5F5', border: '1px solid #E1BEE7' }}>
+                                        <div style={styles.fileInfoBox}>
+                                            <Link size={24} color="#7B1FA2" />
+                                            <div>
+                                                <span style={{ ...styles.fileName, color: '#4A148C' }}>Material Externo / Vídeo</span>
+                                            </div>
+                                        </div>
+                                        <a href={producaoEmRevisao.link_material} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }}>
+                                            <button style={{ ...styles.downloadBtnCompact, backgroundColor: '#7B1FA2', width: '100%' }}>
+                                                <ExternalLink size={18} style={{marginRight: '6px'}}/> Abrir Link
+                                            </button>
+                                        </a>
+                                    </div>
+                                )}
+
                             </div>
-                            <button onClick={handleDownload} style={styles.downloadBtnCompact}><Download size={18} /> Baixar Arquivo</button>
                         </div>
                     )}
+                    {/* --- FIM DA SEÇÃO DE ARQUIVOS E LINKS --- */}
 
                     {/* MOSTRAR PARECER DO PRIMEIRO REVISOR SE EXISTIR (E TIVER SIDO APROVADO) */}
                     {producaoEmRevisao.avaliacoes_detalhadas && producaoEmRevisao.avaliacoes_detalhadas.length === 1 && (
@@ -335,10 +366,12 @@ const styles = {
     textBody: { fontSize: '15px', lineHeight: '1.6', color: '#455A64', whiteSpace: 'pre-wrap', wordBreak: 'break-word', overflowWrap: 'break-word' },
     promptBox: { backgroundColor: '#F8FAFC', padding: '15px', borderRadius: '8px', borderLeft: '4px solid #8B5CF6', fontStyle: 'italic', wordBreak: 'break-word', overflowWrap: 'break-word' },
     resultsBox: { backgroundColor: '#E8F5E9', border: '1px solid #C8E6C9', padding: '15px', borderRadius: '8px', fontStyle: 'italic', wordBreak: 'break-word', overflowWrap: 'break-word' },
-    downloadContainer: { marginTop: '25px', padding: '12px 15px', backgroundColor: '#F8F9FA', borderRadius: '10px', border: '1px solid #E0E0E0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
-    fileInfoBox: { display: 'flex', alignItems: 'center', gap: '10px' },
+    
+    downloadContainer: { padding: '12px 15px', backgroundColor: '#F8F9FA', borderRadius: '10px', border: '1px solid #E0E0E0', display: 'flex', flexDirection: 'column', justifyContent: 'center' },
+    fileInfoBox: { display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' },
     fileName: { fontSize: '13px', fontWeight: '700' },
-    downloadBtnCompact: { backgroundColor: '#1565C0', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', fontWeight: '700' },
+    downloadBtnCompact: { backgroundColor: '#1565C0', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', fontWeight: '700', display: 'flex', alignItems: 'center', justifyContent: 'center' },
+    
     firstReviewerBox: { backgroundColor: '#F8FBFF', border: '1px solid #BBDEFB', borderRadius: '12px', padding: '20px', marginTop: '30px' },
     firstReviewerTitle: { fontSize: '15px', fontWeight: '800', color: '#1565C0', marginBottom: '15px', display: 'flex', alignItems: 'center', gap: '8px' },
     firstReviewerFeedback: { backgroundColor: '#FFFFFF', padding: '15px', borderRadius: '8px', border: '1px solid #E3F2FD' },

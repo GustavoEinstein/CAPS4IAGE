@@ -330,7 +330,6 @@ def api_get_production_details(request, pk):
         is_dono = p.user == request.user
         is_admin = request.user.is_superuser
         is_aprovado = p.status in ['Aprovado', 'Concluído']
-        # Verifica se o usuário logado revisou ESTA produção específica
         is_revisor_desta_pratica = p.avaliacoes.filter(revisor=request.user).exists() 
         
         minha_disciplina = request.user.profile.disciplina if hasattr(request.user, 'profile') else 'Outra'
@@ -341,7 +340,6 @@ def api_get_production_details(request, pk):
         
         arquivo_url = request.build_absolute_uri(p.arquivo.url) if p.arquivo else None
 
-        # --- NOVA LÓGICA DE EXTRAÇÃO DE NOTAS E AVALIAÇÕES ---
         avaliacoes = p.avaliacoes.all().order_by('data_avaliacao')
         avaliacoes_detalhadas = []
         
@@ -350,7 +348,6 @@ def api_get_production_details(request, pk):
             pontos_fortes = ""
             pontos_melhoria = ""
             
-            # Fatiamento inteligente do texto
             if "SUGESTÕES DE MELHORIA:" in raw_feedback:
                 parts = raw_feedback.split("SUGESTÕES DE MELHORIA:")
                 pontos_fortes = parts[0].replace("PONTOS FORTES:", "").strip()
@@ -360,6 +357,7 @@ def api_get_production_details(request, pk):
                 
             avaliacoes_detalhadas.append({
                 'ordem': i + 1,
+                'revisor_id': aval.revisor.id, 
                 'aprovado': aval.aprovado,
                 'pontos_fortes': pontos_fortes,
                 'pontos_melhoria': pontos_melhoria,
@@ -374,9 +372,7 @@ def api_get_production_details(request, pk):
                 }
             })
 
-        # Mantém compatibilidade com o formato antigo pra não quebrar as outras telas
         ultima_avaliacao = avaliacoes.last()
-        notas = avaliacoes_detalhadas[-1]['notas'] if avaliacoes_detalhadas else None
         feedback_texto = ultima_avaliacao.feedback_revisao if ultima_avaliacao else None
 
         lista_recursos = [r.strip() for r in p.recursos.split(',')] if p.recursos else []
@@ -391,9 +387,16 @@ def api_get_production_details(request, pk):
 
         total_aprovacoes = avaliacoes.filter(aprovado=True).count()
 
-        # --- LÓGICA DE PRIVACIDADE DO PARECER TÉCNICO ---
-        # Só incluímos os dados de revisão se for o dono, um revisor que participou ou admin
-        pode_ver_parecer = is_dono or is_revisor_desta_pratica or is_admin
+        pode_ver_parecer = is_dono or is_admin or is_revisor_desta_pratica
+
+        # Lógica de filtragem: dono e admin veem tudo. Revisor vê só o dele.
+        avaliacoes_filtradas = []
+        if is_dono or is_admin:
+            avaliacoes_filtradas = avaliacoes_detalhadas
+        elif is_revisor_desta_pratica:
+            avaliacoes_filtradas = [a for a in avaliacoes_detalhadas if a['revisor_id'] == request.user.id]
+
+        notas = avaliacoes_filtradas[-1]['notas'] if avaliacoes_filtradas else None
 
         data = {
             'id': p.id,
@@ -416,15 +419,18 @@ def api_get_production_details(request, pk):
             'status': p.status,
             'autor': p.user.first_name or p.user.username,
             
-            # Campos condicionados à privacidade
-            'revisao_realizada': avaliacoes.exists() if pode_ver_parecer else False, 
-            'avaliacoes_detalhadas': avaliacoes_detalhadas if pode_ver_parecer else [],
-            'feedback_texto': feedback_texto if pode_ver_parecer else None, 
-            'notas': notas if pode_ver_parecer else None,
-            'total_avaliacoes': avaliacoes.count() if pode_ver_parecer else 0,
-            'total_aprovacoes': total_aprovacoes if pode_ver_parecer else 0,
+            'is_dono': is_dono,
+            'is_admin': is_admin,
+            'is_revisor': is_revisor_desta_pratica, 
 
-            'is_aprovado': p.status == 'Aprovado' or p.status == 'Concluído',
+            'revisao_realizada': len(avaliacoes_filtradas) > 0, 
+            'avaliacoes_detalhadas': avaliacoes_filtradas,
+            'feedback_texto': feedback_texto if (is_dono or is_admin) else None, 
+            'notas': notas,
+            'total_avaliacoes': avaliacoes.count(), # CORREÇÃO: Envia sempre o total real para o frontend
+            'total_aprovacoes': total_aprovacoes,
+
+            'is_aprovado': is_aprovado,
             'producao_base': dados_referencia 
         }
         return Response(data)
@@ -473,7 +479,6 @@ def api_update_production(request, pk):
             p.status = 'Rascunho'
         else:
             p.status = 'Em revisão' 
-            # A MÁGICA ACONTECE AQUI: Deleta o histórico passado para permitir 2 novos revisores!
             p.avaliacoes.all().delete()
             
         p.save()
