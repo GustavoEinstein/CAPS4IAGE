@@ -74,6 +74,14 @@ const LandingPage = () => {
         .anim-float {
             animation: float 5s ease-in-out infinite;
         }
+        @keyframes pulse-live {
+            0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+            70% { box-shadow: 0 0 0 8px rgba(16, 185, 129, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        }
+        .dot-live {
+            animation: pulse-live 2s infinite;
+        }
         .btn-hover:hover {
             transform: translateY(-2px);
             box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.4) !important;
@@ -86,6 +94,25 @@ const LandingPage = () => {
         .faq-card:hover {
             border-color: #2563EB !important;
             background-color: #F8FAFC !important;
+        }
+        .pillar-card {
+            transition: all 0.3s ease;
+            padding: 30px;
+            border-radius: 16px;
+            border: 1px solid transparent;
+        }
+        .pillar-card:hover {
+            transform: translateY(-8px);
+            background-color: #FFFFFF;
+            box-shadow: 0 20px 40px -10px rgba(0,0,0,0.08);
+            border-color: #E2E8F0;
+        }
+        .footer-link {
+            transition: color 0.2s ease, padding-left 0.2s ease;
+        }
+        .footer-link:hover {
+            color: #60A5FA !important;
+            padding-left: 4px;
         }
       `}</style>
 
@@ -117,10 +144,13 @@ const LandingPage = () => {
       <header style={styles.hero}>
         <div style={styles.heroContainer}>
           <div style={styles.heroContent}>
+            
+            {/* NOVO BADGE: REDE DOCENTE ATIVA COM PONTO PULSANTE */}
             <div style={styles.badge}>
-              <span style={styles.badgeDot}></span>
-              Versão Beta Disponível
+              <span className="dot-live" style={styles.badgeDot}></span>
+              REDE DOCENTE ATIVA
             </div>
+
             <h1 style={styles.heroTitle}>
               A ponte entre a <br />
               <span style={styles.textHighlight}>docência e a IA.</span>
@@ -182,33 +212,33 @@ const LandingPage = () => {
         <div style={styles.container}>
           <p style={styles.sectionLabel}>NOSSOS PILARES</p>
           <div style={styles.pillarsGrid}>
-            <div style={styles.pillarCard}>
+            <div className="pillar-card" style={styles.pillarCard}>
               <div style={styles.pillarIcon}>
                 <Share2 size={24} color="#0F172A" />
               </div>
-              <h3>Colaboração Real</h3>
-              <p>
+              <h3 style={styles.pillarTitle}>Colaboração Real</h3>
+              <p style={styles.pillarText}>
                 Transforme o conhecimento individual em inteligência coletiva.
                 Acesse um ecossistema de práticas pedagógicas validadas e escale
                 o impacto das suas aulas.
               </p>
             </div>
-            <div style={styles.pillarCard}>
+            <div className="pillar-card" style={styles.pillarCard}>
               <div style={styles.pillarIcon}>
                 <Shield size={24} color="#0F172A" />
               </div>
-              <h3>Validação por Pares</h3>
-              <p>
+              <h3 style={styles.pillarTitle}>Validação por Pares</h3>
+              <p style={styles.pillarText}>
                 O sistema "Duplo-Cego" garante que o foco seja a qualidade
                 pedagógica, livre de vieses pessoais e focada no aprendizado.
               </p>
             </div>
-            <div style={styles.pillarCard}>
+            <div className="pillar-card" style={styles.pillarCard}>
               <div style={styles.pillarIcon}>
                 <Cpu size={24} color="#0F172A" />
               </div>
-              <h3>IA como Ferramenta</h3>
-              <p>
+              <h3 style={styles.pillarTitle}>IA como Ferramenta</h3>
+              <p style={styles.pillarText}>
                 Não substituímos o professor. Usamos a tecnologia para eliminar
                 burocracia e ampliar a criatividade docente no dia a dia.
               </p>
@@ -305,44 +335,53 @@ const LandingPage = () => {
       <footer style={styles.footer}>
         <div style={styles.container}>
           <div style={styles.footerTop}>
-            <div>
-              <span style={styles.footerLogo}>T.E.I.A — Tecendo a Educação com IA</span>
+            
+            <div style={styles.footerBrandCol}>
+              <div style={styles.footerLogoWrapper}>
+                 <SpiderWebIcon size={28} color="#60A5FA" />
+                 <span style={styles.footerLogoText}>T.E.I.A</span>
+              </div>
               <p style={styles.footerDesc}>
-                Conectando a sabedoria docente à inteligência artificial para tecer o futuro do ensino no Brasil.
+                Tecendo a Educação com IA. <br/> 
+                Conectando a sabedoria docente à inteligência artificial para construir o futuro do ensino no Brasil.
               </p>
             </div>
 
-            <div style={styles.footerCol}>
-              <h4 style={styles.footerColTitle}>Navegação</h4>
-              <div style={styles.footerLinksStack}>
-                <span onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })} style={styles.linkFooter}>Início</span>
-                <span onClick={() => navigate("/login")} style={styles.linkFooter}>Login</span>
-                <span onClick={() => navigate("/register")} style={styles.linkFooter}>Cadastro</span>
-              </div>
-            </div>
-
-            <div style={styles.footerCol}>
-              <h4 style={styles.footerColTitle}>Legal</h4>
-              <div style={styles.footerLinksStack}>
-                <button onClick={() => openModal("terms")} style={styles.linkFooterBtn}>Termos de Uso</button>
-                <button onClick={() => openModal("privacy")} style={styles.linkFooterBtn}>Privacidade</button>
-              </div>
-            </div>
-
-            <div style={styles.footerCol}>
-              <h4 style={styles.footerColTitle}>Suporte</h4>
-              <div style={styles.footerLinksStack}>
-                <div style={styles.supportRow}>
-                  <Mail size={16} />
-                  <a href="mailto:suporte.ianaeducacaobasica.unb@gmail.com" style={styles.emailLink}>
-                    suporte.ianaeducacaobasica.unb@gmail.com
-                  </a>
+            <div style={styles.footerLinksWrapper}>
+                <div style={styles.footerCol}>
+                <h4 style={styles.footerColTitle}>Navegação</h4>
+                <div style={styles.footerLinksStack}>
+                    <span onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })} className="footer-link" style={styles.linkFooter}>Início</span>
+                    <span onClick={() => navigate("/login")} className="footer-link" style={styles.linkFooter}>Acessar Conta</span>
+                    <span onClick={() => navigate("/register")} className="footer-link" style={styles.linkFooter}>Cadastre-se</span>
                 </div>
-              </div>
+                </div>
+
+                <div style={styles.footerCol}>
+                <h4 style={styles.footerColTitle}>Legal</h4>
+                <div style={styles.footerLinksStack}>
+                    <button onClick={() => openModal("terms")} className="footer-link" style={styles.linkFooterBtn}>Termos de Uso</button>
+                    <button onClick={() => openModal("privacy")} className="footer-link" style={styles.linkFooterBtn}>Privacidade</button>
+                </div>
+                </div>
+
+                <div style={styles.footerCol}>
+                <h4 style={styles.footerColTitle}>Suporte</h4>
+                <div style={styles.footerLinksStack}>
+                    <div style={styles.supportRow}>
+                    <Mail size={18} color="#94A3B8" />
+                    <a href="mailto:suporte.ianaeducacaobasica.unb@gmail.com" className="footer-link" style={styles.emailLink}>
+                        Fale com a equipe
+                    </a>
+                    </div>
+                </div>
+                </div>
             </div>
+
           </div>
+          
           <div style={styles.footerBottom}>
-            © 2026 T.E.I.A Project (UnB). Todos os direitos reservados.
+            <p>© {new Date().getFullYear()} Projeto T.E.I.A (Universidade de Brasília). Todos os direitos reservados.</p>
           </div>
         </div>
       </footer>
@@ -416,26 +455,29 @@ const LandingPage = () => {
 
 const styles = {
   wrapper: { fontFamily: "Inter, -apple-system, sans-serif", backgroundColor: "#FFFFFF", minHeight: "100vh", color: "#0F172A" },
-  container: { maxWidth: "1100px", margin: "0 auto", padding: "0 20px", width: "100%", boxSizing: "border-box" },
-  nav: { position: "fixed", top: 0, width: "100%", backgroundColor: "rgba(255,255,255,0.9)", backdropFilter: "blur(8px)", borderBottom: "1px solid #E2E8F0", zIndex: 50 },
-  navContent: { display: "flex", justifyContent: "space-between", alignItems: "center", height: "70px", maxWidth: "1100px", margin: "0 auto", padding: "0 20px" },
-  logoGroup: { display: "flex", alignItems: "center", gap: "10px" },
-  logoText: { fontWeight: "800", fontSize: "20px", color: "#1E293B" },
+  container: { maxWidth: "1150px", margin: "0 auto", padding: "0 20px", width: "100%", boxSizing: "border-box" },
+  nav: { position: "fixed", top: 0, width: "100%", backgroundColor: "rgba(255,255,255,0.9)", backdropFilter: "blur(12px)", borderBottom: "1px solid #E2E8F0", zIndex: 50 },
+  navContent: { display: "flex", justifyContent: "space-between", alignItems: "center", height: "75px", maxWidth: "1150px", margin: "0 auto", padding: "0 20px" },
+  logoGroup: { display: "flex", alignItems: "center", gap: "12px" },
+  logoText: { fontWeight: "900", fontSize: "22px", color: "#0F172A", letterSpacing: "-0.5px" },
   navActions: { display: "flex", gap: "20px", alignItems: "center" },
-  navLink: { background: "none", border: "none", color: "#64748B", fontWeight: "600", cursor: "pointer", fontSize: "14px" },
-  navButtonPrimary: { backgroundColor: "#0F172A", color: "white", padding: "10px 20px", borderRadius: "8px", border: "none", fontWeight: "600", fontSize: "14px", cursor: "pointer" },
+  navLink: { background: "none", border: "none", color: "#475569", fontWeight: "600", cursor: "pointer", fontSize: "15px", transition: "color 0.2s" },
+  navButtonPrimary: { backgroundColor: "#0F172A", color: "white", padding: "10px 22px", borderRadius: "8px", border: "none", fontWeight: "600", fontSize: "14px", cursor: "pointer" },
   
-  hero: { padding: "160px 0 100px 0", backgroundColor: "#FAFAFA", borderBottom: "1px solid #F1F5F9" },
-  heroContainer: { maxWidth: "1100px", margin: "0 auto", padding: "0 20px", display: "flex", alignItems: "center", gap: "60px", flexWrap: "wrap" },
+  hero: { padding: "160px 0 100px 0", background: "linear-gradient(135deg, #F8FAFC 0%, #EFF6FF 100%)", borderBottom: "1px solid #E2E8F0" },
+  heroContainer: { maxWidth: "1150px", margin: "0 auto", padding: "0 20px", display: "flex", alignItems: "center", gap: "60px", flexWrap: "wrap" },
   heroContent: { flex: 1.2, minWidth: "320px" },
-  badge: { display: "inline-flex", alignItems: "center", gap: "8px", padding: "6px 14px", backgroundColor: "#DBEAFE", color: "#1E40AF", borderRadius: "20px", fontSize: "12px", fontWeight: "700", marginBottom: "24px" },
-  badgeDot: { width: "6px", height: "6px", borderRadius: "50%", backgroundColor: "#1E40AF" },
-  heroTitle: { fontSize: "56px", lineHeight: "1.1", fontWeight: "900", color: "#0F172A", marginBottom: "24px", letterSpacing: "-1px" },
+  
+  // --- NOVOS ESTILOS DO BADGE (REDE DOCENTE ATIVA) ---
+  badge: { display: "inline-flex", alignItems: "center", gap: "10px", padding: "8px 18px", backgroundColor: "#FFFFFF", color: "#1E3A8A", borderRadius: "30px", fontSize: "13px", fontWeight: "800", marginBottom: "24px", boxShadow: "0 4px 15px rgba(37, 99, 235, 0.12)", border: "1px solid #E2E8F0", letterSpacing: "0.5px" },
+  badgeDot: { width: "10px", height: "10px", borderRadius: "50%", backgroundColor: "#10B981" },
+  
+  heroTitle: { fontSize: "56px", lineHeight: "1.1", fontWeight: "900", color: "#0F172A", marginBottom: "24px", letterSpacing: "-1.5px" },
   textHighlight: { color: "#2563EB" },
   heroSubtitle: { fontSize: "19px", lineHeight: "1.6", color: "#475569", marginBottom: "32px", maxWidth: "550px" },
   heroButtons: { display: "flex", gap: "15px", flexWrap: "wrap" },
   btnPrimaryLarge: { padding: "16px 32px", backgroundColor: "#2563EB", color: "white", borderRadius: "10px", border: "none", fontSize: "16px", fontWeight: "700", cursor: "pointer", display: "flex", alignItems: "center", gap: "10px" },
-  btnSecondaryLarge: { padding: "16px 32px", backgroundColor: "white", color: "#334155", borderRadius: "10px", border: "1px solid #CBD5E1", fontSize: "16px", fontWeight: "600", cursor: "pointer" },
+  btnSecondaryLarge: { padding: "16px 32px", backgroundColor: "white", color: "#334155", borderRadius: "10px", border: "1px solid #CBD5E1", fontSize: "16px", fontWeight: "600", cursor: "pointer", transition: "all 0.2s" },
   
   heroVisual: { flex: 1, display: "flex", justifyContent: "center", position: "relative", minHeight: '420px' },
   blurredCardWrapper: { width: "380px", height: "420px", position: "relative", borderRadius: "20px", overflow: "hidden", boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.15)", border: "1px solid #E2E8F0", backgroundColor: "#FFFFFF" },
@@ -451,14 +493,16 @@ const styles = {
 
   pillarsSection: { padding: "100px 0", borderBottom: "1px solid #F1F5F9" },
   sectionLabel: { fontSize: "13px", fontWeight: "800", color: "#64748B", letterSpacing: "1.5px", marginBottom: "50px", textAlign: 'center' },
-  pillarsGrid: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "50px" },
+  pillarsGrid: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "30px" },
   pillarCard: { display: "flex", flexDirection: "column", alignItems: "center", textAlign: 'center' },
-  pillarIcon: { width: "56px", height: "56px", backgroundColor: "#F8FAFC", borderRadius: "12px", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "24px", border: '1px solid #E2E8F0' },
+  pillarIcon: { width: "64px", height: "64px", backgroundColor: "#F8FAFC", borderRadius: "16px", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "24px", border: '1px solid #E2E8F0' },
+  pillarTitle: { fontSize: "20px", fontWeight: "800", color: "#0F172A", marginBottom: "12px" },
+  pillarText: { fontSize: "15px", lineHeight: "1.6", color: "#475569" },
 
   aboutSection: { padding: "120px 0", backgroundColor: "white" },
-  aboutContainer: { maxWidth: "1100px", margin: "0 auto", padding: "0 20px", display: "flex", gap: "80px", alignItems: "center", flexWrap: "wrap" },
+  aboutContainer: { maxWidth: "1150px", margin: "0 auto", padding: "0 20px", display: "flex", gap: "80px", alignItems: "center", flexWrap: "wrap" },
   aboutText: { flex: 1.2, minWidth: "320px" },
-  sectionTitle: { fontSize: "40px", fontWeight: "900", color: "#0F172A", marginBottom: "28px", lineHeight: "1.1" },
+  sectionTitle: { fontSize: "40px", fontWeight: "900", color: "#0F172A", marginBottom: "28px", lineHeight: "1.1", letterSpacing: "-0.5px" },
   paragraph: { fontSize: "17px", lineHeight: "1.7", color: "#475569", marginBottom: "24px" },
   featureList: { marginTop: "35px", display: "flex", flexDirection: "column", gap: "20px" },
   featureItem: { display: "flex", alignItems: "center", gap: "14px", fontSize: "16px", fontWeight: "600", color: "#1E293B" },
@@ -470,30 +514,33 @@ const styles = {
   faqHeader: { marginBottom: "60px", textAlign: "center" },
   sectionSubtitle: { fontSize: "19px", color: "#64748B", marginTop: '8px' },
   faqListWrapper: { display: 'flex', flexDirection: 'column', gap: '15px', maxWidth: '850px', margin: '0 auto' },
-  faqCard: { backgroundColor: "white", padding: "24px 30px", borderRadius: "14px", border: "1px solid #E2E8F0", transition: 'all 0.2s ease', cursor: 'pointer' },
+  faqCard: { backgroundColor: "white", padding: "24px 30px", borderRadius: "14px", border: "1px solid #E2E8F0", cursor: 'pointer' },
   faqQuestionRow: { display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
   faqQuestion: { fontSize: "17px", fontWeight: "700", color: "#0F172A", margin: 0 },
   faqAnswerAnim: { fontSize: "16px", lineHeight: "1.7", color: "#475569", marginTop: '20px', borderTop: '1px solid #F1F5F9', paddingTop: '20px' },
 
-  footer: { backgroundColor: "#0F172A", padding: "80px 0 40px 0", color: "white" },
-  footerTop: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "50px", borderBottom: "1px solid #1E293B", paddingBottom: "50px", marginBottom: "40px" },
-  footerLogo: { fontSize: "24px", fontWeight: "900", display: "block", marginBottom: "15px", color: '#3B82F6' },
-  footerDesc: { color: "#94A3B8", fontSize: "15px", lineHeight: "1.6", maxWidth: '300px' },
-  footerCol: { display: "flex", flexDirection: "column", alignItems: "flex-start" },
-  footerColTitle: { fontSize: "15px", fontWeight: "800", color: "white", textTransform: "uppercase", marginBottom: "20px", letterSpacing: '0.5px' },
-  footerLinksStack: { display: "flex", flexDirection: "column", gap: "12px" },
-  linkFooter: { color: "#CBD5E1", fontSize: "15px", cursor: "pointer", transition: "color 0.2s", textDecoration: "none" },
-  linkFooterBtn: { background: "none", border: "none", color: "#CBD5E1", fontSize: "15px", cursor: "pointer", textAlign: "left", padding: 0 },
-  supportRow: { display: "flex", gap: "10px", color: "#94A3B8", fontSize: "15px", alignItems: "flex-start" },
-  emailLink: { color: "#94A3B8", fontSize: "14px", textDecoration: "none" },
-  footerBottom: { textAlign: "center", color: "#475569", fontSize: "14px" },
+  footer: { backgroundColor: "#0B1120", padding: "80px 0 30px 0", color: "white", borderTop: "4px solid #1D4ED8" },
+  footerTop: { display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: "50px", borderBottom: "1px solid #1E293B", paddingBottom: "50px", marginBottom: "30px" },
+  footerBrandCol: { flex: "1 1 300px", maxWidth: "400px" },
+  footerLogoWrapper: { display: "flex", alignItems: "center", gap: "10px", marginBottom: "15px" },
+  footerLogoText: { fontSize: "24px", fontWeight: "900", color: '#60A5FA', letterSpacing: "-0.5px" },
+  footerDesc: { color: "#94A3B8", fontSize: "15px", lineHeight: "1.7" },
+  footerLinksWrapper: { flex: "2 1 500px", display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: "40px" },
+  footerCol: { display: "flex", flexDirection: "column", minWidth: "120px" },
+  footerColTitle: { fontSize: "14px", fontWeight: "800", color: "white", textTransform: "uppercase", marginBottom: "24px", letterSpacing: '1px' },
+  footerLinksStack: { display: "flex", flexDirection: "column", gap: "16px" },
+  linkFooter: { color: "#94A3B8", fontSize: "15px", cursor: "pointer", textDecoration: "none" },
+  linkFooterBtn: { background: "none", border: "none", color: "#94A3B8", fontSize: "15px", cursor: "pointer", textAlign: "left", padding: 0 },
+  supportRow: { display: "flex", gap: "10px", color: "#94A3B8", fontSize: "15px", alignItems: "center" },
+  emailLink: { color: "#94A3B8", fontSize: "15px", textDecoration: "none" },
+  footerBottom: { textAlign: "center", color: "#64748B", fontSize: "14px", paddingTop: "10px" },
 
-  modalOverlay: { position: "fixed", top: 0, left: 0, width: "100%", height: "100%", backgroundColor: "rgba(0,0,0,0.7)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 1000, backdropFilter: "blur(5px)" },
+  modalOverlay: { position: "fixed", top: 0, left: 0, width: "100%", height: "100%", backgroundColor: "rgba(15, 23, 42, 0.75)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 1000, backdropFilter: "blur(8px)" },
   modalContent: { backgroundColor: "white", width: "90%", maxWidth: "650px", padding: "40px", borderRadius: "20px", position: "relative", boxShadow: "0 25px 50px -12px rgba(0,0,0,0.25)", maxHeight: "85vh", overflowY: "auto" },
-  closeModalBtn: { position: "absolute", top: "20px", right: "20px", background: "none", border: "none", cursor: "pointer", color: "#94A3B8" },
-  modalTitle: { fontSize: "28px", fontWeight: "900", color: "#0F172A", marginBottom: "25px" },
+  closeModalBtn: { position: "absolute", top: "20px", right: "20px", background: "#F1F5F9", borderRadius: "50%", padding: "8px", border: "none", cursor: "pointer", color: "#64748B", display: "flex", transition: "background 0.2s" },
+  modalTitle: { fontSize: "28px", fontWeight: "900", color: "#0F172A", marginBottom: "25px", letterSpacing: "-0.5px" },
   modalBody: { fontSize: "16px", lineHeight: "1.8", color: "#475569" },
-  modalFooter: { marginTop: "35px", textAlign: "right" },
+  modalFooter: { marginTop: "35px", textAlign: "right", borderTop: "1px solid #F1F5F9", paddingTop: "25px" },
 }
 
 export default LandingPage;
