@@ -61,7 +61,8 @@ const MinhasProducoes = () => {
                             Acompanhe o status das suas submissões e seu histórico de revisões.
                         </p>
                     </div>
-                    <button onClick={() => navigate('/dashboard/catalogar-producoes')} style={styles.newButton}>
+                    {/* === CORREÇÃO AQUI: Mudamos de '/dashboard/catalogar-producoes' para '/dashboard/catalogar' === */}
+                    <button onClick={() => navigate('/dashboard/catalogar')} style={styles.newButton}>
                         <Plus size={16} style={{marginRight: '6px'}} /> Nova Produção
                     </button>
                 </div>
@@ -162,7 +163,6 @@ const CardProducao = ({ data, navigate, isMobile }) => {
             style={{
                 ...styles.card,
                 backgroundColor: isDraft ? '#F1F5F9' : '#FFFFFF', 
-                // --- BORDAS SÓLIDAS APLICADAS AQUI ---
                 border: isDraft ? '1px solid #94A3B8' : '1px solid #E0E0E0',
             }} 
             onClick={() => navigate(isDraft ? `/dashboard/editar-producao/${data.id}` : `/dashboard/minha-producao/${data.id}`)}
@@ -204,7 +204,6 @@ const CardProducao = ({ data, navigate, isMobile }) => {
 
             <div style={{
                 ...styles.cardStatusSide, 
-                // --- LINHA DIVISÓRIA SÓLIDA AQUI ---
                 borderLeft: isMobile ? 'none' : '1px solid #CBD5E1', 
                 paddingLeft: isMobile ? 0 : '20px', 
                 alignItems: isMobile ? 'flex-start' : 'flex-end', 
@@ -261,7 +260,6 @@ const CardHistorico = ({ data, navigate, isMobile }) => {
     return (
         <div 
             style={styles.card} 
-            // A MÁGICA DE NAVEGAÇÃO SECRETA ACONTECE NESTA LINHA:
             onClick={() => navigate(`/dashboard/producao/${data.id}`, { state: { fromHistory: true } })}
             onMouseOver={(e) => {
                 e.currentTarget.style.borderColor = '#BBDEFB';
@@ -301,7 +299,6 @@ const CardHistorico = ({ data, navigate, isMobile }) => {
                 <div style={{marginTop: '15px'}}>
                     <button 
                         style={styles.actionButtonSecondary}
-                        // E AQUI NO BOTÃO TAMBÉM:
                         onClick={(e) => {
                             e.stopPropagation();
                             navigate(`/dashboard/producao/${data.id}`, { state: { fromHistory: true } });

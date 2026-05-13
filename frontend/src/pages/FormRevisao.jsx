@@ -5,7 +5,7 @@ import Swal from 'sweetalert2';
 import { 
     Star, CheckCircle2, Bot, Download, ArrowLeft, Clock, Wrench, 
     BookOpen, Target, Lightbulb, ThumbsUp, ShieldAlert, FileText, User, 
-    AlertTriangle, Lock, PenTool, Eye, Cpu, Terminal, Link, ExternalLink 
+    AlertTriangle, Lock, PenTool, Eye, Cpu, Terminal, Link, ExternalLink, Package
 } from 'lucide-react';
 
 const Revisao = () => {
@@ -197,13 +197,15 @@ const Revisao = () => {
 
                     <div style={styles.section}>
                         <h3 style={styles.sectionTitle}><BookOpen size={18}/> Alinhamento BNCC</h3>
-                        <div style={styles.bnccBox}>{producaoEmRevisao.bncc || "Não informado."}</div>
+                        <div style={styles.bnccBox}>
+                            <p style={styles.bnccText}>{producaoEmRevisao.bncc || "Não informado."}</p>
+                        </div>
                     </div>
 
                     <div style={styles.section}>
                         <h3 style={styles.sectionTitle}><Cpu size={18}/> BNCC Computação</h3>
                         <div style={{...styles.bnccBox, backgroundColor: '#E3F2FD', borderLeftColor: '#1565C0'}}>
-                            {producaoEmRevisao.bncc_computacao || "Não informado."}
+                            <p style={{...styles.bnccText, color: '#0D47A1'}}>{producaoEmRevisao.bncc_computacao || "Não informado."}</p>
                         </div>
                     </div>
 
@@ -362,14 +364,17 @@ const styles = {
     techValue: { fontSize: '14px', color: '#37474F', fontWeight: '600', wordBreak: 'break-word', overflowWrap: 'break-word' },
     section: { marginBottom: '30px' },
     sectionTitle: { fontSize: '16px', fontWeight: '800', color: '#37474F', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '8px' },
-    bnccBox: { backgroundColor: '#FFF8E1', borderLeft: '4px solid #FFC107', padding: '15px', borderRadius: '6px', fontSize: '14px', wordBreak: 'break-word', overflowWrap: 'break-word' },
+    
+    // --- CORREÇÕES DE CORES APLICADAS AQUI ---
+    bnccBox: { backgroundColor: '#FFF8E1', borderLeft: '4px solid #FFC107', padding: '15px', borderRadius: '6px', wordBreak: 'break-word', overflowWrap: 'break-word' },
+    bnccText: { margin: 0, fontSize: "15px", color: "#3E2723", lineHeight: "1.6", wordBreak: "break-word", overflowWrap: "break-word", whiteSpace: "pre-wrap" },
     textBody: { fontSize: '15px', lineHeight: '1.6', color: '#455A64', whiteSpace: 'pre-wrap', wordBreak: 'break-word', overflowWrap: 'break-word' },
-    promptBox: { backgroundColor: '#F8FAFC', padding: '15px', borderRadius: '8px', borderLeft: '4px solid #8B5CF6', fontStyle: 'italic', wordBreak: 'break-word', overflowWrap: 'break-word' },
-    resultsBox: { backgroundColor: '#E8F5E9', border: '1px solid #C8E6C9', padding: '15px', borderRadius: '8px', fontStyle: 'italic', wordBreak: 'break-word', overflowWrap: 'break-word' },
+    promptBox: { backgroundColor: '#F8FAFC', padding: '15px', borderRadius: '8px', borderLeft: '4px solid #8B5CF6', fontStyle: 'italic', wordBreak: 'break-word', overflowWrap: 'break-word', color: '#475569', fontSize: '15px', whiteSpace: 'pre-wrap', lineHeight: '1.6' },
+    resultsBox: { backgroundColor: '#E8F5E9', border: '1px solid #C8E6C9', padding: '15px', borderRadius: '8px', fontStyle: 'italic', wordBreak: 'break-word', overflowWrap: 'break-word', color: '#1B5E20', fontSize: '15px', whiteSpace: 'pre-wrap', lineHeight: '1.6' },
     
     downloadContainer: { padding: '12px 15px', backgroundColor: '#F8F9FA', borderRadius: '10px', border: '1px solid #E0E0E0', display: 'flex', flexDirection: 'column', justifyContent: 'center' },
     fileInfoBox: { display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' },
-    fileName: { fontSize: '13px', fontWeight: '700' },
+    fileName: { fontSize: '13px', fontWeight: '700', color: '#333' }, // Cor escura adicionada aqui também
     downloadBtnCompact: { backgroundColor: '#1565C0', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', fontWeight: '700', display: 'flex', alignItems: 'center', justifyContent: 'center' },
     
     firstReviewerBox: { backgroundColor: '#F8FBFF', border: '1px solid #BBDEFB', borderRadius: '12px', padding: '20px', marginTop: '30px' },

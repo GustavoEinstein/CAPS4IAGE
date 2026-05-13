@@ -58,11 +58,13 @@ const FormularioManual = () => {
     item.texto.toLowerCase().includes(bnccBusca.toLowerCase())
   ).slice(0, 5)
 
+  // === CORREÇÃO AQUI: INVERTEMOS A ORDEM DE CONCATENAÇÃO ===
   const adicionarBncc = (item) => {
-    const textoAtual = formData.bncc ? formData.bncc + "\n" : ""
-    setFormData(prev => ({ ...prev, bncc: textoAtual + `${item.id}: ${item.texto}` }))
-    setBnccBusca("")
-    setMostrarOpcoesBncc(false)
+    const novaCompetencia = `${item.id}: ${item.texto}`;
+    const textoAtual = formData.bncc ? `\n${formData.bncc}` : ""; // Adiciona quebra de linha antes do texto antigo
+    setFormData(prev => ({ ...prev, bncc: novaCompetencia + textoAtual })); // A competência JSON sempre entra no topo!
+    setBnccBusca("");
+    setMostrarOpcoesBncc(false);
   }
 
   // 2. RECUPERADOR DE RASCUNHO (Auto-Save)
@@ -271,7 +273,6 @@ const FormularioManual = () => {
                 </div>
               </div>
 
-              {/* NOVO CAMPO: LINK EXTERNO ADICIONADO AQUI */}
               <div style={{ ...styles.inputGroup, marginTop: "15px" }}>
                 <label style={styles.label}><Link size={14} /> Link Externo (Opcional)</label>
                 <input 

@@ -31,7 +31,7 @@ import Forum from './pages/Forum/Forum';
 import TopicoDetalhe from './pages/Forum/TopicoDetalhe';
 import Admin from './pages/Admin'; 
 import CentralAdmin from './pages/CentralAdmin';
-import GamificacaoAdmin from './pages/GamificacaoAdmin'; // <--- IMPORTANTE: Crie este arquivo conforme a dica anterior
+import GamificacaoAdmin from './pages/GamificacaoAdmin';
 
 // --- PÁGINA DE EDIÇÃO ---
 import EditarProducao from './EditarProducao';
@@ -65,10 +65,10 @@ function App() {
                 <Route path="producao/:id" element={<DetalheProducao />} />
                 <Route path="minha-producao/:id" element={<VisualizarMinhaProducao />} />
 
-                {/* Funcionalidades de Produção */}
-                <Route path="/dashboard/catalogar" element={<SelecionarMetodo />} />
-                <Route path="/dashboard/catalogar/base" element={<BuscarBase />} />
-                <Route path="/dashboard/catalogar/manual" element={<FormularioManual />} />
+                {/* Funcionalidades de Produção (Corrigidas para caminhos relativos) */}
+                <Route path="catalogar" element={<SelecionarMetodo />} />
+                <Route path="catalogar/base" element={<BuscarBase />} />
+                <Route path="catalogar/manual" element={<FormularioManual />} />
                 <Route path="minhas-producoes" element={<MinhasProducoes />} />
                 <Route path="revisao" element={<RevisaoDuploCego />} />
                 <Route path="revisao/:id" element={<Revisao />} />          
@@ -88,8 +88,6 @@ function App() {
                 <Route path="central-admin" element={<CentralAdmin />} /> 
                 <Route path="aprovacoes" element={<AprovacaoContas />} />
                 <Route path="admin" element={<Admin />} /> 
-                
-                {/* NOVA ROTA DE GESTÃO DE GAMIFICAÇÃO (ADMIN) */}
                 <Route path="admin/gamificacao" element={<GamificacaoAdmin />} />
 
             </Route>
@@ -99,7 +97,7 @@ function App() {
 
         </Route>
 
-        {/* Rota de segurança */}
+        {/* Rota de segurança (Catch-all) */}
         <Route path="*" element={<Navigate to="/" replace />} />
 
       </Routes>
