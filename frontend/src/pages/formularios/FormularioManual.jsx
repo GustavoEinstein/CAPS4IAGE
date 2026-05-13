@@ -7,14 +7,11 @@ import {
   Lightbulb, Target, FileText, CheckCircle2, Layers, X, Bookmark, Send, Check, Link
 } from "lucide-react"
 
-// --- DADOS MOCKADOS DA BNCC (Temporário até os JSONs ficarem prontos) ---
-const BNCC_DADOS = [
-  { id: "EM13MAT101", texto: "Interpretar criticamente situações econômicas, sociais e fatos..." },
-  { id: "EM13MAT102", texto: "Analisar tabelas, gráficos e amostras de pesquisas..." },
-  { id: "EF06MA01", texto: "Comparar, ordenar, ler e escrever números naturais..." },
-  { id: "EF07MA02", texto: "Resolver e elaborar problemas que envolvam porcentagens..." },
-  { id: "EF08MA03", texto: "Resolver e elaborar problemas de contagem..." },
-];
+import bnccMat from "../../data/bncc_mat.json"
+import bnccPort from "../../data/bncc_port.json"
+import bnccComp from "../../data/bncc_comp.json"
+
+const BNCC_DADOS = [...bnccMat, ...bnccPort, ...bnccComp] // Combine as listas BNCC de Português e Computação
 
 const FormularioManual = () => {
   const navigate = useNavigate()
