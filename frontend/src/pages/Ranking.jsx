@@ -1,13 +1,17 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
     Trophy, 
     Rocket, 
     Star, 
     ShieldCheck, 
-    Sparkles 
+    Sparkles,
+    ArrowLeft
 } from 'lucide-react';
 
 export default function Ranking() {
+    const navigate = useNavigate();
+
     return (
         <div style={styles.wrapper}>
             <div style={styles.container}>
@@ -19,13 +23,13 @@ export default function Ranking() {
                         <Rocket size={64} color="#1565C0" style={styles.floatingIcon} />
                     </div>
 
-                    <h1 style={styles.title}>O Hall da Fama está sendo construído!</h1>
+                    <h1 style={styles.title}>O Espaço de Reconhecimento está em construção!</h1>
                     <p style={styles.subtitle}>
-                        Estamos preparando uma experiência incrível para reconhecer e recompensar 
-                        os professores que mais contribuem com a comunidade T.E.I.A.
+                        Estamos preparando uma experiência incrível para celebrar e recompensar 
+                        o impacto pedagógico dos professores que mais contribuem com a comunidade T.E.I.A.
                     </p>
 
-                    {/* Caixa de Spoilers / Hype */}
+                    {/* Caixa de Spoilers / Hype (Com efeito visual de "Bloqueado") */}
                     <div style={styles.hypeBox}>
                         <h3 style={styles.hypeTitle}>
                             <Sparkles size={20} color="#F59E0B" /> 
@@ -34,42 +38,55 @@ export default function Ranking() {
                         
                         <div style={styles.featuresGrid}>
                             <div style={styles.featureItem}>
-                                <div style={styles.featureIcon}><Trophy size={24} color="#F59E0B" /></div>
+                                <div style={styles.featureIconLocked}><Trophy size={24} color="#94A3B8" /></div>
                                 <div>
-                                    <h4 style={styles.featureName}>Ranking Oficial</h4>
-                                    <p style={styles.featureDesc}>Dispute o topo do pódio mensalmente com seus colegas.</p>
+                                    <h4 style={styles.featureName}>Rede de Destaques</h4>
+                                    <p style={styles.featureDesc}>
+                                        Um espaço dedicado a celebrar os educadores mais engajados. Destaque suas contribuições pedagógicas, inspire colegas e seja reconhecido.
+                                    </p>
                                 </div>
                             </div>
                             
                             <div style={styles.featureItem}>
-                                <div style={styles.featureIcon}><ShieldCheck size={24} color="#10B981" /></div>
+                                <div style={styles.featureIconLocked}><ShieldCheck size={24} color="#94A3B8" /></div>
                                 <div>
-                                    <h4 style={styles.featureName}>Títulos e Níveis</h4>
-                                    <p style={styles.featureDesc}>Evolua de Aprendiz até se tornar um Grão-Mestre do T.E.I.A.</p>
+                                    <h4 style={styles.featureName}>Trilhas de Evolução</h4>
+                                    <p style={styles.featureDesc}>
+                                        Acompanhe seu crescimento na plataforma, evoluindo de "Iniciante" até se tornar um "Curador Pedagógico" respeitado na rede.
+                                    </p>
                                 </div>
                             </div>
 
                             <div style={styles.featureItem}>
-                                <div style={styles.featureIcon}><Star size={24} color="#8B5CF6" /></div>
+                                <div style={styles.featureIconLocked}><Star size={24} color="#94A3B8" /></div>
                                 <div>
-                                    <h4 style={styles.featureName}>Conquistas Únicas</h4>
-                                    <p style={styles.featureDesc}>Desbloqueie medalhas exclusivas para exibir no seu perfil.</p>
+                                    <h4 style={styles.featureName}>Marcos Colaborativos</h4>
+                                    <p style={styles.featureDesc}>
+                                        Desbloqueie insígnias exclusivas baseadas na qualidade e no impacto positivo das suas práticas validadas em sala de aula.
+                                    </p>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    {/* Alerta de Suspense (Pegada Gamificada) */}
+                    {/* Alerta de Suspense */}
                     <div style={styles.alertBox}>
-                        <strong style={styles.alertStrong}>🕵️‍♂️ O Hall da Fama  já está rodando na surdina...</strong>
-                        Achou que as suas contribuições iam passar em branco? Cada material publicado e revisão feita já está gerando pontos secretos para o seu perfil. Continue engajando e garanta sua vantagem pro dia do lançamento oficial!
+                        <strong style={styles.alertStrong}>🕵️‍♂️ A rede já está mapeando seus impactos na surdina...</strong>
+                        Achou que as suas contribuições iam passar em branco? Cada material publicado e revisão de qualidade já está gerando um histórico valioso para o seu perfil. Continue colaborando e garanta sua vantagem para o dia do lançamento oficial!
+                    </div>
+
+                    {/* Botão de Saída (Evitar "Beco sem saída") */}
+                    <div style={styles.footerAction}>
+                        <button onClick={() => navigate('/dashboard')} style={styles.btnPrimary}>
+                            <ArrowLeft size={18} /> Voltar ao Painel
+                        </button>
                     </div>
 
                 </div>
 
             </div>
             
-            {/* CSS in line para a animação de flutuação */}
+            {/* CSS in line para as animações */}
             <style>{`
                 @keyframes float {
                     0% { transform: translateY(0px); }
@@ -80,6 +97,9 @@ export default function Ranking() {
                     0% { transform: scale(1); opacity: 0.5; }
                     50% { transform: scale(1.1); opacity: 0.8; }
                     100% { transform: scale(1); opacity: 0.5; }
+                }
+                .locked-blur {
+                    filter: grayscale(100%) opacity(0.7);
                 }
             `}</style>
         </div>
@@ -147,7 +167,7 @@ const styles = {
         color: '#64748B', 
         fontSize: '16px', 
         lineHeight: '1.6',
-        maxWidth: '550px'
+        maxWidth: '600px'
     },
 
     hypeBox: {
@@ -171,53 +191,79 @@ const styles = {
     featuresGrid: {
         display: 'flex',
         flexDirection: 'column',
-        gap: '20px'
+        gap: '20px',
+        // Efeito para dar um ar de que está "bloqueado" / em construção
+        opacity: '0.8'
     },
     featureItem: {
         display: 'flex',
         alignItems: 'flex-start',
-        gap: '15px'
+        gap: '15px',
+        padding: '10px',
+        borderRadius: '12px',
+        transition: 'background-color 0.2s',
     },
-    featureIcon: {
+    featureIconLocked: {
         width: '48px',
         height: '48px',
-        backgroundColor: '#FFFFFF',
+        backgroundColor: '#F1F5F9',
         borderRadius: '12px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        boxShadow: '0 2px 5px rgba(0,0,0,0.02)',
-        border: '1px solid #E2E8F0',
+        border: '1px dashed #CBD5E1',
         flexShrink: 0
     },
     featureName: {
-        margin: '0 0 4px 0',
+        margin: '0 0 6px 0',
         fontSize: '16px',
         fontWeight: '700',
-        color: '#1E293B'
+        color: '#334155' // Cor um pouco mais apagada
     },
     featureDesc: {
         margin: 0,
         fontSize: '14px',
         color: '#64748B',
-        lineHeight: '1.5'
+        lineHeight: '1.6'
     },
 
-    // Alerta de suspense em tons de roxo
     alertBox: {
-        backgroundColor: '#F5F3FF', // Roxo bem clarinho
-        color: '#4C1D95', // Roxo escuro
+        backgroundColor: '#F5F3FF', 
+        color: '#4C1D95', 
         padding: '20px 25px',
         borderRadius: '12px',
         fontSize: '15px',
         lineHeight: '1.6',
         border: '1px dashed #8B5CF6',
-        textAlign: 'left'
+        textAlign: 'left',
+        marginBottom: '35px'
     },
     alertStrong: {
         color: '#5B21B6',
         fontWeight: '800',
         display: 'block',
-        marginBottom: '4px'
+        marginBottom: '6px'
+    },
+    
+    footerAction: {
+        display: 'flex',
+        justifyContent: 'center',
+        borderTop: '1px solid #F1F5F9',
+        paddingTop: '30px'
+    },
+    btnPrimary: {
+        backgroundColor: '#1565C0',
+        color: 'white',
+        border: 'none',
+        padding: '14px 28px',
+        borderRadius: '8px',
+        fontWeight: '700',
+        fontSize: '15px',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '8px',
+        cursor: 'pointer',
+        boxShadow: '0 4px 12px rgba(21, 101, 192, 0.2)',
+        transition: 'transform 0.2s',
     }
 };

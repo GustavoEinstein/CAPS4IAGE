@@ -14,7 +14,8 @@ import {
     EyeOff,
     BookOpen,
     School,
-    Users 
+    Users,
+    X
 } from 'lucide-react';
 
 const Register = () => {
@@ -41,6 +42,12 @@ const Register = () => {
     const [error, setError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false); 
+    
+    const [aceitouTermos, setAceitouTermos] = useState(false);
+    
+    const [activeModal, setActiveModal] = useState(null);
+    const openModal = (type) => setActiveModal(type);
+    const closeModal = () => setActiveModal(null);
 
     const navigate = useNavigate();
 
@@ -57,7 +64,6 @@ const Register = () => {
 
         const pwd = formData.password;
 
-        // --- VALIDAÇÃO DE SEGURANÇA (FRONTEND) ---
         if (pwd.length < 8) {
             setError('A senha precisa ter no mínimo 8 caracteres.');
             return;
@@ -85,6 +91,11 @@ const Register = () => {
 
         if (!formData.disciplina) {
             setError('Por favor, selecione sua área de atuação.');
+            return;
+        }
+
+        if (!aceitouTermos) {
+            setError('Você precisa ler e concordar com os Termos de Uso e a Política de Privacidade para criar sua conta.');
             return;
         }
 
@@ -284,9 +295,24 @@ const Register = () => {
                             </button>
                         </div>
 
+                        {/* CAIXINHA DE TERMOS E CONDIÇÕES - COMPORTAMENTO DO CLIQUE AJUSTADO */}
+                        <div style={styles.termsContainer}>
+                            <input 
+                                type="checkbox" 
+                                id="termos" 
+                                checked={aceitouTermos} 
+                                onChange={(e) => setAceitouTermos(e.target.checked)} 
+                                style={styles.checkbox}
+                            />
+                            {/* Alterado para <span>: O texto comum não clica mais na caixinha, apenas os links abrem os modais */}
+                            <span style={styles.termsText}>
+                                Li e concordo com os <span onClick={() => openModal('terms')} style={styles.termsLink}>Termos de Uso</span> e a <span onClick={() => openModal('privacy')} style={styles.termsLink}>Política de Privacidade</span>.
+                            </span>
+                        </div>
+
                         {error && (
                             <div style={styles.errorBox}>
-                                <AlertCircle size={16} />
+                                <AlertCircle size={16} style={{ flexShrink: 0 }} />
                                 <span>{error}</span>
                             </div>
                         )}
@@ -305,7 +331,59 @@ const Register = () => {
                     </form>
                 </div>
             </div>
-            <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } } .spin { animation: spin 1s linear infinite; }`}</style>
+
+            {/* === MODAIS DE TERMOS E PRIVACIDADE === */}
+            {activeModal && (
+                <div style={styles.modalOverlay} onClick={closeModal}>
+                    <div style={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+                        <button onClick={closeModal} style={styles.closeModalBtn}><X size={20} /></button>
+                        <h2 style={styles.modalTitle}>{activeModal === "terms" ? "Termos de Uso" : "Política de Privacidade"}</h2>
+                        
+                        <div style={styles.modalBody}>
+                            {activeModal === "terms" ? (
+                                <>
+                                    <p style={{marginBottom: '15px'}}>
+                                        Ao acessar e utilizar a plataforma T.E.I.A, você concorda expressamente com as seguintes diretrizes e responsabilidades:
+                                    </p>
+                                    <ul style={{display: 'flex', flexDirection: 'column', gap: '12px'}}>
+                                        <li><strong>1. Responsabilidade sobre o Conteúdo:</strong> O usuário é o único responsável legal e pedagógico pelo material submetido. É estritamente proibido enviar conteúdos ilegais, discriminatórios, ofensivos ou que violem direitos autorais de terceiros.</li>
+                                        <li><strong>2. Geração por Inteligência Artificial:</strong> O T.E.I.A integra ferramentas de IA como suporte criativo. A IA pode apresentar "alucinações" ou imprecisões. A revisão, validação factual e adequação à BNCC são obrigações exclusivas do professor titular.</li>
+                                        <li><strong>3. Propriedade Intelectual e Colaboração:</strong> Ao submeter e ter sua produção aprovada, você concorda em disponibilizá-la sob licença colaborativa para a comunidade do T.E.I.A, permitindo que outros docentes acessem e adaptem seu material para fins educacionais (não comerciais).</li>
+                                        <li><strong>4. Integridade da Revisão Duplo-Cego:</strong> O usuário se compromete a não inserir dados de identificação pessoal no corpo do material submetido. Qualquer tentativa deliberada de fraudar, manipular notas ou quebrar o anonimato da avaliação resultará no banimento permanente da plataforma.</li>
+                                        <li><strong>5. Moderação e Banimento:</strong> A administração do T.E.I.A reserva-se o direito de excluir conteúdos, suspender ou cancelar contas que violem estes termos, sem aviso prévio.</li>
+                                    </ul>
+                                </>
+                            ) : (
+                                <>
+                                    <p style={{marginBottom: '15px'}}>
+                                        Em conformidade com a Lei Geral de Proteção de Dados (LGPD - Lei nº 13.709/2018), detalhamos o tratamento de suas informações:
+                                    </p>
+                                    <ul style={{display: 'flex', flexDirection: 'column', gap: '12px'}}>
+                                        <li><strong>1. Coleta Mínima Necessária:</strong> Coletamos apenas os dados estritamente necessários para o funcionamento da plataforma e autenticação: Nome, E-mail, Instituição de Ensino e Área de Atuação/Disciplina.</li>
+                                        <li><strong>2. Proteção do Anonimato (Duplo-Cego):</strong> Seus dados de identificação são rigorosamente separados do seu conteúdo durante a fila de revisão. Revisores não têm acesso à sua identidade, e você não tem acesso à identidade de quem avalia.</li>
+                                        <li><strong>3. Compartilhamento de Dados:</strong> O T.E.I.A não comercializa, aluga ou cede seus dados pessoais a terceiros sob nenhuma hipótese. Os dados são mantidos em servidores seguros e utilizados exclusivamente para métricas internas do sistema educacional.</li>
+                                        {/* === ATUALIZAÇÃO NESTE PONTO (IGUAL DA LANDING PAGE) === */}
+                                        <li><strong>4. Tecnologias Essenciais e de Segurança:</strong> Empregamos recursos técnicos estritamente necessários operando em segundo plano para manter a sua conexão ativa e proteger o seu acesso enquanto navega. O sistema é totalmente livre de rastreadores comportamentais ou publicidade de terceiros.</li>
+                                        <li><strong>5. Direito de Exclusão (Esquecimento):</strong> O usuário pode solicitar a exclusão de sua conta a qualquer momento. Caso existam produções aprovadas e publicadas na comunidade, o autor poderá optar por excluí-las ou mantê-las sob autoria "Anônima" para não prejudicar a rede de ensino.</li>
+                                    </ul>
+                                </>
+                            )}
+                        </div>
+                        
+                        <div style={styles.modalFooter}>
+                            <button onClick={closeModal} style={styles.btnModalCompreendido}>Compreendido</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            <style>
+                {`
+                @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } } 
+                .spin { animation: spin 1s linear infinite; }
+                .btn-hover:hover { filter: brightness(1.1); transform: translateY(-1px); box-shadow: 0 6px 16px rgba(21, 101, 192, 0.3) !important; }
+                `}
+            </style>
         </div>
     );
 };
@@ -332,8 +410,8 @@ const styles = {
     header: { marginBottom: '30px' },
     title: { fontSize: '26px', fontWeight: '800', color: '#1E293B', marginBottom: '8px' },
     subtitle: { fontSize: '14px', color: '#64748B' },
-    form: { display: 'flex', flexDirection: 'column', gap: '20px' },
-    row: { display: 'flex', gap: '20px', flexWrap: 'wrap' },
+    form: { display: 'flex', flexDirection: 'column', gap: '18px' },
+    row: { display: 'flex', gap: '18px', flexWrap: 'wrap' },
     inputGroup: { flex: 1, display: 'flex', flexDirection: 'column', minWidth: '200px' },
     label: { fontSize: '13px', fontWeight: '600', color: '#334155', marginBottom: '6px' },
     
@@ -356,19 +434,36 @@ const styles = {
         backgroundSize: '.65em auto',
     },
     
-    showPassContainer: { display: 'flex', justifyContent: 'flex-end', marginTop: '-10px' },
+    showPassContainer: { display: 'flex', justifyContent: 'flex-end', marginTop: '-8px' },
     toggleBtn: { background: 'none', border: 'none', color: '#64748B', fontSize: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px' },
+    
+    // --- ESTILOS DO CHECKBOX E TEXTO NEUTRO ---
+    termsContainer: { display: 'flex', alignItems: 'flex-start', gap: '10px', marginTop: '5px' },
+    checkbox: { marginTop: '2px', cursor: 'pointer', accentColor: '#1565C0', width: '16px', height: '16px' },
+    termsText: { fontSize: '13px', color: '#475569', lineHeight: '1.4', margin: 0 }, // cursor pointer removido
+    termsLink: { color: '#1565C0', fontWeight: '700', textDecoration: 'none', cursor: 'pointer' },
+
     button: {
-        backgroundColor: '#1565C0', color: 'white', padding: '12px', borderRadius: '8px', border: 'none',
+        backgroundColor: '#1565C0', color: 'white', padding: '14px', borderRadius: '8px', border: 'none',
         fontWeight: '700', fontSize: '15px', cursor: 'pointer', display: 'flex', alignItems: 'center',
-        justifyContent: 'center', gap: '10px', transition: 'background 0.2s', marginTop: '10px'
+        justifyContent: 'center', gap: '10px', transition: 'all 0.2s', marginTop: '10px',
+        boxShadow: '0 4px 12px rgba(21, 101, 192, 0.2)'
     },
     errorBox: {
         backgroundColor: '#FEF2F2', border: '1px solid #FECACA', color: '#991B1B',
         padding: '12px', borderRadius: '8px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '10px'
     },
     footerLink: { textAlign: 'center', fontSize: '14px', color: '#64748B', marginTop: '10px' },
-    link: { color: '#1565C0', fontWeight: '700', textDecoration: 'none' }
+    link: { color: '#1565C0', fontWeight: '700', textDecoration: 'none' },
+
+    // --- ESTILOS DOS MODAIS ---
+    modalOverlay: { position: "fixed", top: 0, left: 0, width: "100%", height: "100%", backgroundColor: "rgba(15, 23, 42, 0.6)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 1000, backdropFilter: "blur(4px)" },
+    modalContent: { backgroundColor: "white", width: "90%", maxWidth: "600px", padding: "35px", borderRadius: "16px", position: "relative", boxShadow: "0 20px 40px rgba(0,0,0,0.2)", maxHeight: "85vh", overflowY: "auto" },
+    closeModalBtn: { position: "absolute", top: "15px", right: "15px", background: "#F1F5F9", borderRadius: "50%", padding: "6px", border: "none", cursor: "pointer", color: "#64748B", display: "flex", transition: "background 0.2s" },
+    modalTitle: { fontSize: "24px", fontWeight: "800", color: "#0F172A", marginBottom: "20px" },
+    modalBody: { fontSize: "14px", lineHeight: "1.7", color: "#475569" },
+    modalFooter: { marginTop: "30px", textAlign: "right", borderTop: "1px solid #F1F5F9", paddingTop: "20px" },
+    btnModalCompreendido: { padding: "10px 24px", backgroundColor: "#1565C0", color: "white", borderRadius: "8px", border: "none", fontSize: "14px", fontWeight: "700", cursor: "pointer" }
 };
 
 export default Register;

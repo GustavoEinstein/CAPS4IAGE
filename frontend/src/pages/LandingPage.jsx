@@ -433,7 +433,8 @@ const LandingPage = () => {
                       <strong>3. Compartilhamento de Dados:</strong> O T.E.I.A não comercializa, aluga ou cede seus dados pessoais a terceiros sob nenhuma hipótese. Os dados são mantidos em servidores seguros e utilizados exclusivamente para métricas internas do sistema educacional.
                     </li>
                     <li>
-                      <strong>4. Cookies e Autenticação:</strong> Utilizamos tecnologias locais (como LocalStorage e JWT) apenas para manter sua sessão segura e ativa. Não utilizamos rastreadores de publicidade de terceiros.
+                      {/* === ATUALIZAÇÃO NESTE PONTO === */}
+                      <strong>4. Tecnologias Essenciais e de Segurança:</strong> Empregamos recursos técnicos estritamente necessários operando em segundo plano para manter a sua conexão ativa e proteger o seu acesso enquanto navega. O sistema é totalmente livre de rastreadores comportamentais ou publicidade de terceiros.
                     </li>
                     <li>
                       <strong>5. Direito de Exclusão (Esquecimento):</strong> O usuário pode solicitar a exclusão de sua conta a qualquer momento. Caso existam produções aprovadas e publicadas na comunidade, o autor poderá optar por excluí-las ou mantê-las sob autoria "Anônima" para não prejudicar a rede de ensino.
@@ -468,7 +469,6 @@ const styles = {
   heroContainer: { maxWidth: "1150px", margin: "0 auto", padding: "0 20px", display: "flex", alignItems: "center", gap: "60px", flexWrap: "wrap" },
   heroContent: { flex: 1.2, minWidth: "320px" },
   
-  // --- NOVOS ESTILOS DO BADGE (REDE DOCENTE ATIVA) ---
   badge: { display: "inline-flex", alignItems: "center", gap: "10px", padding: "8px 18px", backgroundColor: "#FFFFFF", color: "#1E3A8A", borderRadius: "30px", fontSize: "13px", fontWeight: "800", marginBottom: "24px", boxShadow: "0 4px 15px rgba(37, 99, 235, 0.12)", border: "1px solid #E2E8F0", letterSpacing: "0.5px" },
   badgeDot: { width: "10px", height: "10px", borderRadius: "50%", backgroundColor: "#10B981" },
   
