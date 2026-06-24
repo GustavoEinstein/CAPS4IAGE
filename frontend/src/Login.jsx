@@ -1,6 +1,7 @@
 import React, { useState } from "react"
-import api from "./services/api" // <--- USANDO A CONFIGURAÇÃO CENTRAL (URL Base automática)
+import api from "./services/api"
 import { Link } from "react-router-dom"
+import { Eye, EyeOff } from "lucide-react" // Ícones importados para o botão de senha
 
 const SpiderWebIcon = ({ size = 24, color = "currentColor" }) => (
   <svg
@@ -9,18 +10,15 @@ const SpiderWebIcon = ({ size = 24, color = "currentColor" }) => (
     viewBox="0 0 24 24"
     fill="none"
     stroke={color}
-    strokeWidth="1.5" // Linhas ligeiramente mais finas para elegância
+    strokeWidth="1.5"
     strokeLinecap="round"
     strokeLinejoin="round"
   >
-    {/* Eixos Radiais (A estrutura da rede) */}
-    <path d="M12 2v20" /> {/* Vertical */}
-    <path d="M2 12h20" /> {/* Horizontal */}
-    <path d="M4.93 4.93l14.14 14.14" /> {/* Diagonal 1 */}
-    <path d="M19.07 4.93L4.93 19.07" /> {/* Diagonal 2 */}
-    {/* Conexões Internas (Octógono Menor) */}
+    <path d="M12 2v20" />
+    <path d="M2 12h20" />
+    <path d="M4.93 4.93l14.14 14.14" />
+    <path d="M19.07 4.93L4.93 19.07" />
     <path d="M12 7 L15.53 8.47 L17 12 L15.53 15.53 L12 17 L8.47 15.53 L7 12 L8.47 8.47 Z" />
-    {/* Conexões Externas (Octógono Maior) */}
     <path d="M12 3 L18.36 5.64 L21 12 L18.36 18.36 L12 21 L5.64 18.36 L3 12 L5.64 5.64 Z" />
   </svg>
 )
@@ -32,13 +30,15 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState(false)
   const [hover, setHover] = useState(false)
 
+  // NOVO: Estado para controlar a visibilidade da senha
+  const [showPassword, setShowPassword] = useState(false)
+
   const handleLogin = async (e) => {
     e.preventDefault()
     setError("")
     setIsLoading(true)
 
     try {
-      // 1. URL de Login (Token) - A api já sabe o endereço base
       const urlToken = "api/token/"
 
       const response = await api.post(urlToken, {
@@ -50,50 +50,44 @@ const Login = () => {
       localStorage.setItem("access_token", token)
       localStorage.setItem("refresh_token", response.data.refresh)
 
-      // 2. BUSCA OS DADOS DO PERFIL IMEDIATAMENTE
       const urlUser = "api/user/me/"
 
-      // Passamos o token no header manualmente aqui para garantir,
-      // pois acabamos de recebê-lo e o interceptor pode não ter atualizado ainda
       const userResponse = await api.get(urlUser, {
         headers: { Authorization: `Bearer ${token}` },
       })
 
-      // Salva os dados importantes no localStorage (com fallbacks)
       localStorage.setItem("user_name", userResponse.data.username || "Admin")
-      localStorage.setItem("user_disciplina", userResponse.data.disciplina || "Geral")
-      
+      localStorage.setItem(
+        "user_disciplina",
+        userResponse.data.disciplina || "Geral",
+      )
+
       if (userResponse.data.avatar) {
         localStorage.setItem("user_avatar", userResponse.data.avatar)
       }
 
-      // NOVO: Salva no localStorage se o usuário logado é superadmin
       if (userResponse.data.is_superuser) {
         localStorage.setItem("is_superuser", "true")
       } else {
-        localStorage.removeItem("is_superuser") // Garante que não fique sujo de um login anterior
+        localStorage.removeItem("is_superuser")
       }
 
-      // Dispara evento para atualizar o cabeçalho imediatamente (se houver listeners)
       window.dispatchEvent(new Event("storage"))
-
-      // 3. Redireciona e FORÇA O REFRESH (Para a Sidebar ler o novo is_superuser)
       window.location.href = "/dashboard"
-      
     } catch (err) {
       console.error(err)
       if (err.code === "ERR_NETWORK") {
         setError("Erro de conexão. Verifique se o servidor está rodando.")
       } else if (err.response && err.response.status === 429) {
-        // --- PROTEÇÃO CONTRA FORÇA BRUTA (THROTTLING) ---
-        setError("Muitas tentativas falhadas. Por favor, aguarde 1 minuto e tente novamente.");
+        setError(
+          "Muitas tentativas falhadas. Por favor, aguarde 1 minuto e tente novamente.",
+        )
       } else if (err.response && err.response.status === 401) {
-        // Captura a mensagem customizada do backend se houver (Conta não aprovada)
-        const detailMessage = err.response.data.detail;
+        const detailMessage = err.response.data.detail
         if (detailMessage) {
-            setError(detailMessage); 
+          setError(detailMessage)
         } else {
-            setError("Usuário ou senha incorretos.");
+          setError("Usuário ou senha incorretos.")
         }
       } else {
         setError("Ocorreu um erro inesperado.")
@@ -137,17 +131,29 @@ const Login = () => {
             <label style={styles.label}>Senha</label>
             <div style={styles.inputWrapper}>
               <input
-                type="password"
+                type={showPassword ? "text" : "password"} // Alterna entre text e password
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 style={styles.input}
                 placeholder="Sua senha"
                 required
               />
+              {/* NOVO: Botão de alternância de visibilidade */}
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                style={styles.eyeButton}
+                aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
+              >
+                {showPassword ? (
+                  <EyeOff size={20} color="#64748B" />
+                ) : (
+                  <Eye size={20} color="#64748B" />
+                )}
+              </button>
             </div>
           </div>
 
-          {/* Link de Esqueci a Senha */}
           <div style={styles.forgotPasswordContainer}>
             <Link to="/esqueceu-senha" style={styles.forgotPasswordLink}>
               Esqueceu a senha?
@@ -205,6 +211,7 @@ const styles = {
     boxShadow: "0 8px 20px rgba(0,0,0,0.2)",
     display: "flex",
     flexDirection: "column",
+    boxSizing: "border-box", // Adicionado para garantir que o padding não quebre o layout
   },
   header: { textAlign: "center", marginBottom: "25px" },
   logoCircle: {
@@ -232,6 +239,7 @@ const styles = {
     border: "1px solid #E2E8F0",
     borderRadius: "8px",
     backgroundColor: "#F8FAFC",
+    overflow: "hidden", // Garante que elementos internos não vazem das bordas arredondadas
   },
   label: {
     display: "block",
@@ -241,12 +249,22 @@ const styles = {
     color: "#334155",
   },
   input: {
-    width: "100%",
+    flex: 1, // Permite que o input ocupe todo o espaço disponível, empurrando o botão para a direita
     padding: "12px",
     border: "none",
     background: "transparent",
     outline: "none",
     color: "#334155",
+    width: "100%",
+  },
+  eyeButton: {
+    background: "none",
+    border: "none",
+    padding: "0 12px",
+    cursor: "pointer",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
   },
   forgotPasswordContainer: { textAlign: "right", marginTop: "-5px" },
   forgotPasswordLink: {
