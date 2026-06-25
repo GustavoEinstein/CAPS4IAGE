@@ -1,4 +1,4 @@
-import React from "react"
+import React, { useState } from "react"
 import { useNavigate, useOutletContext } from "react-router-dom"
 import {
   ShieldAlert,
@@ -7,6 +7,11 @@ import {
   ChevronRight,
   Database,
   Trophy,
+  ExternalLink,
+  Book,
+  FileText,
+  Sun,
+  Moon,
 } from "lucide-react"
 
 export default function CentralAdmin() {
@@ -15,6 +20,9 @@ export default function CentralAdmin() {
   // --- DETECÇÃO DE MOBILE ---
   const context = useOutletContext()
   const isMobile = context ? context.isMobile : false
+
+  // --- ESTADO DO MODO ESCURO (Visual por enquanto) ---
+  const [isDarkMode, setIsDarkMode] = useState(false)
 
   return (
     <div
@@ -37,7 +45,7 @@ export default function CentralAdmin() {
             <div style={styles.iconCircleBlue}>
               <Settings size={28} color="#1565C0" />
             </div>
-            <div>
+            <div style={{ flex: 1 }}>
               <h1
                 style={{
                   ...styles.pageTitle,
@@ -50,11 +58,35 @@ export default function CentralAdmin() {
                 Selecione a ferramenta de gestão que deseja acessar.
               </p>
             </div>
+
+            {/* --- BOTÃO DE MODO ESCURO (Preparado para o futuro) --- */}
+            <button
+              onClick={() => setIsDarkMode(!isDarkMode)}
+              style={styles.themeToggleBtn}
+              title="Alternar Modo Escuro"
+            >
+              {isDarkMode ? (
+                <Moon size={20} color="#6366F1" />
+              ) : (
+                <Sun size={20} color="#F59E0B" />
+              )}
+              {!isMobile && (
+                <span style={styles.themeToggleText}>
+                  {isDarkMode ? "Modo Escuro" : "Modo Claro"}
+                </span>
+              )}
+            </button>
           </div>
         </div>
 
-        <div style={styles.grid}>
-          {/* Card: Aprovação de Contas */}
+        {/* Transformado em Grid (2 colunas no PC, 1 coluna no Mobile) */}
+        <div
+          style={{
+            ...styles.grid,
+            gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
+          }}
+        >
+          {/* 1. Aprovação de Contas */}
           <div
             style={styles.card}
             onClick={() => navigate("/dashboard/aprovacoes")}
@@ -72,14 +104,13 @@ export default function CentralAdmin() {
                 Aprovação de Contas
               </h3>
               <p style={styles.cardDesc}>
-                Analise e aprove novos professores que solicitaram acesso ao
-                sistema T.E.I.A.
+                Analise e aprove novos professores que solicitaram acesso.
               </p>
             </div>
             <ChevronRight size={20} color="#90A4AE" style={styles.arrow} />
           </div>
 
-          {/* Card: Gestão de Gamificação e Hall da Fama */}
+          {/* 2. Gamificação e Hall da Fama */}
           <div
             style={styles.card}
             onClick={() => navigate("/dashboard/admin/gamificacao")}
@@ -94,17 +125,16 @@ export default function CentralAdmin() {
                   fontSize: isMobile ? "16px" : "18px",
                 }}
               >
-                Gamificação e Hall da Fama
+                Gamificação e Hall
               </h3>
               <p style={styles.cardDesc}>
-                Gerencie conquistas, atribua XP manual, crie badges e monitore o
-                ranking global.
+                Gerencie conquistas, atribua XP manual e crie badges.
               </p>
             </div>
             <ChevronRight size={20} color="#90A4AE" style={styles.arrow} />
           </div>
 
-          {/* Card: Auditoria e Gestão de Dados */}
+          {/* 3. Auditoria e Gestão de Dados */}
           <div style={styles.card} onClick={() => navigate("/dashboard/admin")}>
             <div style={{ ...styles.cardIcon, backgroundColor: "#FEE2E2" }}>
               <ShieldAlert size={32} color="#DC2626" />
@@ -116,17 +146,69 @@ export default function CentralAdmin() {
                   fontSize: isMobile ? "16px" : "18px",
                 }}
               >
-                Auditoria e Gestão de Dados
+                Auditoria de Dados
               </h3>
               <p style={styles.cardDesc}>
-                Exclua usuários, monitore produções didáticas, exporte
-                relatórios e gerencie o fórum.
+                Exclua usuários, exporte relatórios e gerencie o fórum.
               </p>
             </div>
             <ChevronRight size={20} color="#90A4AE" style={styles.arrow} />
           </div>
 
-          {/* Card: Configurações do Sistema */}
+          {/* 4. NOVO: Diário de Bordo / Operacional */}
+          <div
+            style={styles.card}
+            onClick={() => navigate("/dashboard/admin/diario")}
+          >
+            <div style={{ ...styles.cardIcon, backgroundColor: "#FEF9C3" }}>
+              <FileText size={32} color="#CA8A04" />
+            </div>
+            <div style={styles.cardContent}>
+              <h3
+                style={{
+                  ...styles.cardTitle,
+                  fontSize: isMobile ? "16px" : "18px",
+                }}
+              >
+                Diário de Operações
+              </h3>
+              <p style={styles.cardDesc}>
+                Registre reuniões, visitas às escolas e treinamentos.
+              </p>
+            </div>
+            <ChevronRight size={20} color="#90A4AE" style={styles.arrow} />
+          </div>
+
+          {/* 5. NOVO: Documentação Técnica (Link Externo) */}
+          <div
+            style={styles.card}
+            onClick={() =>
+              window.open(
+                "https://docs.google.com/document/d/SEU_LINK_AQUI",
+                "_blank",
+              )
+            }
+          >
+            <div style={{ ...styles.cardIcon, backgroundColor: "#F3E8FF" }}>
+              <Book size={32} color="#7E22CE" />
+            </div>
+            <div style={styles.cardContent}>
+              <h3
+                style={{
+                  ...styles.cardTitle,
+                  fontSize: isMobile ? "16px" : "18px",
+                }}
+              >
+                Documentação Técnica
+              </h3>
+              <p style={styles.cardDesc}>
+                Requisitos funcionais, regras de negócio e arquitetura.
+              </p>
+            </div>
+            <ExternalLink size={20} color="#90A4AE" style={styles.arrow} />
+          </div>
+
+          {/* 6. Configurações do Sistema */}
           <div
             style={styles.card}
             onClick={() => alert("Módulo em desenvolvimento!")}
@@ -141,11 +223,10 @@ export default function CentralAdmin() {
                   fontSize: isMobile ? "16px" : "18px",
                 }}
               >
-                Configurações do Sistema
+                Configurações Gerais
               </h3>
               <p style={styles.cardDesc}>
-                Ajuste os pesos da IA, categorias de disciplinas e parâmetros
-                globais do sistema.
+                Ajuste parâmetros globais e pesos da IA do sistema.
               </p>
             </div>
             <ChevronRight size={20} color="#90A4AE" style={styles.arrow} />
@@ -162,9 +243,9 @@ const styles = {
     minHeight: "100vh",
     fontFamily: "Inter, sans-serif",
   },
-  container: { maxWidth: "900px", margin: "0 auto" },
+  container: { maxWidth: "1000px", margin: "0 auto" },
   header: {},
-  titleGroup: { display: "flex", gap: "15px" },
+  titleGroup: { display: "flex", gap: "15px", width: "100%" },
   iconCircleBlue: {
     width: "50px",
     height: "50px",
@@ -183,7 +264,24 @@ const styles = {
     fontSize: "14px",
   },
 
-  grid: { display: "flex", flexDirection: "column", gap: "15px" },
+  // --- ESTILO DO BOTÃO DE TEMA ---
+  themeToggleBtn: {
+    display: "flex",
+    alignItems: "center",
+    gap: "8px",
+    padding: "10px 16px",
+    backgroundColor: "#FFFFFF",
+    border: "1px solid #E2E8F0",
+    borderRadius: "30px",
+    cursor: "pointer",
+    transition: "all 0.2s ease",
+    boxShadow: "0 2px 4px rgba(0,0,0,0.02)",
+    alignSelf: "center",
+  },
+  themeToggleText: { fontSize: "14px", fontWeight: "600", color: "#475569" },
+
+  // --- MUDANÇA PARA GRID ---
+  grid: { display: "grid", gap: "20px" },
 
   card: {
     backgroundColor: "#FFFFFF",
