@@ -1,6 +1,7 @@
 import React, { useState } from "react"
 import api from "./services/api" // <--- USANDO A CONFIGURAÇÃO CENTRAL (URL Base automática)
-import { Link } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
+import { ArrowLeft } from "lucide-react"
 
 const SpiderWebIcon = ({ size = 24, color = "currentColor" }) => (
   <svg
@@ -31,6 +32,7 @@ const Login = () => {
   const [error, setError] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [hover, setHover] = useState(false)
+  const navigate = useNavigate()
 
   const handleLogin = async (e) => {
     e.preventDefault()
@@ -61,8 +63,11 @@ const Login = () => {
 
       // Salva os dados importantes no localStorage (com fallbacks)
       localStorage.setItem("user_name", userResponse.data.username || "Admin")
-      localStorage.setItem("user_disciplina", userResponse.data.disciplina || "Geral")
-      
+      localStorage.setItem(
+        "user_disciplina",
+        userResponse.data.disciplina || "Geral",
+      )
+
       if (userResponse.data.avatar) {
         localStorage.setItem("user_avatar", userResponse.data.avatar)
       }
@@ -79,21 +84,22 @@ const Login = () => {
 
       // 3. Redireciona e FORÇA O REFRESH (Para a Sidebar ler o novo is_superuser)
       window.location.href = "/dashboard"
-      
     } catch (err) {
       console.error(err)
       if (err.code === "ERR_NETWORK") {
         setError("Erro de conexão. Verifique se o servidor está rodando.")
       } else if (err.response && err.response.status === 429) {
         // --- PROTEÇÃO CONTRA FORÇA BRUTA (THROTTLING) ---
-        setError("Muitas tentativas falhadas. Por favor, aguarde 1 minuto e tente novamente.");
+        setError(
+          "Muitas tentativas falhadas. Por favor, aguarde 1 minuto e tente novamente.",
+        )
       } else if (err.response && err.response.status === 401) {
         // Captura a mensagem customizada do backend se houver (Conta não aprovada)
-        const detailMessage = err.response.data.detail;
+        const detailMessage = err.response.data.detail
         if (detailMessage) {
-            setError(detailMessage); 
+          setError(detailMessage)
         } else {
-            setError("Usuário ou senha incorretos.");
+          setError("Usuário ou senha incorretos.")
         }
       } else {
         setError("Ocorreu um erro inesperado.")
@@ -106,6 +112,11 @@ const Login = () => {
   return (
     <div style={styles.pageBackground}>
       <div style={styles.card}>
+        {/* BOTÃO VOLTAR PARA A LANDING PAGE */}
+        <button onClick={() => navigate("/")} style={styles.backButton}>
+          <ArrowLeft size={16} /> Voltar ao Início
+        </button>
+
         <div style={styles.header}>
           <div style={styles.logoCircle}>
             <span>
@@ -205,6 +216,22 @@ const styles = {
     boxShadow: "0 8px 20px rgba(0,0,0,0.2)",
     display: "flex",
     flexDirection: "column",
+    boxSizing: "border-box", // Garante que o padding não estoure o maxWidth em telas pequenas
+    margin: "20px", // Margem para não grudar na borda do celular
+  },
+  backButton: {
+    background: "none",
+    border: "none",
+    color: "#546E7A",
+    display: "flex",
+    alignItems: "center",
+    gap: "5px",
+    fontSize: "13px",
+    fontWeight: "600",
+    cursor: "pointer",
+    padding: 0,
+    marginBottom: "20px",
+    alignSelf: "flex-start",
   },
   header: { textAlign: "center", marginBottom: "25px" },
   logoCircle: {

@@ -12,13 +12,13 @@ import {
   X,
   MessageCircle,
   Mail,
-  Users
+  Users,
 } from "lucide-react"
 
 const Ajuda = () => {
   const navigate = useNavigate()
   const [faqAtivo, setFaqAtivo] = useState(null)
-  
+
   // --- ESTADO DO MODAL DE CONTATO ---
   const [showContactModal, setShowContactModal] = useState(false)
 
@@ -94,7 +94,9 @@ const Ajuda = () => {
               Aprenda a preencher os campos pedagógicos (BNCC, Metodologia) para
               garantir sua aprovação.
             </p>
-            <button className="tutorial-btn" style={styles.videoButton}>Assistir Tutorial</button>
+            <button className="tutorial-btn" style={styles.videoButton}>
+              Assistir Tutorial
+            </button>
           </div>
 
           <div style={styles.tutorialCard}>
@@ -106,7 +108,9 @@ const Ajuda = () => {
               Entenda como aplicar a Rúbrica de 6 Eixos para avaliar seus
               colegas de forma justa.
             </p>
-            <button className="tutorial-btn" style={styles.videoButton}>Assistir Tutorial</button>
+            <button className="tutorial-btn" style={styles.videoButton}>
+              Assistir Tutorial
+            </button>
           </div>
 
           <div style={styles.tutorialCard}>
@@ -118,7 +122,9 @@ const Ajuda = () => {
               Dicas de como adaptar os roteiros e prompts da plataforma para a
               sua realidade escolar.
             </p>
-            <button className="tutorial-btn" style={styles.videoButton}>Assistir Tutorial</button>
+            <button className="tutorial-btn" style={styles.videoButton}>
+              Assistir Tutorial
+            </button>
           </div>
         </div>
 
@@ -158,8 +164,8 @@ const Ajuda = () => {
           <p style={{ margin: 0, color: "#546E7A" }}>
             Ainda com dúvidas ou encontrou algum problema no sistema?
           </p>
-          <button 
-            onClick={() => setShowContactModal(true)} 
+          <button
+            onClick={() => setShowContactModal(true)}
             style={styles.contactLink}
           >
             Fale com a nossa equipe
@@ -169,115 +175,338 @@ const Ajuda = () => {
 
       {/* --- MODAL DE CONTATO --- */}
       {showContactModal && (
-        <div style={styles.modalOverlay} onClick={() => setShowContactModal(false)}>
+        <div
+          style={styles.modalOverlay}
+          onClick={() => setShowContactModal(false)}
+        >
           <div style={styles.modalContent} onClick={(e) => e.stopPropagation()}>
-            <button onClick={() => setShowContactModal(false)} style={styles.closeModalBtn}>
+            <button
+              onClick={() => setShowContactModal(false)}
+              style={styles.closeModalBtn}
+            >
               <X size={24} />
             </button>
-            
+
             <h2 style={styles.modalTitle}>Como podemos ajudar?</h2>
-            <p style={styles.modalSubtitle}>Escolha o canal mais adequado para a sua necessidade.</p>
+            <p style={styles.modalSubtitle}>
+              Escolha o canal mais adequado para a sua necessidade.
+            </p>
 
             <div style={styles.contactOptionsGrid}>
-              
               {/* Opção 1: WhatsApp (Link do Grupo Atualizado) */}
-              <div 
-                className="contact-card" 
-                style={{...styles.contactCardBox, borderLeftColor: '#25D366'}}
-                onClick={() => window.open('https://chat.whatsapp.com/JuHs27M1Xb80lZ6fCuwIsVc', '_blank')}
+              <div
+                className="contact-card"
+                style={{ ...styles.contactCardBox, borderLeftColor: "#25D366" }}
+                onClick={() =>
+                  window.open(
+                    "https://chat.whatsapp.com/EEcyH5dEb4l0WKziyBVSqU",
+                    "_blank",
+                  )
+                }
               >
-                <div style={{...styles.contactIconCircle, backgroundColor: '#E8F5E9', color: '#2E7D32'}}>
+                <div
+                  style={{
+                    ...styles.contactIconCircle,
+                    backgroundColor: "#E8F5E9",
+                    color: "#2E7D32",
+                  }}
+                >
                   <MessageCircle size={24} />
                 </div>
                 <div style={styles.contactCardTexts}>
                   <h4 style={styles.contactCardTitle}>Suporte Rápido</h4>
-                  <p style={styles.contactCardDesc}>Dúvidas pontuais ou bugs. Atendimento via grupo oficial de WhatsApp.</p>
+                  <p style={styles.contactCardDesc}>
+                    Dúvidas pontuais ou bugs. Atendimento via grupo oficial de
+                    WhatsApp.
+                  </p>
                 </div>
               </div>
 
-              {/* Opção 2: E-mail (E-mail Atualizado) */}
-              <div 
-                className="contact-card" 
-                style={{...styles.contactCardBox, borderLeftColor: '#1565C0'}}
-                onClick={() => window.location.href = 'mailto:suporte.ianaeducacaobasica.unb@gmail.com?subject=Suporte T.E.I.A'}
+              {/* Opção 2: E-mail */}
+              <div
+                className="contact-card"
+                style={{ ...styles.contactCardBox, borderLeftColor: "#1565C0" }}
+                onClick={() =>
+                  (window.location.href =
+                    "mailto:suporte.ianaeducacaobasica.unb@gmail.com?subject=Suporte T.E.I.A")
+                }
               >
-                <div style={{...styles.contactIconCircle, backgroundColor: '#E3F2FD', color: '#1565C0'}}>
+                <div
+                  style={{
+                    ...styles.contactIconCircle,
+                    backgroundColor: "#E3F2FD",
+                    color: "#1565C0",
+                  }}
+                >
                   <Mail size={24} />
                 </div>
                 <div style={styles.contactCardTexts}>
                   <h4 style={styles.contactCardTitle}>Canal Oficial</h4>
-                  <p style={styles.contactCardDesc}>Para documentações, sugestões longas ou exclusão de conta.</p>
+                  <p style={styles.contactCardDesc}>
+                    Para documentações, sugestões longas ou exclusão de conta.
+                  </p>
                 </div>
               </div>
 
               {/* Opção 3: Comunidade/Fórum */}
-              <div 
-                className="contact-card" 
-                style={{...styles.contactCardBox, borderLeftColor: '#7E22CE'}}
+              <div
+                className="contact-card"
+                style={{ ...styles.contactCardBox, borderLeftColor: "#7E22CE" }}
                 onClick={() => {
-                  setShowContactModal(false);
-                  navigate('/dashboard/forum');
+                  setShowContactModal(false)
+                  navigate("/dashboard/forum")
                 }}
               >
-                <div style={{...styles.contactIconCircle, backgroundColor: '#F3E8FF', color: '#7E22CE'}}>
+                <div
+                  style={{
+                    ...styles.contactIconCircle,
+                    backgroundColor: "#F3E8FF",
+                    color: "#7E22CE",
+                  }}
+                >
                   <Users size={24} />
                 </div>
                 <div style={styles.contactCardTexts}>
                   <h4 style={styles.contactCardTitle}>Fórum T.E.I.A</h4>
-                  <p style={styles.contactCardDesc}>Abra uma discussão no fórum para debater com outros professores.</p>
+                  <p style={styles.contactCardDesc}>
+                    Abra uma discussão no fórum para debater com outros
+                    professores.
+                  </p>
                 </div>
               </div>
-
             </div>
           </div>
         </div>
       )}
-
     </div>
   )
 }
 
 // --- ESTILOS ---
 const styles = {
-  fullPageWrapper: { backgroundColor: "#F8F9FA", minHeight: "100vh", width: "100%", boxSizing: "border-box", padding: "30px 20px" },
-  container: { maxWidth: "1000px", margin: "0 auto", width: "100%", boxSizing: "border-box" },
+  fullPageWrapper: {
+    backgroundColor: "#F8F9FA",
+    minHeight: "100vh",
+    width: "100%",
+    boxSizing: "border-box",
+    padding: "30px 20px",
+  },
+  container: {
+    maxWidth: "1000px",
+    margin: "0 auto",
+    width: "100%",
+    boxSizing: "border-box",
+  },
 
-  header: { marginBottom: "40px", display: "flex", flexDirection: "column", gap: "15px" },
-  backButton: { background: "none", border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: "8px", color: "#546E7A", fontWeight: "600", fontSize: "15px", alignSelf: "flex-start", padding: 0 },
-  pageTitle: { fontSize: "28px", color: "#1565C0", fontWeight: "800", margin: "0 0 8px 0" },
+  header: {
+    marginBottom: "40px",
+    display: "flex",
+    flexDirection: "column",
+    gap: "15px",
+  },
+  backButton: {
+    background: "none",
+    border: "none",
+    cursor: "pointer",
+    display: "flex",
+    alignItems: "center",
+    gap: "8px",
+    color: "#546E7A",
+    fontWeight: "600",
+    fontSize: "15px",
+    alignSelf: "flex-start",
+    padding: 0,
+  },
+  pageTitle: {
+    fontSize: "28px",
+    color: "#1565C0",
+    fontWeight: "800",
+    margin: "0 0 8px 0",
+  },
   pageSubtitle: { fontSize: "16px", color: "#546E7A", margin: 0 },
-  sectionTitle: { fontSize: "20px", fontWeight: "700", color: "#37474F", marginBottom: "20px", display: "flex", alignItems: "center", gap: "10px" },
+  sectionTitle: {
+    fontSize: "20px",
+    fontWeight: "700",
+    color: "#37474F",
+    marginBottom: "20px",
+    display: "flex",
+    alignItems: "center",
+    gap: "10px",
+  },
 
   // TUTORIAL CARDS
-  tutorialsGrid: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "20px" },
-  tutorialCard: { backgroundColor: "#FFFFFF", borderRadius: "12px", padding: "25px", boxShadow: "0 4px 15px rgba(0,0,0,0.03)", border: "1px solid #E0E0E0", display: "flex", flexDirection: "column", alignItems: "flex-start" },
-  iconBox: { backgroundColor: "#F5F7FA", padding: "12px", borderRadius: "10px", marginBottom: "15px" },
-  cardTitle: { margin: "0 0 10px 0", fontSize: "16px", fontWeight: "700", color: "#333" },
-  cardText: { margin: "0 0 20px 0", fontSize: "14px", color: "#546E7A", lineHeight: "1.5", flex: 1 },
-  videoButton: { backgroundColor: "#E3F2FD", color: "#1565C0", border: "none", borderRadius: "6px", padding: "10px 16px", fontWeight: "700", fontSize: "13px", cursor: "pointer", width: "100%" },
+  tutorialsGrid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+    gap: "20px",
+  },
+  tutorialCard: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: "12px",
+    padding: "25px",
+    boxShadow: "0 4px 15px rgba(0,0,0,0.03)",
+    border: "1px solid #E0E0E0",
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "flex-start",
+  },
+  iconBox: {
+    backgroundColor: "#F5F7FA",
+    padding: "12px",
+    borderRadius: "10px",
+    marginBottom: "15px",
+  },
+  cardTitle: {
+    margin: "0 0 10px 0",
+    fontSize: "16px",
+    fontWeight: "700",
+    color: "#333",
+  },
+  cardText: {
+    margin: "0 0 20px 0",
+    fontSize: "14px",
+    color: "#546E7A",
+    lineHeight: "1.5",
+    flex: 1,
+  },
+  videoButton: {
+    backgroundColor: "#E3F2FD",
+    color: "#1565C0",
+    border: "none",
+    borderRadius: "6px",
+    padding: "10px 16px",
+    fontWeight: "700",
+    fontSize: "13px",
+    cursor: "pointer",
+    width: "100%",
+  },
 
   // FAQ
-  faqContainer: { backgroundColor: "#FFFFFF", borderRadius: "16px", boxShadow: "0 4px 15px rgba(0,0,0,0.03)", border: "1px solid #E0E0E0", overflow: "hidden" },
+  faqContainer: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: "16px",
+    boxShadow: "0 4px 15px rgba(0,0,0,0.03)",
+    border: "1px solid #E0E0E0",
+    overflow: "hidden",
+  },
   faqItem: { borderBottom: "1px solid #F0F0F0" },
-  faqQuestion: { width: "100%", display: "flex", justifyContent: "space-between", alignItems: "center", padding: "20px 25px", background: "none", border: "none", cursor: "pointer", fontSize: "15px", fontWeight: "600", textAlign: "left", transition: "background 0.2s" },
-  faqAnswer: { padding: "0 25px 25px 25px", fontSize: "14px", color: "#546E7A", lineHeight: "1.6" },
+  faqQuestion: {
+    width: "100%",
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: "20px 25px",
+    background: "none",
+    border: "none",
+    cursor: "pointer",
+    fontSize: "15px",
+    fontWeight: "600",
+    textAlign: "left",
+    transition: "background 0.2s",
+  },
+  faqAnswer: {
+    padding: "0 25px 25px 25px",
+    fontSize: "14px",
+    color: "#546E7A",
+    lineHeight: "1.6",
+  },
 
-  supportFooter: { marginTop: "40px", textAlign: "center", borderTop: "1px solid #E0E0E0", paddingTop: "30px", paddingBottom: "20px" },
-  contactLink: { display: "inline-block", marginTop: "12px", padding: "10px 20px", backgroundColor: "#1565C0", color: "white", borderRadius: "8px", fontWeight: "700", textDecoration: "none", border: "none", cursor: "pointer", fontSize: "14px", boxShadow: "0 4px 6px rgba(21, 101, 192, 0.2)" },
+  supportFooter: {
+    marginTop: "40px",
+    textAlign: "center",
+    borderTop: "1px solid #E0E0E0",
+    paddingTop: "30px",
+    paddingBottom: "20px",
+  },
+  contactLink: {
+    display: "inline-block",
+    marginTop: "12px",
+    padding: "10px 20px",
+    backgroundColor: "#1565C0",
+    color: "white",
+    borderRadius: "8px",
+    fontWeight: "700",
+    textDecoration: "none",
+    border: "none",
+    cursor: "pointer",
+    fontSize: "14px",
+    boxShadow: "0 4px 6px rgba(21, 101, 192, 0.2)",
+  },
 
   // MODAL DE CONTATO
-  modalOverlay: { position: "fixed", top: 0, left: 0, width: "100%", height: "100%", backgroundColor: "rgba(15, 23, 42, 0.6)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 1000, backdropFilter: "blur(4px)" },
-  modalContent: { backgroundColor: "white", width: "90%", maxWidth: "550px", padding: "35px", borderRadius: "16px", position: "relative", boxShadow: "0 20px 25px -5px rgba(0,0,0,0.1)" },
-  closeModalBtn: { position: "absolute", top: "15px", right: "15px", background: "none", border: "none", cursor: "pointer", color: "#64748B" },
-  modalTitle: { fontSize: "24px", fontWeight: "800", color: "#0F172A", marginBottom: "8px" },
+  modalOverlay: {
+    position: "fixed",
+    top: 0,
+    left: 0,
+    width: "100%",
+    height: "100%",
+    backgroundColor: "rgba(15, 23, 42, 0.6)",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 1000,
+    backdropFilter: "blur(4px)",
+  },
+  modalContent: {
+    backgroundColor: "white",
+    width: "90%",
+    maxWidth: "550px",
+    padding: "35px",
+    borderRadius: "16px",
+    position: "relative",
+    boxShadow: "0 20px 25px -5px rgba(0,0,0,0.1)",
+  },
+  closeModalBtn: {
+    position: "absolute",
+    top: "15px",
+    right: "15px",
+    background: "none",
+    border: "none",
+    cursor: "pointer",
+    color: "#64748B",
+  },
+  modalTitle: {
+    fontSize: "24px",
+    fontWeight: "800",
+    color: "#0F172A",
+    marginBottom: "8px",
+  },
   modalSubtitle: { fontSize: "15px", color: "#64748B", marginBottom: "25px" },
-  
+
   contactOptionsGrid: { display: "flex", flexDirection: "column", gap: "15px" },
-  contactCardBox: { display: "flex", alignItems: "center", gap: "15px", padding: "20px", backgroundColor: "#FFFFFF", border: "1px solid #E2E8F0", borderLeftWidth: "4px", borderRadius: "10px", cursor: "pointer" },
-  contactIconCircle: { width: "48px", height: "48px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 },
+  contactCardBox: {
+    display: "flex",
+    alignItems: "center",
+    gap: "15px",
+    padding: "20px",
+    backgroundColor: "#FFFFFF",
+    border: "1px solid #E2E8F0",
+    borderLeftWidth: "4px",
+    borderRadius: "10px",
+    cursor: "pointer",
+  },
+  contactIconCircle: {
+    width: "48px",
+    height: "48px",
+    borderRadius: "50%",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    flexShrink: 0,
+  },
   contactCardTexts: { display: "flex", flexDirection: "column", gap: "4px" },
-  contactCardTitle: { margin: 0, fontSize: "16px", fontWeight: "700", color: "#1E293B" },
-  contactCardDesc: { margin: 0, fontSize: "13px", color: "#64748B", lineHeight: "1.4" }
+  contactCardTitle: {
+    margin: 0,
+    fontSize: "16px",
+    fontWeight: "700",
+    color: "#1E293B",
+  },
+  contactCardDesc: {
+    margin: 0,
+    fontSize: "13px",
+    color: "#64748B",
+    lineHeight: "1.4",
+  },
 }
 
 export default Ajuda
