@@ -138,13 +138,11 @@ class Producao(models.Model):
     resultados = models.TextField(blank=True, null=True) 
     arquivo = models.FileField(upload_to='producoes/', blank=True, null=True)
     
-    # [NOVO] CAMPO PARA SUPORTAR VÍDEOS E ARQUIVOS PESADOS
     link_material = models.URLField(max_length=500, null=True, blank=True, verbose_name="Link Externo do Material")
     
     data_criacao = models.DateTimeField(auto_now_add=True)
     status = models.CharField(max_length=50, default='Em revisão')
     
-    # [NOVO] CAMPO DE DERIVAÇÃO / REFERÊNCIA
     producao_base = models.ForeignKey(
         'self', 
         on_delete=models.SET_NULL, 
@@ -196,6 +194,53 @@ class Comentario(models.Model):
     autor = models.ForeignKey(User, on_delete=models.CASCADE, related_name='comentarios_usuario')
     conteudo = models.TextField()
     data_criacao = models.DateTimeField(auto_now_add=True)
+
+# ============================================================================
+# 7. DIÁRIO DE OPERAÇÕES (CRM INTERNO)
+# ============================================================================
+class DiarioOperacao(models.Model):
+    TIPO_CHOICES = [
+        ('Reunião', 'Reunião'),
+        ('Treinamento', 'Treinamento'),
+        ('Visita Escolar', 'Visita Escolar'),
+        ('Suporte', 'Suporte'),
+        ('Outros', 'Outros'),
+    ]
+    
+    titulo = models.CharField(max_length=255)
+    tipo = models.CharField(max_length=50, choices=TIPO_CHOICES)
+    contato = models.CharField(max_length=255)
+    data_evento = models.DateField()
+    descricao = models.TextField()
+    foto = models.ImageField(upload_to='diario_fotos/', null=True, blank=True)
+    criado_em = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-data_evento', '-criado_em']
+
+    def __str__(self):
+        return f"{self.data_evento} - {self.titulo}"
+
+# ============================================================================
+# 8. CONFIGURAÇÕES GERAIS DO SISTEMA
+# ============================================================================
+class ConfiguracaoXP(models.Model):
+    xp_revisao = models.IntegerField(default=15)
+    xp_aprovacao = models.IntegerField(default=50)
+    xp_topico = models.IntegerField(default=5)
+    xp_comentario = models.IntegerField(default=5)
+
+    def save(self, *args, **kwargs):
+        self.pk = 1 
+        super(ConfiguracaoXP, self).save(*args, **kwargs)
+
+class Escola(models.Model):
+    nome = models.CharField(max_length=255, unique=True)
+    def __str__(self): return self.nome
+
+class Disciplina(models.Model):
+    nome = models.CharField(max_length=255, unique=True)
+    def __str__(self): return self.nome
 
 # ============================================================================
 # SIGNALS

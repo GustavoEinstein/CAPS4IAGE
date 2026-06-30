@@ -15,8 +15,8 @@ import {
   MapPin,
   MessageCircle,
   Camera,
-  Image as ImageIcon,
   CheckCircle2,
+  Eye,
 } from "lucide-react"
 
 export default function DiarioOperacoes() {
@@ -30,13 +30,12 @@ export default function DiarioOperacoes() {
 
   const [formData, setFormData] = useState({
     titulo: "",
-    tipo: "Reunião", // Opções: Reunião, Treinamento, Visita Escolar, Suporte, Outros
-    contato: "", // Ex: "Professores do CEMI", "Diretoria", etc.
+    tipo: "Reunião",
+    contato: "",
     data_evento: new Date().toISOString().split("T")[0],
     descricao: "",
   })
 
-  // --- NOVO ESTADO PARA A FOTO ---
   const [foto, setFoto] = useState(null)
 
   useEffect(() => {
@@ -68,29 +67,11 @@ export default function DiarioOperacoes() {
       setLogs(response.data)
     } catch (error) {
       console.error("Erro ao carregar diário:", error)
-      // Fallback (Dados Mockados) caso a API ainda não exista no Django
-      if (error.response?.status === 404 || error.code === "ERR_NETWORK") {
-        setLogs([
-          {
-            id: 1,
-            titulo: "Treinamento Inicial",
-            tipo: "Treinamento",
-            contato: "Professores CEMI",
-            data_evento: "2026-06-20",
-            descricao: "Apresentação do fluxo de Revisão Duplo-Cego.",
-            foto: null,
-          },
-          {
-            id: 2,
-            titulo: "Reunião de Alinhamento",
-            tipo: "Reunião",
-            contato: "Coordenação",
-            data_evento: "2026-06-15",
-            descricao: "Definição das rubricas de avaliação de História.",
-            foto: null,
-          },
-        ])
-      }
+      Swal.fire(
+        "Erro de Conexão",
+        "Não foi possível carregar os registros do diário. Verifique o servidor.",
+        "error",
+      )
     } finally {
       setLoading(false)
     }
@@ -118,52 +99,38 @@ export default function DiarioOperacoes() {
 
     setIsSubmitting(true)
     try {
-      // --- USANDO FORMDATA PARA PERMITIR ENVIO DE FOTO ---
       const dataToSend = new FormData()
       Object.keys(formData).forEach((key) =>
         dataToSend.append(key, formData[key]),
       )
+
       if (foto) {
         dataToSend.append("foto", foto)
       }
 
-      // Faz o POST para o Django
       const response = await api.post("api/admin/diario/", dataToSend, {
         headers: { "Content-Type": "multipart/form-data" },
       })
 
-      setLogs([response.data, ...logs]) // Adiciona o novo no topo
+      setLogs([response.data, ...logs])
 
       Swal.fire({
         icon: "success",
         title: "Registrado!",
-        text: "Atividade salva no Diário de Operações.",
+        text: "Atividade salva no banco de dados com sucesso.",
         timer: 2000,
         showConfirmButton: false,
       })
 
-      // Limpa o formulário
       setFormData({ ...formData, titulo: "", contato: "", descricao: "" })
       setFoto(null)
     } catch (error) {
-      // Tratamento caso a API não exista ainda (Modo de Teste Local)
-      if (error.response?.status === 404 || error.code === "ERR_NETWORK") {
-        const fotoUrlTemporaria = foto ? URL.createObjectURL(foto) : null
-        const novoLog = { ...formData, id: Date.now(), foto: fotoUrlTemporaria }
-        setLogs([novoLog, ...logs])
-
-        setFormData({ ...formData, titulo: "", contato: "", descricao: "" })
-        setFoto(null)
-
-        Swal.fire({
-          icon: "success",
-          title: "Salvo Localmente!",
-          text: "A API não foi encontrada, mas salvamos no navegador para teste.",
-          timer: 2500,
-        })
-      } else {
-        Swal.fire("Erro", "Não foi possível salvar o registro.", "error")
-      }
+      console.error(error)
+      Swal.fire(
+        "Erro",
+        "Não foi possível salvar o registro no servidor.",
+        "error",
+      )
     } finally {
       setIsSubmitting(false)
     }
@@ -172,7 +139,7 @@ export default function DiarioOperacoes() {
   const handleDelete = async (id) => {
     const confirm = await Swal.fire({
       title: "Excluir registro?",
-      text: "Essa ação não pode ser desfeita.",
+      text: "Essa ação apagará os dados do banco definitivamente.",
       icon: "warning",
       showCancelButton: true,
       confirmButtonColor: "#DC2626",
@@ -182,30 +149,33 @@ export default function DiarioOperacoes() {
     try {
       await api.delete(`api/admin/diario/${id}/delete/`)
       setLogs(logs.filter((log) => log.id !== id))
-      Swal.fire("Excluído!", "", "success")
+      Swal.fire("Excluído!", "O registro foi removido.", "success")
     } catch (error) {
-      // Mock de exclusão para testes
-      setLogs(logs.filter((log) => log.id !== id))
+      console.error(error)
+      Swal.fire(
+        "Erro",
+        "Não foi possível excluir o registro do banco de dados.",
+        "error",
+      )
     }
   }
 
-  // Função para definir a cor e o ícone baseado no tipo de evento
   const getTipoMeta = (tipo) => {
     switch (tipo) {
       case "Treinamento":
-        return { cor: "#10B981", bg: "#D1FAE5", icone: <BookOpen size={16} /> } // Verde
+        return { cor: "#10B981", bg: "#D1FAE5", icone: <BookOpen size={16} /> }
       case "Reunião":
-        return { cor: "#2563EB", bg: "#DBEAFE", icone: <Users size={16} /> } // Azul
+        return { cor: "#2563EB", bg: "#DBEAFE", icone: <Users size={16} /> }
       case "Visita Escolar":
-        return { cor: "#8B5CF6", bg: "#EDE9FE", icone: <MapPin size={16} /> } // Roxo
+        return { cor: "#8B5CF6", bg: "#EDE9FE", icone: <MapPin size={16} /> }
       case "Suporte":
         return {
           cor: "#F59E0B",
           bg: "#FEF3C7",
           icone: <MessageCircle size={16} />,
-        } // Laranja
+        }
       default:
-        return { cor: "#64748B", bg: "#F1F5F9", icone: <FileText size={16} /> } // Cinza
+        return { cor: "#64748B", bg: "#F1F5F9", icone: <FileText size={16} /> }
     }
   }
 
@@ -214,7 +184,7 @@ export default function DiarioOperacoes() {
       <div style={styles.loadingContainer}>
         <Loader2 className="spin" size={32} color="#CA8A04" />
         <p style={{ marginTop: "10px", color: "#64748B" }}>
-          Abrindo Diário de Operações...
+          Conectando ao banco de dados...
         </p>
         <style>{`@keyframes spin { 100% { transform: rotate(360deg); } } .spin { animation: spin 1s linear infinite; }`}</style>
       </div>
@@ -227,30 +197,28 @@ export default function DiarioOperacoes() {
         padding: isMobile ? "20px 10px" : "40px 20px",
       }}
     >
-      {/* CORREÇÃO DOS PLACEHOLDERS GLOBAIS E DA LINHA DA TIMELINE */}
       <style>{`
-                input::placeholder, textarea::placeholder {
-                    color: #94A3B8 !important;
-                    opacity: 1 !important;
-                }
-                ::-webkit-input-placeholder { color: #94A3B8 !important; opacity: 1 !important; }
-                :-moz-placeholder { color: #94A3B8 !important; opacity: 1 !important; }
-                
-                /* Eixo central da linha do tempo */
-                .timeline-line::before {
-                    content: '';
-                    position: absolute;
-                    top: 15px;
-                    bottom: 0;
-                    left: 20px; /* Alinhado com o centro do ícone de 32px (left 4px + 16px) */
-                    width: 2px;
-                    background-color: #E2E8F0;
-                    z-index: 1;
-                }
-            `}</style>
+        input::placeholder, textarea::placeholder {
+            color: #94A3B8 !important;
+            opacity: 1 !important;
+        }
+        ::-webkit-input-placeholder { color: #94A3B8 !important; opacity: 1 !important; }
+        :-moz-placeholder { color: #94A3B8 !important; opacity: 1 !important; }
+        
+        /* Eixo central da linha do tempo */
+        .timeline-line::before {
+            content: '';
+            position: absolute;
+            top: 15px;
+            bottom: 0;
+            left: 20px;
+            width: 2px;
+            background-color: #E2E8F0;
+            z-index: 1;
+        }
+      `}</style>
 
       <div style={styles.container}>
-        {/* --- HEADER --- */}
         <div style={styles.header}>
           <button
             onClick={() => navigate("/dashboard/central-admin")}
@@ -378,7 +346,15 @@ export default function DiarioOperacoes() {
                     {foto ? (
                       <>
                         <CheckCircle2 size={18} color="#10B981" />
-                        <span style={{ color: "#10B981", fontWeight: "bold" }}>
+                        <span
+                          style={{
+                            color: "#10B981",
+                            fontWeight: "bold",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            whiteSpace: "nowrap",
+                          }}
+                        >
                           {foto.name}
                         </span>
                       </>
@@ -416,15 +392,20 @@ export default function DiarioOperacoes() {
 
               {logs.length === 0 ? (
                 <p style={styles.emptyText}>
-                  Nenhum registro encontrado. Comece a documentar ao lado!
+                  Nenhum registro encontrado no banco de dados.
                 </p>
               ) : (
                 <div className="timeline-line" style={styles.timeline}>
                   {logs.map((log) => {
                     const meta = getTipoMeta(log.tipo)
+
+                    const isLongText = log.descricao.length > 150
+                    const descResumo = isLongText
+                      ? log.descricao.substring(0, 150) + "..."
+                      : log.descricao
+
                     return (
                       <div key={log.id} style={styles.timelineItem}>
-                        {/* Ponto / Ícone da Linha do Tempo */}
                         <div
                           style={{
                             ...styles.timelineIcon,
@@ -435,7 +416,6 @@ export default function DiarioOperacoes() {
                           {meta.icone}
                         </div>
 
-                        {/* Conteúdo do Log */}
                         <div style={styles.timelineContent}>
                           <div style={styles.logHeader}>
                             <div style={{ flex: 1 }}>
@@ -458,31 +438,60 @@ export default function DiarioOperacoes() {
                                 <Users size={12} /> {log.contato}
                               </div>
                             </div>
-                            <button
-                              onClick={() => handleDelete(log.id)}
-                              style={styles.deleteBtn}
-                              title="Excluir Registro"
-                            >
-                              <Trash2 size={16} />
-                            </button>
+
+                            {/* BOTÕES DE AÇÃO: REDIRECIONAR PARA DETALHES E EXCLUIR */}
+                            <div style={styles.actionButtons}>
+                              <button
+                                onClick={() =>
+                                  navigate(
+                                    `/dashboard/admin/diario/${log.id}`,
+                                    { state: { logData: log } },
+                                  )
+                                }
+                                style={styles.viewBtn}
+                                title="Ver Detalhes do Registro"
+                              >
+                                <Eye size={18} />
+                              </button>
+                              <button
+                                onClick={() => handleDelete(log.id)}
+                                style={styles.deleteBtn}
+                                title="Excluir Registro"
+                              >
+                                <Trash2 size={18} />
+                              </button>
+                            </div>
                           </div>
 
-                          <p style={styles.logDesc}>{log.descricao}</p>
+                          <p style={styles.logDesc}>{descResumo}</p>
 
-                          {/* EXIBIÇÃO DA FOTO NA TIMELINE SE EXISTIR */}
                           {log.foto && (
-                            <div style={styles.fotoContainer}>
-                              <a
-                                href={log.foto}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                              >
-                                <img
-                                  src={log.foto}
-                                  alt="Anexo da Reunião"
-                                  style={styles.fotoThumb}
-                                />
-                              </a>
+                            <div
+                              style={styles.fotoThumbContainer}
+                              onClick={() =>
+                                navigate(`/dashboard/admin/diario/${log.id}`, {
+                                  state: { logData: log },
+                                })
+                              }
+                            >
+                              <div style={styles.fotoOverlay}>
+                                <Eye size={24} color="white" />
+                                <span
+                                  style={{
+                                    color: "white",
+                                    fontSize: "13px",
+                                    fontWeight: "bold",
+                                    marginTop: "4px",
+                                  }}
+                                >
+                                  Ver Detalhes
+                                </span>
+                              </div>
+                              <img
+                                src={log.foto}
+                                alt="Anexo da Reunião"
+                                style={styles.fotoThumbTimeline}
+                              />
                             </div>
                           )}
                         </div>
@@ -549,7 +558,6 @@ const styles = {
 
   splitLayout: { display: "flex", gap: "30px", alignItems: "flex-start" },
 
-  // --- ESTILOS DO FORMULÁRIO (FUNDOS CORRIGIDOS) ---
   formCard: {
     backgroundColor: "#FFFFFF",
     borderRadius: "16px",
@@ -579,7 +587,6 @@ const styles = {
   },
   label: { fontSize: "13px", fontWeight: "600", color: "#475569" },
 
-  // Garantindo backgroundColor branco e color escura para não bugar o CSS
   inputWrapper: {
     display: "flex",
     alignItems: "center",
@@ -636,7 +643,6 @@ const styles = {
     boxSizing: "border-box",
   },
 
-  // Botão de Arquivo
   uploadBtn: {
     display: "flex",
     alignItems: "center",
@@ -674,7 +680,6 @@ const styles = {
     boxSizing: "border-box",
   },
 
-  // --- ESTILOS DA TIMELINE ---
   timelineContainer: {
     backgroundColor: "#FFFFFF",
     borderRadius: "16px",
@@ -714,6 +719,7 @@ const styles = {
     padding: "20px",
     borderRadius: "12px",
     border: "1px solid #E2E8F0",
+    boxShadow: "0 1px 3px rgba(0,0,0,0.02)",
   },
 
   logHeader: {
@@ -733,7 +739,7 @@ const styles = {
     padding: "4px 10px",
     borderRadius: "6px",
     fontSize: "11px",
-    fontWeight: "700",
+    fontWeight: "800",
     textTransform: "uppercase",
   },
   logDate: { fontSize: "12px", color: "#94A3B8", fontWeight: "600" },
@@ -761,22 +767,62 @@ const styles = {
     wordBreak: "break-word",
   },
 
-  fotoContainer: { marginTop: "15px", display: "flex" },
-  fotoThumb: {
-    maxWidth: "100%",
-    maxHeight: "200px",
-    borderRadius: "8px",
-    border: "1px solid #E2E8F0",
-    objectFit: "cover",
+  actionButtons: {
+    display: "flex",
+    gap: "5px",
+  },
+  viewBtn: {
+    background: "#E0F2FE",
+    border: "none",
+    color: "#0284C7",
+    cursor: "pointer",
+    padding: "6px",
+    borderRadius: "6px",
+    display: "flex",
+    transition: "background 0.2s",
+  },
+  deleteBtn: {
+    background: "#FEE2E2",
+    border: "none",
+    color: "#DC2626",
+    cursor: "pointer",
+    padding: "6px",
+    borderRadius: "6px",
+    display: "flex",
+    transition: "background 0.2s",
   },
 
-  deleteBtn: {
-    background: "none",
-    border: "none",
-    color: "#CBD5E1",
+  fotoThumbContainer: {
+    marginTop: "15px",
+    position: "relative",
+    display: "inline-block",
     cursor: "pointer",
-    padding: "4px",
+    borderRadius: "8px",
+    overflow: "hidden",
+    border: "1px solid #E2E8F0",
+  },
+  fotoThumbTimeline: {
+    display: "block",
+    maxWidth: "100%",
+    maxHeight: "120px",
+    objectFit: "cover",
+    opacity: 0.85,
+    transition: "opacity 0.2s",
+  },
+  fotoOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(15, 23, 42, 0.4)",
     display: "flex",
-    transition: "color 0.2s",
+    flexDirection: "column",
+    alignItems: "center",
+    justifyContent: "center",
+    zIndex: 1,
+    opacity: 0,
+    transition: "opacity 0.2s",
+    ":hover": { opacity: 1 },
   },
 }

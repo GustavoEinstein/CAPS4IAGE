@@ -37,7 +37,9 @@ import TopicoDetalhe from "./pages/Forum/TopicoDetalhe"
 import Admin from "./pages/Admin"
 import CentralAdmin from "./pages/CentralAdmin"
 import GamificacaoAdmin from "./pages/GamificacaoAdmin"
-import DiarioOperacoes from "./pages/DiarioOperacoes" // <--- NOVA IMPORTAÇÃO AQUI
+import DiarioOperacoes from "./pages/DiarioOperacoes"
+import DiarioDetalhes from "./pages/DiarioDetalhes"
+import ConfiguracoesGerais from "./pages/ConfiguracoesGerais" // <--- Importado corretamente
 
 // --- PÁGINA DE EDIÇÃO ---
 import EditarProducao from "./EditarProducao"
@@ -84,13 +86,22 @@ function App() {
             <Route path="forum/:id" element={<TopicoDetalhe />} />
             {/* --- ROTA DE EDIÇÃO --- */}
             <Route path="editar-producao/:id" element={<EditarProducao />} />
+
             {/* --- ROTAS DE ADMINISTRAÇÃO --- */}
             <Route path="central-admin" element={<CentralAdmin />} />
             <Route path="aprovacoes" element={<AprovacaoContas />} />
             <Route path="admin" element={<Admin />} />
             <Route path="admin/gamificacao" element={<GamificacaoAdmin />} />
-            <Route path="admin/diario" element={<DiarioOperacoes />} />{" "}
-            {/* <--- NOVA ROTA AQUI */}
+
+            {/* Diário de Operações */}
+            <Route path="admin/diario" element={<DiarioOperacoes />} />
+            <Route path="admin/diario/:id" element={<DiarioDetalhes />} />
+
+            {/* Configurações Gerais (ROTA ADICIONADA AQUI) */}
+            <Route
+              path="admin/configuracoes"
+              element={<ConfiguracoesGerais />}
+            />
           </Route>
 
           {/* Perfil fica fora do layout do Dashboard */}

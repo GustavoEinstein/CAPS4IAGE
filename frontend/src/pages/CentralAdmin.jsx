@@ -211,7 +211,7 @@ export default function CentralAdmin() {
           {/* 6. Configurações do Sistema */}
           <div
             style={styles.card}
-            onClick={() => alert("Módulo em desenvolvimento!")}
+            onClick={() => navigate("/dashboard/admin/configuracoes")}
           >
             <div style={{ ...styles.cardIcon, backgroundColor: "#F3E5F5" }}>
               <Database size={32} color="#7B1FA2" />

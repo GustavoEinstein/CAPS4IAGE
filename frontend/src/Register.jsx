@@ -1,4 +1,4 @@
-import React, { useState } from "react"
+import React, { useState, useEffect } from "react"
 import api from "./services/api"
 import { useNavigate, Link } from "react-router-dom"
 import {
@@ -14,8 +14,32 @@ import {
   BookOpen,
   School,
   X,
-  ArrowLeft, // Ícone novo importado
+  ArrowLeft,
 } from "lucide-react"
+
+// ============================================================================
+// LISTAS BASE (FIXAS) - Nunca serão apagadas do sistema
+// ============================================================================
+const DISCIPLINAS_BASE = [
+  "História",
+  "Matemática",
+  "Geografia",
+  "Português",
+  "Ciências",
+  "Física",
+  "Química",
+  "Biologia",
+  "Inglês",
+  "Artes",
+  "Educação Física",
+  "Filosofia",
+  "Sociologia",
+  "Pedagogia",
+  "Projeto de vida",
+  "Computação",
+]
+
+const ESCOLAS_BASE = ["Universidade de Brasília", "CEMI-Gama"]
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -28,26 +52,10 @@ const Register = () => {
     escola: "",
   })
 
-  const disciplinas = [
-    "História",
-    "Matemática",
-    "Geografia",
-    "Português",
-    "Ciências",
-    "Física",
-    "Química",
-    "Biologia",
-    "Inglês",
-    "Artes",
-    "Educação Física",
-    "Filosofia",
-    "Sociologia",
-    "Pedagogia",
-    "Projeto de vida",
-    "Computação",
-  ]
-
-  const escolas = ["Universidade de Brasília", "CEMI-Gama"]
+  // Os estados começam com as listas base, e depois somamos com o banco de dados
+  const [disciplinas, setDisciplinas] = useState(DISCIPLINAS_BASE)
+  const [escolas, setEscolas] = useState(ESCOLAS_BASE)
+  const [isLoadingOptions, setIsLoadingOptions] = useState(true)
 
   const [error, setError] = useState("")
   const [isLoading, setIsLoading] = useState(false)
@@ -60,6 +68,45 @@ const Register = () => {
   const closeModal = () => setActiveModal(null)
 
   const navigate = useNavigate()
+
+  // --- BUSCAR DO BANCO E SOMAR COM AS LISTAS FIXAS ---
+  useEffect(() => {
+    const fetchOptions = async () => {
+      try {
+        const response = await api.get("api/register-options/")
+
+        // Junta a lista fixa com a do banco e usa o Set() para remover duplicatas
+        const combinedEscolas = Array.from(
+          new Set([...ESCOLAS_BASE, ...response.data.escolas]),
+        )
+        const combinedDisciplinas = Array.from(
+          new Set([...DISCIPLINAS_BASE, ...response.data.disciplinas]),
+        )
+
+        // Ordena em ordem alfabética para ficar organizado no select
+        combinedEscolas.sort((a, b) => a.localeCompare(b))
+        combinedDisciplinas.sort((a, b) => a.localeCompare(b))
+
+        // --- MÁGICA: JOGAR "OUTRA" PARA O FINAL DA LISTA ---
+        const indexOutra = combinedDisciplinas.indexOf("Outra")
+        if (indexOutra > -1) {
+          combinedDisciplinas.splice(indexOutra, 1) // Tira de onde estiver
+          combinedDisciplinas.push("Outra") // Coloca no último lugar
+        }
+
+        setEscolas(combinedEscolas)
+        setDisciplinas(combinedDisciplinas)
+      } catch (err) {
+        console.error(
+          "Erro ao buscar opções do banco, usando apenas as fixas:",
+          err,
+        )
+      } finally {
+        setIsLoadingOptions(false)
+      }
+    }
+    fetchOptions()
+  }, [])
 
   const handleChange = (e) => {
     setFormData({
@@ -145,7 +192,6 @@ const Register = () => {
 
   return (
     <div style={styles.wrapper}>
-      {/* BOTÃO VOLTAR POR FORA DO CONTAINER BRANCO PARA NÃO QUEBRAR O LAYOUT */}
       <div style={styles.topBar}>
         <button onClick={() => navigate("/login")} style={styles.backButton}>
           <ArrowLeft size={16} /> Voltar ao Login
@@ -153,7 +199,6 @@ const Register = () => {
       </div>
 
       <div style={styles.container}>
-        {/* Formulário Centralizado e Único */}
         <div style={styles.formSection}>
           <div style={styles.header}>
             <h2 style={styles.title}>Crie sua conta</h2>
@@ -212,7 +257,7 @@ const Register = () => {
               </div>
             </div>
 
-            {/* ESCOLA */}
+            {/* ESCOLA (COMBINADA: FIXAS + BANCO) */}
             <div style={styles.inputGroup}>
               <label style={styles.label}>Sua Escola</label>
               <div style={styles.inputWrapper}>
@@ -223,12 +268,15 @@ const Register = () => {
                   onChange={handleChange}
                   style={styles.select}
                   required
+                  disabled={isLoadingOptions}
                 >
                   <option value="" disabled>
-                    Selecione a escola onde atua
+                    {isLoadingOptions
+                      ? "Carregando escolas..."
+                      : "Selecione a escola onde atua"}
                   </option>
-                  {escolas.map((escola) => (
-                    <option key={escola} value={escola}>
+                  {escolas.map((escola, index) => (
+                    <option key={index} value={escola}>
                       {escola}
                     </option>
                   ))}
@@ -236,7 +284,7 @@ const Register = () => {
               </div>
             </div>
 
-            {/* DISCIPLINA */}
+            {/* DISCIPLINA (COMBINADA: FIXAS + BANCO) */}
             <div style={styles.inputGroup}>
               <label style={styles.label}>Sua Disciplina / Área</label>
               <div style={styles.inputWrapper}>
@@ -247,12 +295,15 @@ const Register = () => {
                   onChange={handleChange}
                   style={styles.select}
                   required
+                  disabled={isLoadingOptions}
                 >
                   <option value="" disabled>
-                    Selecione uma disciplina
+                    {isLoadingOptions
+                      ? "Carregando áreas..."
+                      : "Selecione uma disciplina"}
                   </option>
-                  {disciplinas.map((disc) => (
-                    <option key={disc} value={disc}>
+                  {disciplinas.map((disc, index) => (
+                    <option key={index} value={disc}>
                       {disc}
                     </option>
                   ))}
@@ -340,7 +391,11 @@ const Register = () => {
               </div>
             )}
 
-            <button type="submit" style={styles.button} disabled={isLoading}>
+            <button
+              type="submit"
+              style={styles.button}
+              disabled={isLoading || isLoadingOptions}
+            >
               {isLoading ? (
                 <>
                   <Loader2 size={18} className="spin" /> Criando conta...

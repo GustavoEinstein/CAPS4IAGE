@@ -67,13 +67,21 @@ urlpatterns = [
     path('api/admin/forum/', views.api_admin_list_forum, name='api_admin_list_forum'),
     path('api/admin/forum/<int:pk>/delete/', views.api_admin_delete_forum, name='api_admin_delete_forum'),
 
-    # --- NOVO: Gestão de Gamificação e Hall da Fama ---
-    # Rota para o admin gerenciar badges e auditar o histórico de XP
+    # --- Gestão de Gamificação e Hall da Fama ---
     path('api/admin/gamificacao/', views.api_admin_gamificacao, name='admin_gamificacao'),
+    path('api/admin/gamificacao/<int:pk>/delete/', views.api_admin_delete_badge, name='admin_delete_badge'),
+    path('api/admin/gamificacao/atribuir/', views.api_admin_atribuir_badge, name='admin_atribuir_badge'), # <--- ROTA ADICIONADA AQUI
+
+    # --- Diário de Operações (CRM Interno) ---
+    path('api/admin/diario/', views.DiarioOperacaoView.as_view(), name='diario-list-create'),
+    path('api/admin/diario/<int:pk>/delete/', views.DiarioOperacaoDeleteView.as_view(), name='diario-delete'),
+    
+    # --- Configurações Gerais ---
+    path('api/admin/configuracoes/', views.ConfiguracoesGeraisView.as_view(), name='admin_configuracoes'),
+    path('api/register-options/', views.api_get_register_options, name='register_options'),
 
     # --- Legado ---
     path('api/ontology/cycles/', views.api_listar_ciclos, name='list_cycles'),
-    path('api/admin/gamificacao/<int:pk>/delete/', views.api_admin_delete_badge, name='admin_delete_badge'),
 ]
 
 # Configuração para servir arquivos de mídia (avatars, uploads) em ambiente de desenvolvimento

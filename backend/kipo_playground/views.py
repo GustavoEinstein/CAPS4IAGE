@@ -18,9 +18,13 @@ import json
 import sys 
 import re 
 from random import randint
+
+# --- IMPORTS DO REST FRAMEWORK ---
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.permissions import IsAuthenticated, AllowAny, IsAdminUser
 from rest_framework.response import Response
+from rest_framework.views import APIView
+from rest_framework import status
 from django.utils import timezone
 
 from django.contrib.auth.tokens import default_token_generator
@@ -39,11 +43,14 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.throttling import ScopedRateThrottle 
 
-# Importação dos novos modelos de gamificação
-from .models import Profile, Producao, Avaliacao, Topico, Comentario, RegistroXP, Conquista, ConquistaUsuario
+# Importação dos modelos (Incluindo ConfiguracaoXP, Escola e Disciplina)
+from .models import (
+    Profile, Producao, Avaliacao, Topico, Comentario, RegistroXP, 
+    Conquista, ConquistaUsuario, DiarioOperacao, ConfiguracaoXP, Escola, Disciplina
+)
 
 
-#lista de arquivos permitidas no servidor, fora esses não serão aceitos 
+# Lista de arquivos permitidos no servidor
 ALLOWED_EXTENSIONS = [
     '.pdf', '.doc', '.docx', '.txt', 
     '.ppt', '.pptx', '.xls', '.xlsx', 
@@ -121,6 +128,27 @@ class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
     throttle_classes = [ScopedRateThrottle]
     throttle_scope = 'login_attempts'
+
+
+# ============================================================================
+# NOVO: OPÇÕES PARA O FORMULÁRIO DE REGISTRO (PÚBLICO)
+# ============================================================================
+@api_view(['GET'])
+@authentication_classes([]) 
+@permission_classes([AllowAny])
+def api_get_register_options(request):
+    """Devolve as escolas e disciplinas do banco de dados para a página de Registro."""
+    escolas = list(Escola.objects.values_list('nome', flat=True).order_by('nome'))
+    disciplinas = list(Disciplina.objects.values_list('nome', flat=True).order_by('nome'))
+    
+    # Adicionamos "Outra" caso não tenha sido cadastrada, para o professor não ficar travado
+    if "Outra" not in disciplinas:
+        disciplinas.append("Outra")
+
+    return Response({
+        'escolas': escolas,
+        'disciplinas': disciplinas
+    })
 
 
 #views de autenticação e perfil 
@@ -264,7 +292,6 @@ def api_create_production(request):
         recursos_input = data.getlist('recursos') if hasattr(data, 'getlist') else data.get('recursos', '')
         recursos_str = ", ".join(recursos_input) if isinstance(recursos_input, list) else str(recursos_input)
 
-        #logica para conseguir aplicar o rascunho
         is_draft_val = data.get('is_draft')
         is_draft = str(is_draft_val).strip().lower() in ['true', '1', 't', 'y', 'yes']
         status_inicial = 'Rascunho' if is_draft else 'Em revisão'
@@ -387,9 +414,6 @@ def api_get_production_details(request, pk):
 
         total_aprovacoes = avaliacoes.filter(aprovado=True).count()
 
-        pode_ver_parecer = is_dono or is_admin or is_revisor_desta_pratica
-
-        # Lógica de filtragem: dono e admin veem tudo. Revisor vê só o dele.
         avaliacoes_filtradas = []
         if is_dono or is_admin:
             avaliacoes_filtradas = avaliacoes_detalhadas
@@ -427,7 +451,7 @@ def api_get_production_details(request, pk):
             'avaliacoes_detalhadas': avaliacoes_filtradas,
             'feedback_texto': feedback_texto if (is_dono or is_admin) else None, 
             'notas': notas,
-            'total_avaliacoes': avaliacoes.count(), # CORREÇÃO: Envia sempre o total real para o frontend
+            'total_avaliacoes': avaliacoes.count(), 
             'total_aprovacoes': total_aprovacoes,
 
             'is_aprovado': is_aprovado,
@@ -562,12 +586,14 @@ def api_submit_review(request, pk):
             nota_inovacao=int(data.get('nota_inovacao', 0))
         )
 
+        config_xp, _ = ConfiguracaoXP.objects.get_or_create(pk=1)
+
         perfil_revisor = request.user.profile
-        adicionar_xp(perfil_revisor, 15, f"Revisão da produção: {p.titulo}")
+        adicionar_xp(perfil_revisor, config_xp.xp_revisao, f"Revisão da produção: {p.titulo}")
 
         if not aprovado:
             p.status = 'Correção solicitada'
-            msg_response = 'Sua avaliação foi registrada. Você ganhou +15 XP! A produção foi devolvida ao autor para correção.'
+            msg_response = f'Sua avaliação foi registrada. Você ganhou +{config_xp.xp_revisao} XP! A produção foi devolvida ao autor para correção.'
             
             try:
                 autor_email = p.user.email
@@ -583,16 +609,16 @@ def api_submit_review(request, pk):
             
             if total_aprovacoes >= 2:
                 p.status = 'Aprovado'
-                msg_response = 'Revisão registrada! Você ganhou +15 XP. A produção alcançou 2 aprovações e foi publicada na comunidade.'
+                msg_response = f'Revisão registrada! Você ganhou +{config_xp.xp_revisao} XP. A produção alcançou 2 aprovações e foi publicada na comunidade.'
                 
                 perfil_autor = p.user.profile
-                adicionar_xp(perfil_autor, 50, f"Produção aprovada pela comunidade: {p.titulo}")
+                adicionar_xp(perfil_autor, config_xp.xp_aprovacao, f"Produção aprovada pela comunidade: {p.titulo}")
             else:
                 p.status = 'Em revisão'
-                msg_response = f'Revisão registrada! Você ganhou +15 XP. Esta produção agora possui {total_aprovacoes} aprovação(ões). Aguardando o segundo revisor.'
+                msg_response = f'Revisão registrada! Você ganhou +{config_xp.xp_revisao} XP. Esta produção agora possui {total_aprovacoes} aprovação(ões). Aguardando o segundo revisor.'
 
         p.save()
-        return Response({'mensagem': msg_response})
+        return Response({'mensagem': msg_response, 'xp_ganho': config_xp.xp_revisao})
         
     except Producao.DoesNotExist:
         return Response({'erro': 'Produção não encontrada'}, status=404)
@@ -756,6 +782,8 @@ def api_forum_detalhe_comentarios(request, pk):
     except Topico.DoesNotExist:
         return Response({'erro': 'Tópico não encontrado'}, status=404)
 
+    config_xp, _ = ConfiguracaoXP.objects.get_or_create(pk=1)
+
     if request.method == 'GET':
         comentarios_db = topico.comentarios.all().order_by('data_criacao')
         lista_comentarios = []
@@ -799,9 +827,12 @@ def api_forum_detalhe_comentarios(request, pk):
         )
 
         perfil_comentarista = request.user.profile
-        adicionar_xp(perfil_comentarista, 5, f"Comentário no tópico: {topico.titulo}")
+        adicionar_xp(perfil_comentarista, config_xp.xp_comentario, f"Comentário no tópico: {topico.titulo}")
 
-        return Response({'mensagem': 'Comentário adicionado com sucesso! Você ganhou +5 XP.'})
+        return Response({
+            'mensagem': f'Comentário adicionado com sucesso! Você ganhou +{config_xp.xp_comentario} XP.',
+            'xp_ganho': config_xp.xp_comentario
+        })
 
     elif request.method == 'PUT':
         if topico.autor != request.user:
@@ -859,10 +890,14 @@ def api_forum_topicos(request):
             arquivo=arquivo_enviado 
         )
 
+        config_xp, _ = ConfiguracaoXP.objects.get_or_create(pk=1)
         perfil_autor = request.user.profile
-        adicionar_xp(perfil_autor, 5, f"Novo tópico aberto: {titulo}")
+        adicionar_xp(perfil_autor, config_xp.xp_topico, f"Novo tópico aberto: {titulo}")
 
-        return Response({'mensagem': 'Tópico criado com sucesso! Você ganhou +5 XP.'}, status=201)
+        return Response({
+            'mensagem': f'Tópico criado com sucesso! Você ganhou +{config_xp.xp_topico} XP.',
+            'xp_ganho': config_xp.xp_topico
+        }, status=201)
 
 
 
@@ -1003,7 +1038,9 @@ def api_ranking_gamificacao(request):
         'top_forum': top_forum
     })
 
-# NOVA VIEW DE ADMIN DE GAMIFICAÇÃO (PARA RESOLVER O ERRO)
+# ============================================================================
+# GESTÃO DE GAMIFICAÇÃO (ADMIN)
+# ============================================================================
 @api_view(['GET', 'POST'])
 @permission_classes([IsAuthenticated])
 def api_admin_gamificacao(request):
@@ -1058,3 +1095,158 @@ def api_admin_delete_badge(request, pk):
     conquista = get_object_or_404(Conquista, id=pk)
     conquista.delete()
     return Response({'mensagem': 'Badge excluída com sucesso.'})
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def api_admin_atribuir_badge(request):
+    """Atribui manualmente uma medalha a um usuário e concede o XP"""
+    if not request.user.is_superuser:
+        return Response({'erro': 'Acesso negado'}, status=403)
+        
+    user_id = request.data.get('usuario_id')
+    conquista_id = request.data.get('conquista_id')
+    
+    try:
+        perfil = Profile.objects.get(user__id=user_id)
+        conquista = Conquista.objects.get(id=conquista_id)
+        
+        if ConquistaUsuario.objects.filter(perfil=perfil, conquista=conquista).exists():
+            return Response({'erro': 'O usuário já possui esta medalha.'}, status=400)
+            
+        ConquistaUsuario.objects.create(perfil=perfil, conquista=conquista)
+        adicionar_xp(perfil, conquista.xp_bonus, f"Medalha Atribuída: {conquista.nome}")
+        
+        return Response({'mensagem': 'Medalha atribuída com sucesso!'})
+    except Exception as e:
+        return Response({'erro': 'Erro ao atribuir medalha.'}, status=400)
+
+
+# ============================================================================
+# DIÁRIO DE OPERAÇÕES (GET e POST)
+# ============================================================================
+class DiarioOperacaoView(APIView):
+    # Trava de segurança: Apenas superusuários do Django podem acessar
+    permission_classes = [IsAdminUser]
+
+    def get(self, request):
+        logs = DiarioOperacao.objects.all()
+        dados = []
+        
+        # Traduzindo os dados do banco para JSON manualmente
+        for log in logs:
+            dados.append({
+                'id': log.id,
+                'titulo': log.titulo,
+                'tipo': log.tipo,
+                'contato': log.contato,
+                # No GET, a data vem do banco como um objeto 'date', então formatamos
+                'data_evento': log.data_evento.strftime('%Y-%m-%d') if log.data_evento else None,
+                'descricao': log.descricao,
+                'foto': request.build_absolute_uri(log.foto.url) if log.foto else None,
+            })
+        return Response(dados)
+
+    def post(self, request):
+        titulo = request.data.get('titulo')
+        tipo = request.data.get('tipo')
+        contato = request.data.get('contato')
+        data_evento = request.data.get('data_evento') # Recebemos como texto (String)
+        descricao = request.data.get('descricao')
+        
+        # Como o React envia via FormData, a foto vem no request.FILES
+        foto = request.FILES.get('foto')
+
+        if not all([titulo, tipo, contato, data_evento, descricao]):
+            return Response({'erro': 'Campos obrigatórios faltando.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Criando o registro no banco de dados
+        novo_log = DiarioOperacao.objects.create(
+            titulo=titulo,
+            tipo=tipo,
+            contato=contato,
+            data_evento=data_evento,
+            descricao=descricao,
+            foto=foto
+        )
+
+        # Devolvendo o item criado para o React já colocar no topo da tela
+        return Response({
+            'id': novo_log.id,
+            'titulo': novo_log.titulo,
+            'tipo': novo_log.tipo,
+            'contato': novo_log.contato,
+            'data_evento': data_evento, 
+            'descricao': novo_log.descricao,
+            'foto': request.build_absolute_uri(novo_log.foto.url) if novo_log.foto else None,
+        }, status=status.HTTP_201_CREATED)
+
+class DiarioOperacaoDeleteView(APIView):
+    permission_classes = [IsAdminUser]
+
+    def delete(self, request, pk):
+        try:
+            log = DiarioOperacao.objects.get(pk=pk)
+            log.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        except DiarioOperacao.DoesNotExist:
+            return Response({'erro': 'Registro não encontrado'}, status=status.HTTP_404_NOT_FOUND)
+
+# ============================================================================
+# CONFIGURAÇÕES GERAIS (XP, Escolas e Disciplinas)
+# ============================================================================
+class ConfiguracoesGeraisView(APIView):
+    permission_classes = [IsAdminUser]
+
+    def get(self, request):
+        config_xp, _ = ConfiguracaoXP.objects.get_or_create(pk=1)
+        escolas = Escola.objects.all().values('id', 'nome').order_by('nome')
+        disciplinas = Disciplina.objects.all().values('id', 'nome').order_by('nome')
+
+        return Response({
+            'xp': {
+                'xp_revisao': config_xp.xp_revisao,
+                'xp_aprovacao': config_xp.xp_aprovacao,
+                'xp_topico': config_xp.xp_topico,
+                'xp_comentario': config_xp.xp_comentario
+            },
+            'escolas': list(escolas),
+            'disciplinas': list(disciplinas)
+        })
+
+    def post(self, request):
+        acao = request.data.get('acao')
+
+        if acao == 'atualizar_xp':
+            config_xp, _ = ConfiguracaoXP.objects.get_or_create(pk=1)
+            config_xp.xp_revisao = request.data.get('xp_revisao', config_xp.xp_revisao)
+            config_xp.xp_aprovacao = request.data.get('xp_aprovacao', config_xp.xp_aprovacao)
+            config_xp.xp_topico = request.data.get('xp_topico', config_xp.xp_topico)
+            config_xp.xp_comentario = request.data.get('xp_comentario', config_xp.xp_comentario)
+            config_xp.save()
+            return Response({'mensagem': 'Economia de XP atualizada!'})
+
+        elif acao == 'adicionar_escola':
+            nome = request.data.get('nome')
+            if nome:
+                Escola.objects.get_or_create(nome=nome)
+                return Response({'mensagem': 'Escola adicionada com sucesso!'})
+            return Response({'erro': 'Nome inválido'}, status=400)
+
+        elif acao == 'remover_escola':
+            escola_id = request.data.get('id')
+            Escola.objects.filter(id=escola_id).delete()
+            return Response({'mensagem': 'Escola removida!'})
+
+        elif acao == 'adicionar_disciplina':
+            nome = request.data.get('nome')
+            if nome:
+                Disciplina.objects.get_or_create(nome=nome)
+                return Response({'mensagem': 'Disciplina adicionada com sucesso!'})
+            return Response({'erro': 'Nome inválido'}, status=400)
+
+        elif acao == 'remover_disciplina':
+            disciplina_id = request.data.get('id')
+            Disciplina.objects.filter(id=disciplina_id).delete()
+            return Response({'mensagem': 'Disciplina removida!'})
+
+        return Response({'erro': 'Ação desconhecida'}, status=400)
