@@ -10,10 +10,77 @@ import {
   Trash2,
   ShieldCheck,
   Loader2,
+  // --- ÍCONES DO SELETOR ---
+  Star,
+  Zap,
+  Crown,
+  Flame,
+  Target,
+  Book,
+  Lightbulb,
+  Medal,
+  ThumbsUp,
+  Heart,
+  Rocket,
+  Shield,
 } from "lucide-react"
 import { useNavigate, useOutletContext } from "react-router-dom"
 import api from "../services/api"
 import Swal from "sweetalert2"
+
+// ============================================================================
+// LISTA DE NOMES E RENDERIZADOR SEGURO DE ÍCONES (À Prova de Falhas)
+// ============================================================================
+const ICONS_DISPONIVEIS = [
+  "award",
+  "star",
+  "zap",
+  "crown",
+  "flame",
+  "target",
+  "book",
+  "lightbulb",
+  "medal",
+  "thumbsup",
+  "heart",
+  "rocket",
+  "shield",
+  "trophy",
+]
+
+const getIcon = (name, size = 18, color = "#F59E0B") => {
+  switch (name) {
+    case "star":
+      return <Star size={size} color={color} style={{ flexShrink: 0 }} />
+    case "zap":
+      return <Zap size={size} color={color} style={{ flexShrink: 0 }} />
+    case "crown":
+      return <Crown size={size} color={color} style={{ flexShrink: 0 }} />
+    case "flame":
+      return <Flame size={size} color={color} style={{ flexShrink: 0 }} />
+    case "target":
+      return <Target size={size} color={color} style={{ flexShrink: 0 }} />
+    case "book":
+      return <Book size={size} color={color} style={{ flexShrink: 0 }} />
+    case "lightbulb":
+      return <Lightbulb size={size} color={color} style={{ flexShrink: 0 }} />
+    case "medal":
+      return <Medal size={size} color={color} style={{ flexShrink: 0 }} />
+    case "thumbsup":
+      return <ThumbsUp size={size} color={color} style={{ flexShrink: 0 }} />
+    case "heart":
+      return <Heart size={size} color={color} style={{ flexShrink: 0 }} />
+    case "rocket":
+      return <Rocket size={size} color={color} style={{ flexShrink: 0 }} />
+    case "shield":
+      return <Shield size={size} color={color} style={{ flexShrink: 0 }} />
+    case "trophy":
+      return <Trophy size={size} color={color} style={{ flexShrink: 0 }} />
+    case "award":
+    default:
+      return <Award size={size} color={color} style={{ flexShrink: 0 }} />
+  }
+}
 
 export default function GamificacaoAdmin() {
   const navigate = useNavigate()
@@ -34,7 +101,7 @@ export default function GamificacaoAdmin() {
     nome: "",
     descricao: "",
     xp_bonus: 50,
-    icone: "award",
+    icone: "award", // Padrão selecionado
   })
 
   const [atribuicao, setAtribuicao] = useState({
@@ -61,7 +128,7 @@ export default function GamificacaoAdmin() {
   const fetchUsuarios = async () => {
     try {
       const response = await api.get("api/admin/users/")
-      setUsuarios(response.data.filter((u) => !u.is_superuser)) // Puxa todos que não são administradores
+      setUsuarios(response.data.filter((u) => !u.is_superuser))
     } catch (err) {
       console.error("Erro ao buscar usuários", err)
     }
@@ -158,12 +225,11 @@ export default function GamificacaoAdmin() {
         padding: isMobile ? "20px 10px" : "40px 20px",
       }}
     >
-      {/* CORREÇÃO DO BUG VISUAL DO FUNDO PRETO NOS INPUTS */}
       <style>{`
-                input::placeholder, textarea::placeholder { color: #94A3B8 !important; opacity: 1 !important; }
-                ::-webkit-input-placeholder { color: #94A3B8 !important; opacity: 1 !important; }
-                :-moz-placeholder { color: #94A3B8 !important; opacity: 1 !important; }
-            `}</style>
+        input::placeholder, textarea::placeholder { color: #94A3B8 !important; opacity: 1 !important; }
+        ::-webkit-input-placeholder { color: #94A3B8 !important; opacity: 1 !important; }
+        :-moz-placeholder { color: #94A3B8 !important; opacity: 1 !important; }
+      `}</style>
 
       <div style={styles.container}>
         <header style={styles.header}>
@@ -409,6 +475,7 @@ export default function GamificacaoAdmin() {
                     required
                   />
                 </div>
+
                 <div style={styles.inputGroup}>
                   <label style={styles.label}>Descrição</label>
                   <textarea
@@ -424,37 +491,56 @@ export default function GamificacaoAdmin() {
                     required
                   />
                 </div>
-                <div style={{ display: "flex", gap: "15px" }}>
-                  <div style={styles.inputGroup}>
-                    <label style={styles.label}>Ícone Lucide</label>
-                    <input
-                      type="text"
-                      style={styles.input}
-                      placeholder="Ex: star"
-                      value={novaConquista.icone}
-                      onChange={(e) =>
-                        setNovaConquista({
-                          ...novaConquista,
-                          icone: e.target.value,
-                        })
-                      }
-                    />
-                  </div>
-                  <div style={styles.inputGroup}>
-                    <label style={styles.label}>XP Bônus</label>
-                    <input
-                      type="number"
-                      style={styles.input}
-                      value={novaConquista.xp_bonus}
-                      onChange={(e) =>
-                        setNovaConquista({
-                          ...novaConquista,
-                          xp_bonus: e.target.value,
-                        })
-                      }
-                    />
+
+                {/* --- SELETOR DE ÍCONES CORRIGIDO --- */}
+                <div style={styles.inputGroup}>
+                  <label style={styles.label}>Escolha o Ícone</label>
+                  <div style={styles.iconSelectorGrid}>
+                    {ICONS_DISPONIVEIS.map((iconName) => {
+                      const isSelected = novaConquista.icone === iconName
+                      return (
+                        <button
+                          type="button"
+                          key={iconName}
+                          onClick={() =>
+                            setNovaConquista({
+                              ...novaConquista,
+                              icone: iconName,
+                            })
+                          }
+                          title={iconName}
+                          style={{
+                            ...styles.iconSelectBtn,
+                            backgroundColor: isSelected ? "#FEF3C7" : "#FFFFFF",
+                            borderColor: isSelected ? "#F59E0B" : "#E2E8F0",
+                          }}
+                        >
+                          {getIcon(
+                            iconName,
+                            20,
+                            isSelected ? "#D97706" : "#94A3B8",
+                          )}
+                        </button>
+                      )
+                    })}
                   </div>
                 </div>
+
+                <div style={styles.inputGroup}>
+                  <label style={styles.label}>XP Bônus (Recompensa)</label>
+                  <input
+                    type="number"
+                    style={styles.input}
+                    value={novaConquista.xp_bonus}
+                    onChange={(e) =>
+                      setNovaConquista({
+                        ...novaConquista,
+                        xp_bonus: e.target.value,
+                      })
+                    }
+                  />
+                </div>
+
                 <button
                   type="submit"
                   disabled={isSubmitting}
@@ -470,23 +556,27 @@ export default function GamificacaoAdmin() {
               </form>
             </div>
 
+            {/* LISTAGEM DAS BADGES CORRIGIDA */}
             <div style={styles.listCard}>
               <h3 style={styles.miniTitle}>Badges Ativas</h3>
               {dados.conquistas_disponiveis.map((c) => (
                 <div key={c.id} style={styles.badgeItem}>
-                  <Award size={18} color="#F59E0B" style={{ flexShrink: 0 }} />
+                  {/* Puxa o ícone dinâmico direto da função JSX */}
+                  {getIcon(c.icone, 22, "#F59E0B")}
+
                   <div
                     style={{
                       display: "flex",
                       flexDirection: "column",
                       flex: 1,
                       overflow: "hidden",
+                      marginLeft: "6px", // Espaçamento extra pro ícone
                     }}
                   >
                     <span
                       style={{
-                        fontSize: "13px",
-                        fontWeight: "700",
+                        fontSize: "14px",
+                        fontWeight: "800",
                         color: "#1E293B",
                         whiteSpace: "nowrap",
                         textOverflow: "ellipsis",
@@ -495,7 +585,9 @@ export default function GamificacaoAdmin() {
                     >
                       {c.nome}
                     </span>
-                    <small style={{ color: "#64748B" }}>{c.xp_bonus} XP</small>
+                    <small style={{ color: "#64748B", fontWeight: "600" }}>
+                      +{c.xp_bonus} XP
+                    </small>
                   </div>
                   <button
                     onClick={() => handleDeleteBadge(c.id)}
@@ -720,7 +812,6 @@ const styles = {
   inputGroup: { display: "flex", flexDirection: "column", gap: "6px", flex: 1 },
   label: { fontSize: "13px", color: "#475569", fontWeight: "600" },
 
-  // FUNDOS BRANCOS PARA OS INPUTS
   input: {
     width: "100%",
     padding: "10px 12px",
@@ -744,6 +835,28 @@ const styles = {
     minHeight: "80px",
     boxSizing: "border-box",
     fontFamily: "inherit",
+  },
+
+  // --- ESTILOS DO SELETOR DE ÍCONES ---
+  iconSelectorGrid: {
+    display: "flex",
+    flexWrap: "wrap",
+    gap: "8px",
+    padding: "12px",
+    backgroundColor: "#F8FAFC",
+    borderRadius: "8px",
+    border: "1px solid #E2E8F0",
+  },
+  iconSelectBtn: {
+    width: "38px",
+    height: "38px",
+    borderRadius: "8px",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    border: "1px solid",
+    cursor: "pointer",
+    transition: "all 0.2s",
   },
 
   submitBtn: {

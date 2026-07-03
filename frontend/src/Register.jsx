@@ -76,23 +76,21 @@ const Register = () => {
         const response = await api.get("api/register-options/")
 
         // Junta a lista fixa com a do banco e usa o Set() para remover duplicatas
-        const combinedEscolas = Array.from(
+        let combinedEscolas = Array.from(
           new Set([...ESCOLAS_BASE, ...response.data.escolas]),
         )
-        const combinedDisciplinas = Array.from(
+        let combinedDisciplinas = Array.from(
           new Set([...DISCIPLINAS_BASE, ...response.data.disciplinas]),
+        )
+
+        // Filtra para remover a opção "Outra" caso ela venha do backend
+        combinedDisciplinas = combinedDisciplinas.filter(
+          (disc) => disc !== "Outra",
         )
 
         // Ordena em ordem alfabética para ficar organizado no select
         combinedEscolas.sort((a, b) => a.localeCompare(b))
         combinedDisciplinas.sort((a, b) => a.localeCompare(b))
-
-        // --- MÁGICA: JOGAR "OUTRA" PARA O FINAL DA LISTA ---
-        const indexOutra = combinedDisciplinas.indexOf("Outra")
-        if (indexOutra > -1) {
-          combinedDisciplinas.splice(indexOutra, 1) // Tira de onde estiver
-          combinedDisciplinas.push("Outra") // Coloca no último lugar
-        }
 
         setEscolas(combinedEscolas)
         setDisciplinas(combinedDisciplinas)
