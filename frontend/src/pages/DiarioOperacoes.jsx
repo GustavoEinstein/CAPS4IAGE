@@ -17,7 +17,22 @@ import {
   Camera,
   CheckCircle2,
   Eye,
+  Search,
+  Tag,
+  Filter,
+  Check,
+  ListChecks,
 } from "lucide-react"
+
+const TAGS_DISPONIVEIS = [
+  "Dúvida com Login",
+  "Criação de Prompts",
+  "Problema no Fórum",
+  "Apresentação da Plataforma",
+  "Feedback Positivo",
+  "Erro no Sistema",
+  "Engajamento",
+]
 
 export default function DiarioOperacoes() {
   const navigate = useNavigate()
@@ -28,12 +43,26 @@ export default function DiarioOperacoes() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [logs, setLogs] = useState([])
 
+  // Lista de usuários para o Autocomplete
+  const [usuarios, setUsuarios] = useState([])
+  const [buscaUsuario, setBuscaUsuario] = useState("")
+  const [mostrarAutocomplete, setMostrarAutocomplete] = useState(false)
+
+  // Filtros da Timeline
+  const [buscaTimeline, setBuscaTimeline] = useState("")
+  const [filtroStatus, setFiltroStatus] = useState("Todos")
+
   const [formData, setFormData] = useState({
     titulo: "",
     tipo: "Reunião",
+    status: "Resolvido",
+    docente_id: "",
     contato: "",
     data_evento: new Date().toISOString().split("T")[0],
     descricao: "",
+    proximos_passos: "",
+    tags: [],
+    participantes: 1,
   })
 
   const [foto, setFoto] = useState(null)
@@ -54,7 +83,10 @@ export default function DiarioOperacoes() {
         navigate("/dashboard")
         return
       }
-      carregarDiario()
+
+      // Carrega os logs e os usuários cadastrados simultaneamente
+      await carregarDiario()
+      await carregarUsuarios()
     } catch (error) {
       console.error("Erro na verificação", error)
       navigate("/dashboard")
@@ -69,7 +101,7 @@ export default function DiarioOperacoes() {
       console.error("Erro ao carregar diário:", error)
       Swal.fire(
         "Erro de Conexão",
-        "Não foi possível carregar os registros do diário. Verifique o servidor.",
+        "Não foi possível carregar os registros.",
         "error",
       )
     } finally {
@@ -77,8 +109,24 @@ export default function DiarioOperacoes() {
     }
   }
 
+  const carregarUsuarios = async () => {
+    try {
+      const response = await api.get("api/admin/users/")
+      setUsuarios(response.data)
+    } catch (error) {
+      console.log("Erro ao carregar usuários para busca", error)
+    }
+  }
+
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value })
+  }
+
+  const toggleTag = (tag) => {
+    const novasTags = formData.tags.includes(tag)
+      ? formData.tags.filter((t) => t !== tag)
+      : [...formData.tags, tag]
+    setFormData({ ...formData, tags: novasTags })
   }
 
   const handleFileChange = (e) => {
@@ -92,7 +140,7 @@ export default function DiarioOperacoes() {
     if (!formData.titulo || !formData.descricao || !formData.contato) {
       return Swal.fire(
         "Campos Incompletos",
-        "Preencha todos os campos do registro.",
+        "Preencha título, contato e descrição.",
         "warning",
       )
     }
@@ -100,20 +148,22 @@ export default function DiarioOperacoes() {
     setIsSubmitting(true)
     try {
       const dataToSend = new FormData()
-      Object.keys(formData).forEach((key) =>
-        dataToSend.append(key, formData[key]),
-      )
+      Object.keys(formData).forEach((key) => {
+        if (key === "tags") {
+          if (formData.tags.length > 0)
+            dataToSend.append("tags", formData.tags.join(", "))
+        } else {
+          dataToSend.append(key, formData[key])
+        }
+      })
 
-      if (foto) {
-        dataToSend.append("foto", foto)
-      }
+      if (foto) dataToSend.append("foto", foto)
 
       const response = await api.post("api/admin/diario/", dataToSend, {
         headers: { "Content-Type": "multipart/form-data" },
       })
 
       setLogs([response.data, ...logs])
-
       Swal.fire({
         icon: "success",
         title: "Registrado!",
@@ -122,7 +172,20 @@ export default function DiarioOperacoes() {
         showConfirmButton: false,
       })
 
-      setFormData({ ...formData, titulo: "", contato: "", descricao: "" })
+      // Reset Form
+      setFormData({
+        titulo: "",
+        tipo: "Reunião",
+        status: "Resolvido",
+        docente_id: "",
+        contato: "",
+        data_evento: new Date().toISOString().split("T")[0],
+        descricao: "",
+        proximos_passos: "",
+        tags: [],
+        participantes: 1,
+      })
+      setBuscaUsuario("")
       setFoto(null)
     } catch (error) {
       console.error(error)
@@ -139,7 +202,7 @@ export default function DiarioOperacoes() {
   const handleDelete = async (id) => {
     const confirm = await Swal.fire({
       title: "Excluir registro?",
-      text: "Essa ação apagará os dados do banco definitivamente.",
+      text: "Essa ação apagará os dados permanentemente.",
       icon: "warning",
       showCancelButton: true,
       confirmButtonColor: "#DC2626",
@@ -152,14 +215,11 @@ export default function DiarioOperacoes() {
       Swal.fire("Excluído!", "O registro foi removido.", "success")
     } catch (error) {
       console.error(error)
-      Swal.fire(
-        "Erro",
-        "Não foi possível excluir o registro do banco de dados.",
-        "error",
-      )
+      Swal.fire("Erro", "Não foi possível excluir o registro.", "error")
     }
   }
 
+  // Estilização de Meta Dados (Cor dos Tipos)
   const getTipoMeta = (tipo) => {
     switch (tipo) {
       case "Treinamento":
@@ -179,12 +239,44 @@ export default function DiarioOperacoes() {
     }
   }
 
+  // Estilização de Meta Dados (Cor dos Status)
+  const getStatusMeta = (status) => {
+    switch (status) {
+      case "Pendente":
+        return { cor: "#DC2626", bg: "#FEE2E2", label: "Pendente" }
+      case "Em andamento":
+        return { cor: "#D97706", bg: "#FEF3C7", label: "Em andamento" }
+      default:
+        return { cor: "#059669", bg: "#D1FAE5", label: "Resolvido" }
+    }
+  }
+
+  // Filtragem da Lista para o Autocomplete de Usuários
+  const usuariosFiltrados = usuarios
+    .filter(
+      (u) =>
+        u.username.toLowerCase().includes(buscaUsuario.toLowerCase()) ||
+        u.email.toLowerCase().includes(buscaUsuario.toLowerCase()),
+    )
+    .slice(0, 5)
+
+  // Filtragem da Timeline
+  const logsFiltrados = logs.filter((log) => {
+    const contatoStr = log.contato || ""
+    const tituloStr = log.titulo || ""
+    const matchBusca =
+      tituloStr.toLowerCase().includes(buscaTimeline.toLowerCase()) ||
+      contatoStr.toLowerCase().includes(buscaTimeline.toLowerCase())
+    const matchStatus = filtroStatus === "Todos" || log.status === filtroStatus
+    return matchBusca && matchStatus
+  })
+
   if (loading)
     return (
       <div style={styles.loadingContainer}>
         <Loader2 className="spin" size={32} color="#CA8A04" />
         <p style={{ marginTop: "10px", color: "#64748B" }}>
-          Conectando ao banco de dados...
+          Conectando ao CRM...
         </p>
         <style>{`@keyframes spin { 100% { transform: rotate(360deg); } } .spin { animation: spin 1s linear infinite; }`}</style>
       </div>
@@ -198,24 +290,12 @@ export default function DiarioOperacoes() {
       }}
     >
       <style>{`
-        input::placeholder, textarea::placeholder {
-            color: #94A3B8 !important;
-            opacity: 1 !important;
-        }
+        input::placeholder, textarea::placeholder { color: #94A3B8 !important; opacity: 1 !important; }
         ::-webkit-input-placeholder { color: #94A3B8 !important; opacity: 1 !important; }
         :-moz-placeholder { color: #94A3B8 !important; opacity: 1 !important; }
-        
-        /* Eixo central da linha do tempo */
-        .timeline-line::before {
-            content: '';
-            position: absolute;
-            top: 15px;
-            bottom: 0;
-            left: 20px;
-            width: 2px;
-            background-color: #E2E8F0;
-            z-index: 1;
-        }
+        .timeline-line::before { content: ''; position: absolute; top: 15px; bottom: 0; left: 20px; width: 2px; background-color: #E2E8F0; z-index: 1; }
+        .autocomplete-item:hover { background-color: #F1F5F9; }
+        .tag-chip:hover { border-color: #94A3B8 !important; }
       `}</style>
 
       <div style={styles.container}>
@@ -237,10 +317,11 @@ export default function DiarioOperacoes() {
                   fontSize: isMobile ? "22px" : "26px",
                 }}
               >
-                Diário de Operações
+                CRM & Diário de Operações
               </h1>
               <p style={styles.pageSubtitle}>
-                Documente reuniões, treinamentos e relacionamentos.
+                Documente treinamentos, suporte e relacionamentos com os
+                docentes.
               </p>
             </div>
           </div>
@@ -252,27 +333,44 @@ export default function DiarioOperacoes() {
             flexDirection: isMobile ? "column" : "row",
           }}
         >
-          {/* --- COLUNA ESQUERDA: FORMULÁRIO --- */}
+          {/* --- COLUNA ESQUERDA: FORMULÁRIO COMPLETO --- */}
           <div style={{ flex: 1, width: "100%" }}>
             <div style={styles.formCard}>
               <h3 style={styles.cardTitle}>
-                <Plus size={18} /> Novo Registro
+                <Plus size={18} /> Novo Registro de Atendimento
               </h3>
 
               <form onSubmit={handleSubmit} style={styles.form}>
-                <div style={styles.inputGroup}>
-                  <label style={styles.label}>Título da Atividade</label>
-                  <input
-                    type="text"
-                    name="titulo"
-                    value={formData.titulo}
-                    onChange={handleChange}
-                    style={styles.input}
-                    placeholder="Ex: Oficina sobre Prompts Básicos"
-                    required
-                  />
+                {/* Linha 1: Título e Status */}
+                <div style={styles.row}>
+                  <div style={{ ...styles.inputGroup, flex: 2 }}>
+                    <label style={styles.label}>Título da Interação</label>
+                    <input
+                      type="text"
+                      name="titulo"
+                      value={formData.titulo}
+                      onChange={handleChange}
+                      style={styles.input}
+                      placeholder="Ex: Oficina sobre Prompts Básicos"
+                      required
+                    />
+                  </div>
+                  <div style={{ ...styles.inputGroup, flex: 1 }}>
+                    <label style={styles.label}>Status</label>
+                    <select
+                      name="status"
+                      value={formData.status}
+                      onChange={handleChange}
+                      style={styles.select}
+                    >
+                      <option value="Resolvido">Resolvido ✅</option>
+                      <option value="Em andamento">Em andamento ⏳</option>
+                      <option value="Pendente">Pendente 🚨</option>
+                    </select>
+                  </div>
                 </div>
 
+                {/* Linha 2: Tipo e Data */}
                 <div style={styles.row}>
                   <div style={styles.inputGroup}>
                     <label style={styles.label}>Tipo de Evento</label>
@@ -300,37 +398,169 @@ export default function DiarioOperacoes() {
                       required
                     />
                   </div>
+                  {(formData.tipo === "Treinamento" ||
+                    formData.tipo === "Visita Escolar") && (
+                    <div style={{ ...styles.inputGroup, maxWidth: "100px" }}>
+                      <label style={styles.label}>Nº Pessoas</label>
+                      <input
+                        type="number"
+                        name="participantes"
+                        min="1"
+                        value={formData.participantes}
+                        onChange={handleChange}
+                        style={styles.input}
+                      />
+                    </div>
+                  )}
                 </div>
 
+                {/* Autocomplete de Usuário / Contato */}
                 <div style={styles.inputGroup}>
                   <label style={styles.label}>
-                    Com quem? (Escola/Professores)
+                    Professor(a) ou Contato Livre
                   </label>
-                  <div style={styles.inputWrapper}>
-                    <Users size={16} color="#94A3B8" />
-                    <input
-                      type="text"
-                      name="contato"
-                      value={formData.contato}
-                      onChange={handleChange}
-                      style={styles.inputNoBorder}
-                      placeholder="Ex: Coordenação do CEMI"
-                      required
-                    />
+                  <div style={{ position: "relative" }}>
+                    <div style={styles.inputWrapper}>
+                      <Search size={16} color="#94A3B8" />
+                      <input
+                        type="text"
+                        value={buscaUsuario}
+                        onChange={(e) => {
+                          setBuscaUsuario(e.target.value)
+                          setFormData({
+                            ...formData,
+                            contato: e.target.value,
+                            docente_id: "",
+                          }) // Assume texto livre primeiro
+                          setMostrarAutocomplete(true)
+                        }}
+                        onBlur={() =>
+                          setTimeout(() => setMostrarAutocomplete(false), 200)
+                        }
+                        style={styles.inputNoBorder}
+                        placeholder="Busque um usuário ou digite livremente..."
+                        required
+                      />
+                    </div>
+                    {mostrarAutocomplete && buscaUsuario && (
+                      <div style={styles.autocompleteDropdown}>
+                        {usuariosFiltrados.length > 0 ? (
+                          usuariosFiltrados.map((u) => (
+                            <div
+                              key={u.id}
+                              className="autocomplete-item"
+                              style={styles.autocompleteItem}
+                              onClick={() => {
+                                setBuscaUsuario(u.username)
+                                setFormData({
+                                  ...formData,
+                                  contato: u.username,
+                                  docente_id: u.id,
+                                })
+                                setMostrarAutocomplete(false)
+                              }}
+                            >
+                              <strong>{u.username}</strong>{" "}
+                              <span
+                                style={{ color: "#94A3B8", fontSize: "12px" }}
+                              >
+                                - {u.disciplina}
+                              </span>
+                            </div>
+                          ))
+                        ) : (
+                          <div
+                            style={{
+                              padding: "10px",
+                              fontSize: "13px",
+                              color: "#94A3B8",
+                            }}
+                          >
+                            Nenhum usuário encontrado. Será salvo como contato
+                            livre.
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
 
+                {/* Seleção de Tags Rápidas */}
                 <div style={styles.inputGroup}>
-                  <label style={styles.label}>Descrição / Ata da Reunião</label>
+                  <label style={styles.label}>
+                    <Tag
+                      size={14}
+                      style={{
+                        display: "inline",
+                        verticalAlign: "middle",
+                        marginRight: "4px",
+                      }}
+                    />{" "}
+                    Tags de Categorização
+                  </label>
+                  <div
+                    style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}
+                  >
+                    {TAGS_DISPONIVEIS.map((tag) => {
+                      const isSelected = formData.tags.includes(tag)
+                      return (
+                        <div
+                          key={tag}
+                          className="tag-chip"
+                          onClick={() => toggleTag(tag)}
+                          style={{
+                            ...styles.tagChip,
+                            backgroundColor: isSelected ? "#DBEAFE" : "#F8FAFC",
+                            borderColor: isSelected ? "#3B82F6" : "#E2E8F0",
+                            color: isSelected ? "#1D4ED8" : "#64748B",
+                          }}
+                        >
+                          {isSelected && (
+                            <Check size={12} style={{ marginRight: "4px" }} />
+                          )}{" "}
+                          {tag}
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+
+                {/* Descrição Principal */}
+                <div style={styles.inputGroup}>
+                  <label style={styles.label}>Relato da Interação</label>
                   <textarea
                     name="descricao"
                     value={formData.descricao}
                     onChange={handleChange}
                     style={styles.textarea}
-                    placeholder="O que foi discutido? Quais foram os resultados?"
+                    placeholder="Descreva qual foi a dúvida, o que foi discutido no treinamento ou a dor apontada..."
                     required
                   />
                 </div>
+
+                {/* Próximos Passos (Para pendências) */}
+                {formData.status !== "Resolvido" && (
+                  <div style={styles.inputGroup}>
+                    <label style={{ ...styles.label, color: "#D97706" }}>
+                      <ListChecks
+                        size={14}
+                        style={{ display: "inline", marginRight: "4px" }}
+                      />{" "}
+                      Próximos Passos / Pendências
+                    </label>
+                    <textarea
+                      name="proximos_passos"
+                      value={formData.proximos_passos}
+                      onChange={handleChange}
+                      style={{
+                        ...styles.textarea,
+                        minHeight: "60px",
+                        borderColor: "#FCD34D",
+                      }}
+                      placeholder="Ex: Ligar na próxima semana para verificar se conseguiu o acesso."
+                    />
+                  </div>
+                )}
 
                 {/* --- CAMPO DE UPLOAD DE FOTO --- */}
                 <div style={styles.inputGroup}>
@@ -345,23 +575,14 @@ export default function DiarioOperacoes() {
                   <label htmlFor="foto-diario" style={styles.uploadBtn}>
                     {foto ? (
                       <>
-                        <CheckCircle2 size={18} color="#10B981" />
-                        <span
-                          style={{
-                            color: "#10B981",
-                            fontWeight: "bold",
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            whiteSpace: "nowrap",
-                          }}
-                        >
+                        <CheckCircle2 size={18} color="#10B981" />{" "}
+                        <span style={{ color: "#10B981", fontWeight: "bold" }}>
                           {foto.name}
                         </span>
                       </>
                     ) : (
                       <>
-                        <Camera size={18} />
-                        Anexar Imagem
+                        <Camera size={18} /> Anexar Evidência / Print
                       </>
                     )}
                   </label>
@@ -383,25 +604,94 @@ export default function DiarioOperacoes() {
             </div>
           </div>
 
-          {/* --- COLUNA DIREITA: TIMELINE --- */}
+          {/* --- COLUNA DIREITA: TIMELINE COM FILTROS --- */}
           <div style={{ flex: 1.2, width: "100%" }}>
             <div style={styles.timelineContainer}>
-              <h3 style={styles.cardTitle}>
-                <Calendar size={18} /> Histórico do Projeto
-              </h3>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  marginBottom: "20px",
+                  flexWrap: "wrap",
+                  gap: "10px",
+                }}
+              >
+                <h3
+                  style={{
+                    ...styles.cardTitle,
+                    borderBottom: "none",
+                    margin: 0,
+                  }}
+                >
+                  <Calendar size={18} /> Histórico de Atendimentos
+                </h3>
+              </div>
 
-              {logs.length === 0 ? (
+              {/* Barra de Busca e Filtro da Timeline */}
+              <div
+                style={{
+                  display: "flex",
+                  gap: "10px",
+                  marginBottom: "25px",
+                  flexWrap: "wrap",
+                }}
+              >
+                <div
+                  style={{
+                    ...styles.inputWrapper,
+                    flex: 1,
+                    backgroundColor: "#F8FAFC",
+                  }}
+                >
+                  <Search size={16} color="#94A3B8" />
+                  <input
+                    type="text"
+                    value={buscaTimeline}
+                    onChange={(e) => setBuscaTimeline(e.target.value)}
+                    placeholder="Buscar assunto ou docente..."
+                    style={{ ...styles.inputNoBorder, fontSize: "13px" }}
+                  />
+                </div>
+                <div
+                  style={{
+                    ...styles.inputWrapper,
+                    width: "auto",
+                    backgroundColor: "#F8FAFC",
+                  }}
+                >
+                  <Filter size={16} color="#94A3B8" />
+                  <select
+                    value={filtroStatus}
+                    onChange={(e) => setFiltroStatus(e.target.value)}
+                    style={{
+                      ...styles.inputNoBorder,
+                      width: "auto",
+                      fontSize: "13px",
+                      cursor: "pointer",
+                    }}
+                  >
+                    <option value="Todos">Todos os Status</option>
+                    <option value="Pendente">Pendentes</option>
+                    <option value="Em andamento">Em andamento</option>
+                    <option value="Resolvido">Resolvidos</option>
+                  </select>
+                </div>
+              </div>
+
+              {logsFiltrados.length === 0 ? (
                 <p style={styles.emptyText}>
-                  Nenhum registro encontrado no banco de dados.
+                  Nenhum registro encontrado com estes filtros.
                 </p>
               ) : (
                 <div className="timeline-line" style={styles.timeline}>
-                  {logs.map((log) => {
+                  {logsFiltrados.map((log) => {
                     const meta = getTipoMeta(log.tipo)
-
-                    const isLongText = log.descricao.length > 150
+                    const statusMeta = getStatusMeta(log.status)
+                    const isLongText =
+                      log.descricao && log.descricao.length > 120
                     const descResumo = isLongText
-                      ? log.descricao.substring(0, 150) + "..."
+                      ? log.descricao.substring(0, 120) + "..."
                       : log.descricao
 
                     return (
@@ -429,17 +719,40 @@ export default function DiarioOperacoes() {
                                 >
                                   {log.tipo}
                                 </span>
+                                <span
+                                  style={{
+                                    ...styles.badge,
+                                    backgroundColor: statusMeta.bg,
+                                    color: statusMeta.cor,
+                                  }}
+                                >
+                                  {statusMeta.label}
+                                </span>
                                 <span style={styles.logDate}>
                                   {log.data_evento}
                                 </span>
                               </div>
                               <h4 style={styles.logTitle}>{log.titulo}</h4>
-                              <div style={styles.logContact}>
-                                <Users size={12} /> {log.contato}
+                              <div
+                                style={{
+                                  display: "flex",
+                                  gap: "15px",
+                                  flexWrap: "wrap",
+                                }}
+                              >
+                                <div style={styles.logContact}>
+                                  <Users size={12} /> {log.contato}{" "}
+                                  {log.docente_id ? "(Cadastrado)" : ""}
+                                </div>
+                                {log.participantes > 1 && (
+                                  <div style={styles.logContact}>
+                                    <Users size={12} color="#10B981" />{" "}
+                                    {log.participantes} Participantes
+                                  </div>
+                                )}
                               </div>
                             </div>
 
-                            {/* BOTÕES DE AÇÃO: REDIRECIONAR PARA DETALHES E EXCLUIR */}
                             <div style={styles.actionButtons}>
                               <button
                                 onClick={() =>
@@ -449,14 +762,14 @@ export default function DiarioOperacoes() {
                                   )
                                 }
                                 style={styles.viewBtn}
-                                title="Ver Detalhes do Registro"
+                                title="Ver Detalhes"
                               >
                                 <Eye size={18} />
                               </button>
                               <button
                                 onClick={() => handleDelete(log.id)}
                                 style={styles.deleteBtn}
-                                title="Excluir Registro"
+                                title="Excluir"
                               >
                                 <Trash2 size={18} />
                               </button>
@@ -464,6 +777,53 @@ export default function DiarioOperacoes() {
                           </div>
 
                           <p style={styles.logDesc}>{descResumo}</p>
+
+                          {/* Exibição das Tags */}
+                          {log.tags && (
+                            <div
+                              style={{
+                                marginTop: "10px",
+                                display: "flex",
+                                gap: "6px",
+                                flexWrap: "wrap",
+                              }}
+                            >
+                              {log.tags.split(",").map((t, idx) => (
+                                <span
+                                  key={idx}
+                                  style={{
+                                    fontSize: "10px",
+                                    backgroundColor: "#E2E8F0",
+                                    color: "#475569",
+                                    padding: "3px 8px",
+                                    borderRadius: "4px",
+                                    fontWeight: "700",
+                                  }}
+                                >
+                                  #{t.trim()}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+
+                          {/* Exibição dos próximos passos na timeline */}
+                          {log.proximos_passos &&
+                            log.status !== "Resolvido" && (
+                              <div
+                                style={{
+                                  marginTop: "12px",
+                                  backgroundColor: "#FFFBEB",
+                                  padding: "10px",
+                                  borderRadius: "8px",
+                                  borderLeft: "3px solid #F59E0B",
+                                  fontSize: "13px",
+                                  color: "#92400E",
+                                }}
+                              >
+                                <strong>Próximos Passos:</strong>{" "}
+                                {log.proximos_passos}
+                              </div>
+                            )}
 
                           {log.foto && (
                             <div
@@ -484,12 +844,12 @@ export default function DiarioOperacoes() {
                                     marginTop: "4px",
                                   }}
                                 >
-                                  Ver Detalhes
+                                  Ver Anexo
                                 </span>
                               </div>
                               <img
                                 src={log.foto}
-                                alt="Anexo da Reunião"
+                                alt="Anexo"
                                 style={styles.fotoThumbTimeline}
                               />
                             </div>
@@ -627,6 +987,7 @@ const styles = {
     color: "#1E293B",
     backgroundColor: "#FFFFFF",
     boxSizing: "border-box",
+    cursor: "pointer",
   },
   textarea: {
     width: "100%",
@@ -637,10 +998,44 @@ const styles = {
     outline: "none",
     color: "#1E293B",
     backgroundColor: "#FFFFFF",
-    minHeight: "120px",
+    minHeight: "90px",
     resize: "vertical",
     fontFamily: "inherit",
     boxSizing: "border-box",
+  },
+
+  autocompleteDropdown: {
+    position: "absolute",
+    top: "100%",
+    left: 0,
+    right: 0,
+    backgroundColor: "white",
+    border: "1px solid #E2E8F0",
+    borderRadius: "8px",
+    marginTop: "4px",
+    zIndex: 10,
+    boxShadow: "0 10px 15px -3px rgba(0,0,0,0.1)",
+    overflow: "hidden",
+  },
+  autocompleteItem: {
+    padding: "10px 15px",
+    cursor: "pointer",
+    fontSize: "14px",
+    color: "#1E293B",
+    borderBottom: "1px solid #F1F5F9",
+    transition: "background 0.2s",
+  },
+
+  tagChip: {
+    padding: "6px 12px",
+    borderRadius: "20px",
+    fontSize: "12px",
+    fontWeight: "600",
+    cursor: "pointer",
+    border: "1px solid",
+    transition: "all 0.2s",
+    display: "flex",
+    alignItems: "center",
   },
 
   uploadBtn: {
@@ -660,7 +1055,6 @@ const styles = {
     width: "100%",
     boxSizing: "border-box",
   },
-
   submitBtn: {
     display: "flex",
     alignItems: "center",
@@ -694,13 +1088,12 @@ const styles = {
     textAlign: "center",
     marginTop: "40px",
   },
-  timeline: { position: "relative", marginTop: "20px" },
+  timeline: { position: "relative", marginTop: "10px" },
   timelineItem: {
     position: "relative",
     paddingLeft: "45px",
     paddingBottom: "30px",
   },
-
   timelineIcon: {
     position: "absolute",
     left: "4px",
@@ -731,7 +1124,7 @@ const styles = {
   logMetaRow: {
     display: "flex",
     alignItems: "center",
-    gap: "10px",
+    gap: "8px",
     marginBottom: "8px",
     flexWrap: "wrap",
   },
@@ -754,9 +1147,9 @@ const styles = {
     display: "flex",
     alignItems: "center",
     gap: "4px",
-    fontSize: "13px",
+    fontSize: "12px",
     color: "#64748B",
-    fontWeight: "500",
+    fontWeight: "600",
   },
   logDesc: {
     margin: 0,
@@ -767,10 +1160,7 @@ const styles = {
     wordBreak: "break-word",
   },
 
-  actionButtons: {
-    display: "flex",
-    gap: "5px",
-  },
+  actionButtons: { display: "flex", gap: "5px" },
   viewBtn: {
     background: "#E0F2FE",
     border: "none",

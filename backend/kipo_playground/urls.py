@@ -70,11 +70,12 @@ urlpatterns = [
     # --- Gestão de Gamificação e Hall da Fama ---
     path('api/admin/gamificacao/', views.api_admin_gamificacao, name='admin_gamificacao'),
     path('api/admin/gamificacao/<int:pk>/delete/', views.api_admin_delete_badge, name='admin_delete_badge'),
-    path('api/admin/gamificacao/atribuir/', views.api_admin_atribuir_badge, name='admin_atribuir_badge'), # <--- ROTA ADICIONADA AQUI
+    path('api/admin/gamificacao/atribuir/', views.api_admin_atribuir_badge, name='admin_atribuir_badge'),
 
     # --- Diário de Operações (CRM Interno) ---
     path('api/admin/diario/', views.DiarioOperacaoView.as_view(), name='diario-list-create'),
     path('api/admin/diario/<int:pk>/delete/', views.DiarioOperacaoDeleteView.as_view(), name='diario-delete'),
+    path('api/admin/diario/<int:pk>/notas/', views.DiarioNotaView.as_view(), name='diario-notas'),
     
     # --- Configurações Gerais ---
     path('api/admin/configuracoes/', views.ConfiguracoesGeraisView.as_view(), name='admin_configuracoes'),

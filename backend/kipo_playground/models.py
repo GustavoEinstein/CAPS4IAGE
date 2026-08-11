@@ -187,6 +187,17 @@ class Topico(models.Model):
     categoria = models.CharField(max_length=50, choices=CATEGORIAS_CHOICES, default='Geral')
     resolvido = models.BooleanField(default=False) 
     arquivo = models.FileField(upload_to='forum_anexos/', blank=True, null=True)
+    
+    # Campo adicionado para referenciar a produção base
+    producao_base = models.ForeignKey(
+        Producao, 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True, 
+        related_name='topicos_referencia',
+        help_text="Indica se este tópico se baseia em alguma produção aprovada da comunidade."
+    )
+    
     data_criacao = models.DateTimeField(auto_now_add=True)
 
 class Comentario(models.Model):
@@ -207,11 +218,26 @@ class DiarioOperacao(models.Model):
         ('Outros', 'Outros'),
     ]
     
+    STATUS_CHOICES = [
+        ('Pendente', 'Pendente'),
+        ('Em andamento', 'Em andamento'),
+        ('Resolvido', 'Resolvido'),
+    ]
+    
     titulo = models.CharField(max_length=255)
     tipo = models.CharField(max_length=50, choices=TIPO_CHOICES)
-    contato = models.CharField(max_length=255)
+    status = models.CharField(max_length=50, choices=STATUS_CHOICES, default='Resolvido')
+    
+    # Vinculo com o professor (opcional) ou nome livre
+    docente = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='interacoes_diario')
+    contato = models.CharField(max_length=255, blank=True, null=True) 
+    
     data_evento = models.DateField()
     descricao = models.TextField()
+    proximos_passos = models.TextField(blank=True, null=True)
+    tags = models.CharField(max_length=255, blank=True, null=True) 
+    participantes = models.IntegerField(default=1)
+    
     foto = models.ImageField(upload_to='diario_fotos/', null=True, blank=True)
     criado_em = models.DateTimeField(auto_now_add=True)
 
@@ -220,6 +246,18 @@ class DiarioOperacao(models.Model):
 
     def __str__(self):
         return f"{self.data_evento} - {self.titulo}"
+
+class NotaDiario(models.Model):
+    diario = models.ForeignKey(DiarioOperacao, on_delete=models.CASCADE, related_name='notas')
+    autor = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    texto = models.TextField()
+    criado_em = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['criado_em']
+
+    def __str__(self):
+        return f"Nota em {self.diario.titulo}"
 
 # ============================================================================
 # 8. CONFIGURAÇÕES GERAIS DO SISTEMA

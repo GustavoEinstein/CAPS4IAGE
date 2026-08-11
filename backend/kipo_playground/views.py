@@ -46,7 +46,7 @@ from rest_framework.throttling import ScopedRateThrottle
 # Importação dos modelos (Incluindo ConfiguracaoXP, Escola e Disciplina)
 from .models import (
     Profile, Producao, Avaliacao, Topico, Comentario, RegistroXP, 
-    Conquista, ConquistaUsuario, DiarioOperacao, ConfiguracaoXP, Escola, Disciplina
+    Conquista, ConquistaUsuario, DiarioOperacao, NotaDiario, ConfiguracaoXP, Escola, Disciplina
 )
 
 
@@ -797,6 +797,16 @@ def api_forum_detalhe_comentarios(request, pk):
             })
 
         arquivo_url = request.build_absolute_uri(topico.arquivo.url) if topico.arquivo else None
+        
+        # --- NOVA LÓGICA DE PRODUÇÃO BASE ---
+        dados_base = None
+        if topico.producao_base:
+            dados_base = {
+                'id': topico.producao_base.id,
+                'titulo': topico.producao_base.titulo,
+                'disciplina': topico.producao_base.disciplina,
+                'autor': topico.producao_base.user.first_name or topico.producao_base.user.username
+            }
 
         dados_topico = {
             'id': topico.id,
@@ -808,6 +818,7 @@ def api_forum_detalhe_comentarios(request, pk):
             'is_dono_topico': topico.autor == request.user,
             'data': timezone.localtime(topico.data_criacao).strftime('%d/%m/%Y %H:%M'),
             'arquivo': arquivo_url,
+            'producao_base': dados_base,  # <--- ADICIONADO AQUI
             'comentarios': lista_comentarios
         }
         return Response(dados_topico)
@@ -876,18 +887,29 @@ def api_forum_topicos(request):
         titulo = request.data.get('titulo')
         conteudo = request.data.get('conteudo')
         categoria = request.data.get('categoria', 'Geral')
+        producao_base_id = request.data.get('producao_base_id') # <--- ADICIONADO AQUI
         
         arquivo_enviado = request.FILES.get('arquivo') 
 
         if not titulo or not conteudo:
             return Response({'erro': 'Título e conteúdo são obrigatórios.'}, status=400)
+            
+        # --- NOVA LÓGICA DE PRODUÇÃO BASE ---
+        producao_base = None
+        if producao_base_id:
+            try:
+                # Garante que só pode referenciar aprovadas
+                producao_base = Producao.objects.get(id=producao_base_id, status='Aprovado')
+            except Producao.DoesNotExist:
+                pass
 
         Topico.objects.create(
             titulo=titulo,
             conteudo=conteudo,
             categoria=categoria,
             autor=request.user,
-            arquivo=arquivo_enviado 
+            arquivo=arquivo_enviado,
+            producao_base=producao_base # <--- ADICIONADO AQUI
         )
 
         config_xp, _ = ConfiguracaoXP.objects.get_or_create(pk=1)
@@ -1125,23 +1147,25 @@ def api_admin_atribuir_badge(request):
 # DIÁRIO DE OPERAÇÕES (GET e POST)
 # ============================================================================
 class DiarioOperacaoView(APIView):
-    # Trava de segurança: Apenas superusuários do Django podem acessar
     permission_classes = [IsAdminUser]
 
     def get(self, request):
-        logs = DiarioOperacao.objects.all()
+        logs = DiarioOperacao.objects.all().select_related('docente')
         dados = []
         
-        # Traduzindo os dados do banco para JSON manualmente
         for log in logs:
             dados.append({
                 'id': log.id,
                 'titulo': log.titulo,
                 'tipo': log.tipo,
-                'contato': log.contato,
-                # No GET, a data vem do banco como um objeto 'date', então formatamos
+                'status': log.status,
+                'contato': log.contato or (log.docente.first_name if log.docente else 'Não informado'),
+                'docente_id': log.docente.id if log.docente else None,
                 'data_evento': log.data_evento.strftime('%Y-%m-%d') if log.data_evento else None,
                 'descricao': log.descricao,
+                'proximos_passos': log.proximos_passos,
+                'tags': log.tags,
+                'participantes': log.participantes,
                 'foto': request.build_absolute_uri(log.foto.url) if log.foto else None,
             })
         return Response(dados)
@@ -1149,34 +1173,54 @@ class DiarioOperacaoView(APIView):
     def post(self, request):
         titulo = request.data.get('titulo')
         tipo = request.data.get('tipo')
+        status_registro = request.data.get('status', 'Resolvido')
+        docente_id = request.data.get('docente_id')
         contato = request.data.get('contato')
-        data_evento = request.data.get('data_evento') # Recebemos como texto (String)
+        data_evento = request.data.get('data_evento')
         descricao = request.data.get('descricao')
+        proximos_passos = request.data.get('proximos_passos')
+        tags = request.data.get('tags')
+        participantes = request.data.get('participantes', 1)
         
-        # Como o React envia via FormData, a foto vem no request.FILES
         foto = request.FILES.get('foto')
 
-        if not all([titulo, tipo, contato, data_evento, descricao]):
+        if not all([titulo, tipo, data_evento, descricao]):
             return Response({'erro': 'Campos obrigatórios faltando.'}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Criando o registro no banco de dados
+        # Buscar o usuário caso um ID tenha sido selecionado
+        docente = None
+        if docente_id:
+            try:
+                docente = User.objects.get(id=docente_id)
+            except User.DoesNotExist:
+                pass
+
         novo_log = DiarioOperacao.objects.create(
             titulo=titulo,
             tipo=tipo,
+            status=status_registro,
+            docente=docente,
             contato=contato,
             data_evento=data_evento,
             descricao=descricao,
+            proximos_passos=proximos_passos,
+            tags=tags,
+            participantes=participantes,
             foto=foto
         )
 
-        # Devolvendo o item criado para o React já colocar no topo da tela
         return Response({
             'id': novo_log.id,
             'titulo': novo_log.titulo,
             'tipo': novo_log.tipo,
-            'contato': novo_log.contato,
+            'status': novo_log.status,
+            'contato': novo_log.contato or (novo_log.docente.first_name if novo_log.docente else 'Não informado'),
+            'docente_id': novo_log.docente.id if novo_log.docente else None,
             'data_evento': data_evento, 
             'descricao': novo_log.descricao,
+            'proximos_passos': novo_log.proximos_passos,
+            'tags': novo_log.tags,
+            'participantes': novo_log.participantes,
             'foto': request.build_absolute_uri(novo_log.foto.url) if novo_log.foto else None,
         }, status=status.HTTP_201_CREATED)
 
@@ -1190,6 +1234,65 @@ class DiarioOperacaoDeleteView(APIView):
             return Response(status=status.HTTP_204_NO_CONTENT)
         except DiarioOperacao.DoesNotExist:
             return Response({'erro': 'Registro não encontrado'}, status=status.HTTP_404_NOT_FOUND)
+
+class DiarioNotaView(APIView):
+    permission_classes = [IsAdminUser]
+
+    def get(self, request, pk):
+        try:
+            diario = DiarioOperacao.objects.get(pk=pk)
+        except DiarioOperacao.DoesNotExist:
+            return Response({'erro': 'Registro não encontrado'}, status=status.HTTP_404_NOT_FOUND)
+        
+        # Puxa todas as anotações feitas neste atendimento
+        notas = diario.notas.all()
+        lista_notas = [{
+            'id': n.id,
+            'autor': n.autor.first_name or n.autor.username if n.autor else 'Sistema',
+            'texto': n.texto,
+            'criado_em': timezone.localtime(n.criado_em).strftime('%d/%m/%Y %H:%M')
+        } for n in notas]
+
+        # Puxa os dados completos do chamado
+        dados_diario = {
+            'id': diario.id,
+            'titulo': diario.titulo,
+            'tipo': diario.tipo,
+            'status': diario.status,
+            'contato': diario.contato or (diario.docente.first_name if diario.docente else 'Não informado'),
+            'data_evento': diario.data_evento.strftime('%Y-%m-%d') if diario.data_evento else None,
+            'descricao': diario.descricao,
+            'proximos_passos': diario.proximos_passos,
+            'tags': diario.tags,
+            'participantes': diario.participantes,
+            'foto': request.build_absolute_uri(diario.foto.url) if diario.foto else None,
+        }
+        
+        return Response({'diario': dados_diario, 'notas': lista_notas})
+
+    def post(self, request, pk):
+        try:
+            diario = DiarioOperacao.objects.get(pk=pk)
+        except DiarioOperacao.DoesNotExist:
+            return Response({'erro': 'Registro não encontrado'}, status=status.HTTP_404_NOT_FOUND)
+        
+        texto = request.data.get('texto')
+        novo_status = request.data.get('status') 
+
+        # Atualiza o status do chamado se for alterado
+        if novo_status and novo_status != diario.status:
+            diario.status = novo_status
+            diario.save()
+
+        # Cria a nova anotação/comentário
+        if texto:
+            NotaDiario.objects.create(
+                diario=diario,
+                autor=request.user,
+                texto=texto
+            )
+        
+        return Response({'mensagem': 'Ticket atualizado com sucesso!'})
 
 # ============================================================================
 # CONFIGURAÇÕES GERAIS (XP, Escolas e Disciplinas)
