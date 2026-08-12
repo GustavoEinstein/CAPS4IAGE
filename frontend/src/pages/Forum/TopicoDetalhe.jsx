@@ -50,6 +50,10 @@ export default function TopicoDetalhe() {
     if (!novoComentario.trim()) return
     try {
       await api.post(`api/forum/topicos/${id}/`, { conteudo: novoComentario })
+
+      // --- AVISANDO O RADAR DE NOTIFICAÇÕES (XP INSTANTÂNEO) ---
+      window.dispatchEvent(new Event("perfilAtualizado"))
+
       setNovoComentario("")
       carregarDetalhes()
     } catch (error) {
@@ -151,11 +155,11 @@ export default function TopicoDetalhe() {
 
   const getCategoriaStyle = (cat) => {
     const catStyles = {
-      "Dúvida BNCC": { bg: "#DBEAFE", color: "#1E40AF" },
-      Metodologia: { bg: "#FEF3C7", color: "#B45309" },
-      "Uso de IA": { bg: "#F3E8FF", color: "#6B21A8" },
-      Sugestão: { bg: "#DCFCE7", color: "#047857" },
-      Geral: { bg: "#F1F5F9", color: "#475569" },
+      "Dúvida BNCC": { bg: "var(--bg-info)", color: "var(--text-info)" },
+      Metodologia: { bg: "var(--bg-warning)", color: "var(--text-warning)" },
+      "Uso de IA": { bg: "rgba(168, 85, 247, 0.1)", color: "#C084FC" },
+      Sugestão: { bg: "var(--bg-success)", color: "var(--text-success)" },
+      Geral: { bg: "var(--bg-alt)", color: "var(--text-secondary)" },
     }
     return catStyles[cat] || catStyles["Geral"]
   }
@@ -164,7 +168,7 @@ export default function TopicoDetalhe() {
     return (
       <div style={styles.loadingContainer}>
         <Loader2 size={32} color="#2563EB" className="spin" />
-        <p style={{ marginTop: "10px", color: "#64748B" }}>
+        <p style={{ marginTop: "10px", color: "var(--text-muted)" }}>
           Carregando discussão...
         </p>
         <style>{`@keyframes spin { 100% { transform: rotate(360deg); } } .spin { animation: spin 1s linear infinite; }`}</style>
@@ -251,7 +255,7 @@ export default function TopicoDetalhe() {
                 display: "flex",
                 alignItems: "center",
                 gap: "6px",
-                color: "#2563EB",
+                color: "var(--text-info)",
                 fontWeight: "800",
                 fontSize: "12px",
                 textTransform: "uppercase",
@@ -263,14 +267,14 @@ export default function TopicoDetalhe() {
             <div
               style={{
                 fontWeight: "700",
-                color: "#0F172A",
+                color: "var(--text-primary)",
                 fontSize: "16px",
                 marginBottom: "4px",
               }}
             >
               {topico.producao_base.titulo}
             </div>
-            <div style={{ fontSize: "14px", color: "#64748B" }}>
+            <div style={{ fontSize: "14px", color: "var(--text-muted)" }}>
               {topico.producao_base.disciplina} • Por{" "}
               {topico.producao_base.autor}
             </div>
@@ -313,10 +317,12 @@ export default function TopicoDetalhe() {
               key={comentario.id}
               style={{
                 ...styles.commentCard,
-                borderColor: comentario.is_autor_topico ? "#BFDBFE" : "#E2E8F0",
+                borderColor: comentario.is_autor_topico
+                  ? "var(--border-info)"
+                  : "var(--border-color)",
                 backgroundColor: comentario.is_autor_topico
-                  ? "#EFF6FF"
-                  : "#F8FAFC",
+                  ? "var(--bg-info)"
+                  : "var(--bg-card)",
               }}
             >
               <div style={styles.commentHeader}>
@@ -325,8 +331,10 @@ export default function TopicoDetalhe() {
                     ...styles.avatarMini,
                     backgroundColor: comentario.is_autor_topico
                       ? "#2563EB"
-                      : "#E2E8F0",
-                    color: comentario.is_autor_topico ? "white" : "#475569",
+                      : "var(--bg-alt)",
+                    color: comentario.is_autor_topico
+                      ? "white"
+                      : "var(--text-secondary)",
                   }}
                 >
                   {commentInitial}
@@ -400,7 +408,7 @@ const styles = {
     gap: "6px",
     background: "none",
     border: "none",
-    color: "#64748B",
+    color: "var(--text-muted)",
     cursor: "pointer",
     marginBottom: "25px",
     fontWeight: "600",
@@ -410,10 +418,10 @@ const styles = {
 
   // Tópico Principal
   topicCard: {
-    backgroundColor: "#fff",
+    backgroundColor: "var(--bg-card)",
     padding: "35px",
     borderRadius: "12px",
-    border: "1px solid #E2E8F0",
+    border: "1px solid var(--border-color)",
     marginBottom: "40px",
     boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05)",
   },
@@ -444,15 +452,15 @@ const styles = {
     gap: "4px",
     fontSize: "11px",
     fontWeight: "700",
-    color: "#059669",
-    backgroundColor: "#D1FAE5",
+    color: "var(--text-success)",
+    backgroundColor: "var(--bg-success)",
     padding: "4px 12px",
     borderRadius: "20px",
     textTransform: "uppercase",
   },
   topicTitle: {
     margin: "0 0 15px 0",
-    color: "#0F172A",
+    color: "var(--text-primary)",
     fontSize: "28px",
     fontWeight: "900",
     lineHeight: "1.2",
@@ -461,14 +469,14 @@ const styles = {
     display: "flex",
     alignItems: "center",
     gap: "10px",
-    color: "#64748B",
+    color: "var(--text-muted)",
     fontSize: "14px",
   },
   avatarMini: {
     width: "28px",
     height: "28px",
-    backgroundColor: "#E2E8F0",
-    color: "#475569",
+    backgroundColor: "var(--bg-alt)",
+    color: "var(--text-secondary)",
     borderRadius: "50%",
     display: "flex",
     alignItems: "center",
@@ -481,9 +489,9 @@ const styles = {
   actionButtons: { display: "flex", gap: "10px" },
   btnResolve: {
     padding: "8px 14px",
-    backgroundColor: "#F0FDF4",
-    color: "#059669",
-    border: "1px solid #A7F3D0",
+    backgroundColor: "var(--bg-success)",
+    color: "var(--text-success)",
+    border: "1px solid var(--border-success)",
     borderRadius: "8px",
     cursor: "pointer",
     fontWeight: "700",
@@ -495,9 +503,9 @@ const styles = {
   },
   btnDelete: {
     padding: "8px 14px",
-    backgroundColor: "#FEF2F2",
-    color: "#DC2626",
-    border: "1px solid #FECACA",
+    backgroundColor: "var(--bg-danger)",
+    color: "var(--text-danger)",
+    border: "1px solid var(--border-danger)",
     borderRadius: "8px",
     cursor: "pointer",
     fontWeight: "700",
@@ -510,8 +518,8 @@ const styles = {
 
   // Prática Base (NOVO ESTILO)
   basePracticeBox: {
-    backgroundColor: "#F0F9FF",
-    border: "1px dashed #BAE6FD",
+    backgroundColor: "var(--bg-info)",
+    border: "1px dashed var(--border-info)",
     borderRadius: "10px",
     padding: "18px 20px",
     marginTop: "25px",
@@ -519,20 +527,20 @@ const styles = {
 
   // Conteúdo
   markdownContent: {
-    color: "#334155",
+    color: "var(--text-secondary)",
     lineHeight: "1.8",
     marginTop: "25px",
-    borderTop: "1px solid #E2E8F0",
+    borderTop: "1px solid var(--border-color)",
     paddingTop: "25px",
     fontSize: "16px",
   },
   attachmentBox: {
     marginTop: "30px",
     padding: "20px",
-    backgroundColor: "#F8FAFC",
+    backgroundColor: "var(--bg-main)",
     borderRadius: "10px",
     display: "inline-block",
-    border: "1px dashed #CBD5E1",
+    border: "1px dashed var(--border-color)",
   },
   btnDownload: {
     display: "flex",
@@ -550,7 +558,7 @@ const styles = {
 
   // Comentários
   commentsSectionTitle: {
-    color: "#1E293B",
+    color: "var(--text-primary)",
     marginBottom: "20px",
     fontSize: "20px",
     fontWeight: "800",
@@ -568,45 +576,49 @@ const styles = {
     gap: "12px",
     marginBottom: "12px",
   },
-  commentAuthor: { fontWeight: "700", color: "#1E293B", fontSize: "15px" },
+  commentAuthor: {
+    fontWeight: "700",
+    color: "var(--text-primary)",
+    fontSize: "15px",
+  },
   badgeAuthor: {
     fontSize: "10px",
     fontWeight: "800",
-    backgroundColor: "#BFDBFE",
-    color: "#1D4ED8",
+    backgroundColor: "var(--bg-info)",
+    color: "var(--text-info)",
     padding: "2px 8px",
     borderRadius: "12px",
     letterSpacing: "0.5px",
   },
-  commentTime: { fontSize: "12px", color: "#94A3B8" },
+  commentTime: { fontSize: "12px", color: "var(--text-muted)" },
   commentBody: {
     margin: 0,
-    color: "#475569",
+    color: "var(--text-secondary)",
     lineHeight: "1.6",
     fontSize: "15px",
   },
 
   // Área de Resposta
   resolvedNotice: {
-    backgroundColor: "#F0FDF4",
+    backgroundColor: "var(--bg-success)",
     padding: "30px",
     borderRadius: "12px",
     textAlign: "center",
-    color: "#065F46",
+    color: "var(--text-success)",
     fontWeight: "600",
-    border: "1px solid #A7F3D0",
+    border: "1px solid var(--border-success)",
   },
   commentForm: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "var(--bg-card)",
     padding: "25px",
     borderRadius: "12px",
-    border: "1px solid #E2E8F0",
+    border: "1px solid var(--border-color)",
     boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05)",
   },
   formTitle: {
     marginTop: 0,
     marginBottom: "15px",
-    color: "#0F172A",
+    color: "var(--text-primary)",
     fontSize: "18px",
     fontWeight: "800",
   },
@@ -616,15 +628,15 @@ const styles = {
     width: "100%",
     padding: "15px",
     borderRadius: "10px",
-    border: "1px solid #CBD5E1",
+    border: "1px solid var(--border-color)",
     marginBottom: "15px",
     fontFamily: "inherit",
     fontSize: "15px",
     outline: "none",
     resize: "vertical",
     boxSizing: "border-box",
-    backgroundColor: "#FFFFFF",
-    color: "#1E293B",
+    backgroundColor: "var(--input-bg)",
+    color: "var(--input-text)",
   },
 
   btnSubmitComment: {

@@ -37,15 +37,10 @@ import {
 const DetalharProducao = () => {
   const { id } = useParams()
   const navigate = useNavigate()
-
-  // Pegando a informação se a tela for pequena (Celular) do Dashboard (via context)
   const context = useOutletContext()
   const isMobile = context ? context.isMobile : false
-
-  // PEGANDO A ETIQUETA SECRETA DA URL
   const location = useLocation()
   const fromHistory = location.state?.fromHistory || false
-
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
 
@@ -76,7 +71,6 @@ const DetalharProducao = () => {
         const response = await api.get(`api/production/${id}/`)
         setData(response.data)
       } catch (error) {
-        console.error("Erro ao carregar:", error)
         alert("Erro ao carregar a produção.")
         navigate("/dashboard")
       } finally {
@@ -88,7 +82,13 @@ const DetalharProducao = () => {
 
   if (loading)
     return (
-      <div style={{ padding: "50px", textAlign: "center", color: "#90A4AE" }}>
+      <div
+        style={{
+          padding: "50px",
+          textAlign: "center",
+          color: "var(--text-muted)",
+        }}
+      >
         Carregando detalhes...
       </div>
     )
@@ -102,23 +102,6 @@ const DetalharProducao = () => {
     data.status &&
     (data.status.toLowerCase().includes("aprovado") ||
       data.status.toLowerCase().includes("publicado"))
-
-  const getTheme = (disciplina) => {
-    const disc = disciplina ? disciplina.trim() : "Outra"
-    const themes = {
-      História: { main: "#7B1FA2", bg: "#F3E5F5" },
-      Geografia: { main: "#E65100", bg: "#FFF3E0" },
-      Filosofia: { main: "#455A64", bg: "#ECEFF1" },
-      Sociologia: { main: "#5D4037", bg: "#EFEBE9" },
-      Português: { main: "#1565C0", bg: "#E3F2FD" },
-      Matemática: { main: "#C2185B", bg: "#FCE4EC" },
-      Ciências: { main: "#2E7D32", bg: "#E8F5E9" },
-      Default: { main: "#1565C0", bg: "#E3F2FD" },
-    }
-    return themes[disc] || themes["Default"]
-  }
-  const theme = getTheme(data.disciplina)
-
   const podeVerParecer = data.is_admin || (data.is_revisor && fromHistory)
 
   return (
@@ -128,11 +111,9 @@ const DetalharProducao = () => {
           <ArrowLeft size={18} /> Voltar
         </button>
 
-        {/* AJUSTE NA GRADE PARA RESPONSIVIDADE */}
         <div
           style={{ ...styles.grid, flexDirection: isMobile ? "column" : "row" }}
         >
-          {/* EXIBIÇÃO EM CELULAR: A Barra Lateral de Ações (Aprovado/Botão Download) sobe e aparece primeiro! */}
           {isMobile && (
             <div
               style={{
@@ -152,7 +133,6 @@ const DetalharProducao = () => {
             </div>
           )}
 
-          {/* COLUNA ESQUERDA: O Material Técnico */}
           <div style={styles.columnContent}>
             <div style={styles.materialCard}>
               <div style={styles.headerSection}>
@@ -160,8 +140,8 @@ const DetalharProducao = () => {
                   <span
                     style={{
                       ...styles.badge,
-                      backgroundColor: theme.bg,
-                      color: theme.main,
+                      backgroundColor: "var(--bg-info)",
+                      color: "var(--text-info)",
                     }}
                   >
                     {data.disciplina}
@@ -181,19 +161,19 @@ const DetalharProducao = () => {
 
               {data.producao_base && (
                 <div style={styles.derivationBanner}>
-                  <Bookmark size={20} color="#1565C0" />
+                  <Bookmark size={20} color="var(--text-info)" />
                   <span
                     style={{
                       fontSize: "14px",
-                      color: "#1A237E",
+                      color: "var(--text-info)",
                       lineHeight: "1.4",
                     }}
                   >
-                    Inspirada em: <br />{" "}
+                    Inspirada em: <br />
                     <strong>
                       <a
                         href={`/dashboard/producao/${data.producao_base.id}`}
-                        style={{ color: "#1565C0" }}
+                        style={{ color: "var(--text-info)" }}
                       >
                         {data.producao_base.titulo}
                       </a>
@@ -205,10 +185,12 @@ const DetalharProducao = () => {
               <div style={styles.techSheet}>
                 <div style={styles.techItem}>
                   <div style={styles.iconCircle}>
-                    <Wrench size={18} color={theme.main} />
+                    <Wrench size={18} color="var(--text-info)" />
                   </div>
                   <div>
-                    <span style={{ ...styles.techLabel, color: theme.main }}>
+                    <span
+                      style={{ ...styles.techLabel, color: "var(--text-info)" }}
+                    >
                       Metodologia
                     </span>
                     <span style={styles.techValue}>
@@ -218,10 +200,12 @@ const DetalharProducao = () => {
                 </div>
                 <div style={styles.techItem}>
                   <div style={styles.iconCircle}>
-                    <Clock size={18} color={theme.main} />
+                    <Clock size={18} color="var(--text-info)" />
                   </div>
                   <div>
-                    <span style={{ ...styles.techLabel, color: theme.main }}>
+                    <span
+                      style={{ ...styles.techLabel, color: "var(--text-info)" }}
+                    >
                       Duração
                     </span>
                     <span style={styles.techValue}>{data.duracao || "-"}</span>
@@ -229,10 +213,12 @@ const DetalharProducao = () => {
                 </div>
                 <div style={styles.techItem}>
                   <div style={styles.iconCircle}>
-                    <Package size={18} color={theme.main} />
+                    <Package size={18} color="var(--text-info)" />
                   </div>
                   <div>
-                    <span style={{ ...styles.techLabel, color: theme.main }}>
+                    <span
+                      style={{ ...styles.techLabel, color: "var(--text-info)" }}
+                    >
                       Recursos
                     </span>
                     <span style={styles.techValue}>
@@ -265,11 +251,11 @@ const DetalharProducao = () => {
                 <div
                   style={{
                     ...styles.bnccBox,
-                    backgroundColor: "#E3F2FD",
-                    borderLeft: "4px solid #1565C0",
+                    backgroundColor: "var(--bg-info)",
+                    borderLeft: "4px solid var(--text-info)",
                   }}
                 >
-                  <p style={{ ...styles.bnccText, color: "#0D47A1" }}>
+                  <p style={{ ...styles.bnccText, color: "var(--text-info)" }}>
                     {data.bncc_computacao || "Nenhuma habilidade registrada."}
                   </p>
                 </div>
@@ -286,24 +272,23 @@ const DetalharProducao = () => {
 
               <div style={styles.section}>
                 <h3 style={styles.sectionTitle}>
-                  <Lightbulb size={20} color="#F57C00" /> Relato de Experiência
+                  <Lightbulb size={20} color="var(--text-warning)" /> Relato de
+                  Experiência
                 </h3>
                 <div style={styles.textBody}>{data.experiencia}</div>
               </div>
 
               <div style={styles.section}>
                 <h3 style={styles.sectionTitle}>
-                  <Target size={20} color="#2E7D32" /> Resultados
+                  <Target size={20} color="var(--text-success)" /> Resultados
                 </h3>
                 <div style={styles.resultsBox}>{data.resultados}</div>
               </div>
 
-              {/* O COMPONENTE COM A TRAVA ABSOLUTA E DUPLA DE PRIVACIDADE */}
               {podeVerParecer && <ParecerTecnico producao={data} />}
             </div>
           </div>
 
-          {/* EXIBIÇÃO NO PC: A Barra lateral fica onde sempre esteve, no lado direito */}
           {!isMobile && (
             <div style={styles.columnSidebar}>
               <SidebarContent
@@ -320,14 +305,17 @@ const DetalharProducao = () => {
   )
 }
 
-// Extraímos a Sidebar para um mini-componente só para não repetirmos o código (para a lógica de trocar a posição no celular)
 const SidebarContent = ({ data, isApproved, isRejected, handleDownload }) => {
   return (
     <div style={styles.sidebarCard}>
       <h3 style={styles.sidebarTitle}>Status do Material</h3>
       {isApproved && (
         <div style={styles.statusBoxApproved}>
-          <ShieldCheck size={24} color="#2E7D32" style={{ flexShrink: 0 }} />
+          <ShieldCheck
+            size={24}
+            color="var(--text-success)"
+            style={{ flexShrink: 0 }}
+          />
           <div>
             <span style={styles.statusTitleApproved}>APROVADO</span>
             <p style={styles.statusDesc}>Validado pela comunidade.</p>
@@ -336,7 +324,11 @@ const SidebarContent = ({ data, isApproved, isRejected, handleDownload }) => {
       )}
       {!isApproved && !isRejected && (
         <div style={styles.statusBoxPending}>
-          <Clock size={24} color="#EF6C00" style={{ flexShrink: 0 }} />
+          <Clock
+            size={24}
+            color="var(--text-warning)"
+            style={{ flexShrink: 0 }}
+          />
           <div>
             <span style={styles.statusTitlePending}>EM ANÁLISE</span>
           </div>
@@ -372,7 +364,13 @@ const SidebarContent = ({ data, isApproved, isRejected, handleDownload }) => {
       )}
 
       {!data.arquivo && !data.link_material && (
-        <p style={{ fontSize: "13px", color: "#999", textAlign: "center" }}>
+        <p
+          style={{
+            fontSize: "13px",
+            color: "var(--text-muted)",
+            textAlign: "center",
+          }}
+        >
           Nenhum material anexado.
         </p>
       )}
@@ -385,16 +383,14 @@ const ParecerTecnico = ({ producao }) => {
     !producao ||
     !producao.avaliacoes_detalhadas ||
     producao.avaliacoes_detalhadas.length === 0
-  ) {
+  )
     return null
-  }
-
   const avaliacoes = producao.avaliacoes_detalhadas
 
   return (
     <div style={styles.ptContainer}>
       <div style={styles.ptMainHeader}>
-        <BarChart3 size={24} color="#1565C0" />
+        <BarChart3 size={24} color="var(--text-info)" />
         <div>
           <h3 style={styles.ptMainTitle}>Histórico de Revisão</h3>
           <p style={styles.ptMainSubtitle}>
@@ -406,8 +402,6 @@ const ParecerTecnico = ({ producao }) => {
         {avaliacoes.map((aval) => (
           <ReviewCard key={aval.ordem} avaliacao={aval} />
         ))}
-
-        {/* GHOST CARD APENAS PARA DONO E ADMIN QUANDO SÓ TEM 1 AVALIAÇÃO */}
         {producao.total_avaliacoes === 1 &&
           (producao.is_dono || producao.is_admin) &&
           !producao.status.toLowerCase().includes("rejeitado") && <GhostCard />}
@@ -471,7 +465,7 @@ const GhostCard = () => (
   <div style={styles.gcCard}>
     <div style={styles.gcHeader}>
       <div style={styles.gcTitle}>
-        <Clock size={22} color="#90A4AE" />
+        <Clock size={22} color="var(--text-muted)" />
         <span>AGUARDANDO 2º AVALIADOR</span>
       </div>
     </div>
@@ -491,7 +485,7 @@ const ScoreItem = ({ label, valor }) => (
         <Star
           key={star}
           size={12}
-          fill={star <= valor ? "#EF5350" : "#E0E0E0"}
+          fill={star <= valor ? "var(--text-danger)" : "var(--border-color)"}
           color="transparent"
         />
       ))}
@@ -502,7 +496,7 @@ const ScoreItem = ({ label, valor }) => (
 
 const styles = {
   fullPageWrapper: {
-    backgroundColor: "#F0F2F5",
+    backgroundColor: "var(--bg-main)",
     minHeight: "100vh",
     paddingTop: "20px",
   },
@@ -519,22 +513,22 @@ const styles = {
     border: "none",
     cursor: "pointer",
     fontSize: "14px",
-    color: "#546E7A",
+    color: "var(--text-secondary)",
     fontWeight: "700",
     marginBottom: "15px",
   },
   grid: { display: "flex", gap: "20px", alignItems: "flex-start" },
-  columnContent: { flex: 1, minWidth: "0" }, // min-width 0 é super importante pro flexbox não explodir na horizontal
-  columnSidebar: { width: "320px", position: "sticky", top: "20px" }, // Position Sticky volta pro PC, o celular a gente mata lá em cima
+  columnContent: { flex: 1, minWidth: "0" },
+  columnSidebar: { width: "320px", position: "sticky", top: "20px" },
   materialCard: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "var(--bg-card)",
     borderRadius: "12px",
     padding: "30px",
-    border: "1px solid #E0E0E0",
+    border: "1px solid var(--border-color)",
   },
   headerSection: {
     marginBottom: "20px",
-    borderBottom: "1px solid #F0F0F0",
+    borderBottom: "1px solid var(--border-color)",
     paddingBottom: "15px",
   },
   badgesRow: {
@@ -551,8 +545,8 @@ const styles = {
     textTransform: "uppercase",
   },
   badgeNeutral: {
-    backgroundColor: "#F5F5F5",
-    color: "#616161",
+    backgroundColor: "var(--bg-alt)",
+    color: "var(--text-secondary)",
     padding: "4px 10px",
     borderRadius: "6px",
     fontSize: "11px",
@@ -561,10 +555,9 @@ const styles = {
   title: {
     fontSize: "24px",
     fontWeight: "800",
-    color: "#1A237E",
+    color: "var(--text-primary)",
     margin: "0 0 8px 0",
     wordBreak: "break-word",
-    overflowWrap: "break-word",
   },
   metaRow: {
     display: "flex",
@@ -578,8 +571,8 @@ const styles = {
     alignItems: "center",
     gap: "5px",
     fontSize: "12px",
-    color: "#546E7A",
-    backgroundColor: "#F5F5F5",
+    color: "var(--text-secondary)",
+    backgroundColor: "var(--bg-alt)",
     padding: "4px 8px",
     borderRadius: "6px",
   },
@@ -588,11 +581,11 @@ const styles = {
     alignItems: "center",
     gap: "5px",
     fontSize: "12px",
-    color: "#90A4AE",
+    color: "var(--text-muted)",
   },
   derivationBanner: {
-    backgroundColor: "#E3F2FD",
-    borderLeft: "4px solid #1565C0",
+    backgroundColor: "var(--bg-info)",
+    borderLeft: "4px solid var(--text-info)",
     padding: "12px 15px",
     borderRadius: "6px",
     marginBottom: "25px",
@@ -611,7 +604,7 @@ const styles = {
     width: "32px",
     height: "32px",
     borderRadius: "50%",
-    backgroundColor: "#F5F7FA",
+    backgroundColor: "var(--bg-alt)",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
@@ -622,20 +615,19 @@ const styles = {
     fontSize: "10px",
     textTransform: "uppercase",
     fontWeight: "800",
-    color: "#90A4AE",
+    color: "var(--text-muted)",
   },
   techValue: {
     fontSize: "13px",
-    color: "#37474F",
+    color: "var(--text-primary)",
     fontWeight: "600",
     wordBreak: "break-word",
-    overflowWrap: "break-word",
   },
   section: { marginBottom: "30px" },
   sectionTitle: {
     fontSize: "16px",
     fontWeight: "800",
-    color: "#37474F",
+    color: "var(--text-primary)",
     marginBottom: "10px",
     display: "flex",
     alignItems: "center",
@@ -643,60 +635,49 @@ const styles = {
   },
 
   bnccBox: {
-    backgroundColor: "#FFF8E1",
-    borderLeft: "4px solid #FFC107",
+    backgroundColor: "var(--bg-warning)",
+    borderLeft: "4px solid var(--border-warning)",
     padding: "15px",
     borderRadius: "6px",
     marginBottom: "30px",
-    wordBreak: "break-word",
-    overflowWrap: "break-word",
   },
-
   bnccText: {
     margin: 0,
     fontSize: "15px",
-    color: "#3E2723",
+    color: "var(--text-primary)",
     lineHeight: "1.6",
-    wordBreak: "break-word",
-    overflowWrap: "break-word",
     whiteSpace: "pre-wrap",
   },
-
   promptBox: {
-    backgroundColor: "#F8FAFC",
+    backgroundColor: "var(--bg-card)",
     padding: "15px",
     borderRadius: "8px",
-    borderLeft: "4px solid #8B5CF6",
-    color: "#475569",
-    fontSize: "14px",
+    borderLeft: "4px solid var(--text-info)",
     fontStyle: "italic",
+    color: "var(--text-secondary)",
+    fontSize: "14px",
     whiteSpace: "pre-wrap",
-    wordBreak: "break-word",
-    overflowWrap: "break-word",
   },
   textBody: {
     fontSize: "15px",
     lineHeight: "1.6",
-    color: "#455A64",
+    color: "var(--text-secondary)",
     whiteSpace: "pre-wrap",
-    wordBreak: "break-word",
-    overflowWrap: "break-word",
   },
   resultsBox: {
-    backgroundColor: "#E8F5E9",
+    backgroundColor: "var(--bg-success)",
     padding: "15px",
     borderRadius: "8px",
-    border: "1px solid #C8E6C9",
-    color: "#1B5E20",
+    border: "1px solid var(--border-success)",
+    color: "var(--text-success)",
     fontSize: "14px",
     fontStyle: "italic",
-    wordBreak: "break-word",
-    overflowWrap: "break-word",
     whiteSpace: "pre-wrap",
   },
+
   sidebarCard: {
-    backgroundColor: "white",
-    border: "1px solid #E0E0E0",
+    backgroundColor: "var(--bg-card)",
+    border: "1px solid var(--border-color)",
     borderRadius: "12px",
     padding: "20px",
   },
@@ -704,8 +685,8 @@ const styles = {
     fontSize: "12px",
     textTransform: "uppercase",
     fontWeight: "800",
-    color: "#90A4AE",
-    borderBottom: "1px solid #EEE",
+    color: "var(--text-muted)",
+    borderBottom: "1px solid var(--border-color)",
     paddingBottom: "8px",
   },
   statusBoxApproved: {
@@ -713,27 +694,35 @@ const styles = {
     alignItems: "center",
     gap: "12px",
     padding: "15px",
-    backgroundColor: "#E8F5E9",
+    backgroundColor: "var(--bg-success)",
     borderRadius: "8px",
-    border: "1px solid #C8E6C9",
+    border: "1px solid var(--border-success)",
   },
   statusTitleApproved: {
     fontSize: "14px",
     fontWeight: "900",
-    color: "#2E7D32",
+    color: "var(--text-success)",
   },
   statusBoxPending: {
     display: "flex",
     alignItems: "center",
     gap: "12px",
     padding: "15px",
-    backgroundColor: "#FFF3E0",
+    backgroundColor: "var(--bg-warning)",
     borderRadius: "8px",
-    border: "1px solid #FFE0B2",
+    border: "1px solid var(--border-warning)",
   },
-  statusTitlePending: { fontSize: "14px", fontWeight: "900", color: "#EF6C00" },
-  statusDesc: { fontSize: "11px", color: "#546E7A", margin: 0 },
-  divider: { height: "1px", backgroundColor: "#EEE", margin: "20px 0" },
+  statusTitlePending: {
+    fontSize: "14px",
+    fontWeight: "900",
+    color: "var(--text-warning)",
+  },
+  statusDesc: { fontSize: "11px", color: "var(--text-secondary)", margin: 0 },
+  divider: {
+    height: "1px",
+    backgroundColor: "var(--border-color)",
+    margin: "20px 0",
+  },
   downloadBtn: {
     width: "100%",
     padding: "12px",
@@ -747,11 +736,11 @@ const styles = {
     alignItems: "center",
     justifyContent: "center",
     gap: "8px",
-    wordBreak: "break-word",
   },
+
   ptContainer: {
     marginTop: "40px",
-    borderTop: "1px solid #E0E0E0",
+    borderTop: "1px solid var(--border-color)",
     paddingTop: "30px",
   },
   ptMainHeader: {
@@ -763,22 +752,25 @@ const styles = {
   ptMainTitle: {
     fontSize: "20px",
     fontWeight: "800",
-    color: "#1A237E",
+    color: "var(--text-primary)",
     margin: "0 0 4px 0",
   },
-  ptMainSubtitle: { fontSize: "14px", color: "#546E7A", margin: 0 },
+  ptMainSubtitle: { fontSize: "14px", color: "var(--text-muted)", margin: 0 },
   ptCardsWrapper: { display: "flex", flexDirection: "column", gap: "20px" },
   rcCard: (aprovado) => ({
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "var(--bg-card)",
     borderRadius: "12px",
-    border: aprovado ? "1px solid #A5D6A7" : "1px solid #EF9A9A",
-    boxShadow: "0 4px 15px rgba(0,0,0,0.05)",
+    border: aprovado
+      ? "1px solid var(--border-success)"
+      : "1px solid var(--border-danger)",
     overflow: "hidden",
   }),
   rcHeader: (aprovado) => ({
-    backgroundColor: aprovado ? "#E8F5E9" : "#FFEBEE",
+    backgroundColor: aprovado ? "var(--bg-success)" : "var(--bg-danger)",
     padding: "15px 25px",
-    borderBottom: aprovado ? "1px solid #C8E6C9" : "1px solid #FFCDD2",
+    borderBottom: aprovado
+      ? "1px solid var(--border-success)"
+      : "1px solid var(--border-danger)",
     display: "flex",
     justifyContent: "space-between",
     alignItems: "center",
@@ -791,27 +783,18 @@ const styles = {
     gap: "8px",
     fontSize: "15px",
     fontWeight: "900",
-    color: aprovado ? "#2E7D32" : "#C62828",
+    color: aprovado ? "var(--text-success)" : "var(--text-danger)",
   }),
   rcBadge: (aprovado) => ({
     fontSize: "11px",
     fontWeight: "800",
-    backgroundColor: aprovado ? "#C8E6C9" : "#FFCDD2",
-    color: aprovado ? "#1B5E20" : "#B71C1C",
+    backgroundColor: aprovado ? "var(--bg-success)" : "var(--bg-danger)",
+    color: aprovado ? "var(--text-success)" : "var(--text-danger)",
     padding: "6px 12px",
     borderRadius: "20px",
+    border: `1px solid ${aprovado ? "var(--text-success)" : "var(--text-danger)"}`,
   }),
   rcContent: { padding: "25px" },
-  rcSectionTitle: {
-    fontSize: "13px",
-    fontWeight: "800",
-    color: "#78909C",
-    marginBottom: "15px",
-    display: "flex",
-    alignItems: "center",
-    gap: "6px",
-    textTransform: "uppercase",
-  },
   rcGridScores: {
     display: "grid",
     gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
@@ -821,31 +804,34 @@ const styles = {
     display: "flex",
     justifyContent: "space-between",
     alignItems: "center",
-    backgroundColor: "#FAFAFA",
+    backgroundColor: "var(--bg-alt)",
     padding: "8px 12px",
     borderRadius: "8px",
-    border: "1px solid #F0F0F0",
+    border: "1px solid var(--border-color)",
   },
-  rcLabel: { fontSize: "13px", color: "#455A64", fontWeight: "600" },
+  rcLabel: {
+    fontSize: "13px",
+    color: "var(--text-secondary)",
+    fontWeight: "600",
+  },
   rcStarsContainer: { display: "flex", alignItems: "center" },
   rcNumberValue: {
     fontSize: "13px",
     fontWeight: "800",
     marginLeft: "8px",
-    minWidth: "25px",
-    textAlign: "right",
+    color: "var(--text-primary)",
   },
   rcDivider: {
     border: "none",
-    borderTop: "1px dashed #CFD8DC",
+    borderTop: "1px dashed var(--border-color)",
     margin: "25px 0",
   },
   rcFeedbackGrid: { display: "flex", flexDirection: "column", gap: "15px" },
   rcFeedbackBoxSuccess: {
-    backgroundColor: "#F1F8E9",
+    backgroundColor: "var(--bg-success)",
     borderRadius: "8px",
     padding: "15px",
-    borderLeft: "4px solid #7CB342",
+    borderLeft: "4px solid var(--text-success)",
   },
   rcFeedbackLabelSuccess: {
     display: "flex",
@@ -853,23 +839,20 @@ const styles = {
     gap: "6px",
     fontSize: "13px",
     fontWeight: "800",
-    color: "#33691E",
+    color: "var(--text-success)",
     marginBottom: "8px",
-    textTransform: "uppercase",
   },
   rcFeedbackTextSuccess: {
     fontSize: "14px",
-    color: "#33691E",
+    color: "var(--text-success)",
     lineHeight: "1.6",
     whiteSpace: "pre-wrap",
-    wordBreak: "break-word",
-    overflowWrap: "break-word",
   },
   rcFeedbackBoxDanger: {
-    backgroundColor: "#FFF3E0",
+    backgroundColor: "var(--bg-danger)",
     borderRadius: "8px",
     padding: "15px",
-    borderLeft: "4px solid #FF9800",
+    borderLeft: "4px solid var(--text-danger)",
   },
   rcFeedbackLabelDanger: {
     display: "flex",
@@ -877,41 +860,24 @@ const styles = {
     gap: "6px",
     fontSize: "13px",
     fontWeight: "800",
-    color: "#E65100",
+    color: "var(--text-danger)",
     marginBottom: "8px",
-    textTransform: "uppercase",
   },
   rcFeedbackTextDanger: {
     fontSize: "14px",
-    color: "#E65100",
+    color: "var(--text-danger)",
     lineHeight: "1.6",
     whiteSpace: "pre-wrap",
-    wordBreak: "break-word",
-    overflowWrap: "break-word",
-  },
-  rcFeedbackBoxNeutral: {
-    backgroundColor: "#FAFAFA",
-    borderRadius: "8px",
-    padding: "15px",
-    borderLeft: "4px solid #90A4AE",
-  },
-  rcFeedbackTextNeutral: {
-    fontSize: "14px",
-    color: "#455A64",
-    lineHeight: "1.6",
-    whiteSpace: "pre-wrap",
-    wordBreak: "break-word",
-    overflowWrap: "break-word",
   },
   gcCard: {
-    backgroundColor: "#FAFAFA",
+    backgroundColor: "var(--bg-card)",
     borderRadius: "12px",
-    border: "2px dashed #CFD8DC",
+    border: "2px dashed var(--border-color)",
     overflow: "hidden",
     opacity: 0.8,
   },
   gcHeader: {
-    backgroundColor: "#F5F7FA",
+    backgroundColor: "var(--bg-alt)",
     padding: "15px 25px",
     display: "flex",
     justifyContent: "space-between",
@@ -923,10 +889,15 @@ const styles = {
     gap: "8px",
     fontSize: "15px",
     fontWeight: "900",
-    color: "#90A4AE",
+    color: "var(--text-muted)",
   },
   gcContent: { padding: "25px", textAlign: "center" },
-  gcText: { margin: 0, fontSize: "14px", color: "#78909C", lineHeight: "1.6" },
+  gcText: {
+    margin: 0,
+    fontSize: "14px",
+    color: "var(--text-secondary)",
+    lineHeight: "1.6",
+  },
 }
 
 export default DetalharProducao

@@ -38,17 +38,12 @@ export default function DiarioOperacoes() {
   const navigate = useNavigate()
   const context = useOutletContext()
   const isMobile = context ? context.isMobile : false
-
   const [loading, setLoading] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [logs, setLogs] = useState([])
-
-  // Lista de usuários para o Autocomplete
   const [usuarios, setUsuarios] = useState([])
   const [buscaUsuario, setBuscaUsuario] = useState("")
   const [mostrarAutocomplete, setMostrarAutocomplete] = useState(false)
-
-  // Filtros da Timeline
   const [buscaTimeline, setBuscaTimeline] = useState("")
   const [filtroStatus, setFiltroStatus] = useState("Todos")
 
@@ -64,7 +59,6 @@ export default function DiarioOperacoes() {
     tags: [],
     participantes: 1,
   })
-
   const [foto, setFoto] = useState(null)
 
   useEffect(() => {
@@ -83,12 +77,9 @@ export default function DiarioOperacoes() {
         navigate("/dashboard")
         return
       }
-
-      // Carrega os logs e os usuários cadastrados simultaneamente
       await carregarDiario()
       await carregarUsuarios()
     } catch (error) {
-      console.error("Erro na verificação", error)
       navigate("/dashboard")
     }
   }
@@ -98,7 +89,6 @@ export default function DiarioOperacoes() {
       const response = await api.get("api/admin/diario/")
       setLogs(response.data)
     } catch (error) {
-      console.error("Erro ao carregar diário:", error)
       Swal.fire(
         "Erro de Conexão",
         "Não foi possível carregar os registros.",
@@ -114,36 +104,30 @@ export default function DiarioOperacoes() {
       const response = await api.get("api/admin/users/")
       setUsuarios(response.data)
     } catch (error) {
-      console.log("Erro ao carregar usuários para busca", error)
+      console.log(error)
     }
   }
 
-  const handleChange = (e) => {
+  const handleChange = (e) =>
     setFormData({ ...formData, [e.target.name]: e.target.value })
-  }
-
   const toggleTag = (tag) => {
     const novasTags = formData.tags.includes(tag)
       ? formData.tags.filter((t) => t !== tag)
       : [...formData.tags, tag]
     setFormData({ ...formData, tags: novasTags })
   }
-
   const handleFileChange = (e) => {
-    if (e.target.files[0]) {
-      setFoto(e.target.files[0])
-    }
+    if (e.target.files[0]) setFoto(e.target.files[0])
   }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    if (!formData.titulo || !formData.descricao || !formData.contato) {
+    if (!formData.titulo || !formData.descricao || !formData.contato)
       return Swal.fire(
         "Campos Incompletos",
         "Preencha título, contato e descrição.",
         "warning",
       )
-    }
 
     setIsSubmitting(true)
     try {
@@ -156,23 +140,19 @@ export default function DiarioOperacoes() {
           dataToSend.append(key, formData[key])
         }
       })
-
       if (foto) dataToSend.append("foto", foto)
 
       const response = await api.post("api/admin/diario/", dataToSend, {
         headers: { "Content-Type": "multipart/form-data" },
       })
-
       setLogs([response.data, ...logs])
       Swal.fire({
         icon: "success",
         title: "Registrado!",
-        text: "Atividade salva no banco de dados com sucesso.",
+        text: "Atividade salva com sucesso.",
         timer: 2000,
         showConfirmButton: false,
       })
-
-      // Reset Form
       setFormData({
         titulo: "",
         tipo: "Reunião",
@@ -188,7 +168,6 @@ export default function DiarioOperacoes() {
       setBuscaUsuario("")
       setFoto(null)
     } catch (error) {
-      console.error(error)
       Swal.fire(
         "Erro",
         "Não foi possível salvar o registro no servidor.",
@@ -208,50 +187,73 @@ export default function DiarioOperacoes() {
       confirmButtonColor: "#DC2626",
     })
     if (!confirm.isConfirmed) return
-
     try {
       await api.delete(`api/admin/diario/${id}/delete/`)
       setLogs(logs.filter((log) => log.id !== id))
       Swal.fire("Excluído!", "O registro foi removido.", "success")
     } catch (error) {
-      console.error(error)
       Swal.fire("Erro", "Não foi possível excluir o registro.", "error")
     }
   }
 
-  // Estilização de Meta Dados (Cor dos Tipos)
   const getTipoMeta = (tipo) => {
     switch (tipo) {
       case "Treinamento":
-        return { cor: "#10B981", bg: "#D1FAE5", icone: <BookOpen size={16} /> }
+        return {
+          cor: "var(--text-success)",
+          bg: "var(--bg-success)",
+          icone: <BookOpen size={16} />,
+        }
       case "Reunião":
-        return { cor: "#2563EB", bg: "#DBEAFE", icone: <Users size={16} /> }
+        return {
+          cor: "var(--text-info)",
+          bg: "var(--bg-info)",
+          icone: <Users size={16} />,
+        }
       case "Visita Escolar":
-        return { cor: "#8B5CF6", bg: "#EDE9FE", icone: <MapPin size={16} /> }
+        return {
+          cor: "#A78BFA",
+          bg: "rgba(139, 92, 246, 0.1)",
+          icone: <MapPin size={16} />,
+        }
       case "Suporte":
         return {
-          cor: "#F59E0B",
-          bg: "#FEF3C7",
+          cor: "var(--text-warning)",
+          bg: "var(--bg-warning)",
           icone: <MessageCircle size={16} />,
         }
       default:
-        return { cor: "#64748B", bg: "#F1F5F9", icone: <FileText size={16} /> }
+        return {
+          cor: "var(--text-secondary)",
+          bg: "var(--bg-alt)",
+          icone: <FileText size={16} />,
+        }
     }
   }
 
-  // Estilização de Meta Dados (Cor dos Status)
   const getStatusMeta = (status) => {
     switch (status) {
       case "Pendente":
-        return { cor: "#DC2626", bg: "#FEE2E2", label: "Pendente" }
+        return {
+          cor: "var(--text-danger)",
+          bg: "var(--bg-danger)",
+          label: "Pendente",
+        }
       case "Em andamento":
-        return { cor: "#D97706", bg: "#FEF3C7", label: "Em andamento" }
+        return {
+          cor: "var(--text-warning)",
+          bg: "var(--bg-warning)",
+          label: "Em andamento",
+        }
       default:
-        return { cor: "#059669", bg: "#D1FAE5", label: "Resolvido" }
+        return {
+          cor: "var(--text-success)",
+          bg: "var(--bg-success)",
+          label: "Resolvido",
+        }
     }
   }
 
-  // Filtragem da Lista para o Autocomplete de Usuários
   const usuariosFiltrados = usuarios
     .filter(
       (u) =>
@@ -259,14 +261,10 @@ export default function DiarioOperacoes() {
         u.email.toLowerCase().includes(buscaUsuario.toLowerCase()),
     )
     .slice(0, 5)
-
-  // Filtragem da Timeline
   const logsFiltrados = logs.filter((log) => {
-    const contatoStr = log.contato || ""
-    const tituloStr = log.titulo || ""
     const matchBusca =
-      tituloStr.toLowerCase().includes(buscaTimeline.toLowerCase()) ||
-      contatoStr.toLowerCase().includes(buscaTimeline.toLowerCase())
+      (log.titulo || "").toLowerCase().includes(buscaTimeline.toLowerCase()) ||
+      (log.contato || "").toLowerCase().includes(buscaTimeline.toLowerCase())
     const matchStatus = filtroStatus === "Todos" || log.status === filtroStatus
     return matchBusca && matchStatus
   })
@@ -275,7 +273,7 @@ export default function DiarioOperacoes() {
     return (
       <div style={styles.loadingContainer}>
         <Loader2 className="spin" size={32} color="#CA8A04" />
-        <p style={{ marginTop: "10px", color: "#64748B" }}>
+        <p style={{ marginTop: "10px", color: "var(--text-muted)" }}>
           Conectando ao CRM...
         </p>
         <style>{`@keyframes spin { 100% { transform: rotate(360deg); } } .spin { animation: spin 1s linear infinite; }`}</style>
@@ -290,12 +288,12 @@ export default function DiarioOperacoes() {
       }}
     >
       <style>{`
-        input::placeholder, textarea::placeholder { color: #94A3B8 !important; opacity: 1 !important; }
-        ::-webkit-input-placeholder { color: #94A3B8 !important; opacity: 1 !important; }
-        :-moz-placeholder { color: #94A3B8 !important; opacity: 1 !important; }
-        .timeline-line::before { content: ''; position: absolute; top: 15px; bottom: 0; left: 20px; width: 2px; background-color: #E2E8F0; z-index: 1; }
-        .autocomplete-item:hover { background-color: #F1F5F9; }
-        .tag-chip:hover { border-color: #94A3B8 !important; }
+        input::placeholder, textarea::placeholder { color: var(--text-muted) !important; opacity: 1 !important; }
+        ::-webkit-input-placeholder { color: var(--text-muted) !important; opacity: 1 !important; }
+        :-moz-placeholder { color: var(--text-muted) !important; opacity: 1 !important; }
+        .timeline-line::before { content: ''; position: absolute; top: 15px; bottom: 0; left: 20px; width: 2px; background-color: var(--border-color); z-index: 1; }
+        .autocomplete-item:hover { background-color: var(--bg-alt) !important; }
+        .tag-chip:hover { border-color: var(--border-hover) !important; }
       `}</style>
 
       <div style={styles.container}>
@@ -333,7 +331,6 @@ export default function DiarioOperacoes() {
             flexDirection: isMobile ? "column" : "row",
           }}
         >
-          {/* --- COLUNA ESQUERDA: FORMULÁRIO COMPLETO --- */}
           <div style={{ flex: 1, width: "100%" }}>
             <div style={styles.formCard}>
               <h3 style={styles.cardTitle}>
@@ -341,7 +338,6 @@ export default function DiarioOperacoes() {
               </h3>
 
               <form onSubmit={handleSubmit} style={styles.form}>
-                {/* Linha 1: Título e Status */}
                 <div style={styles.row}>
                   <div style={{ ...styles.inputGroup, flex: 2 }}>
                     <label style={styles.label}>Título da Interação</label>
@@ -370,7 +366,6 @@ export default function DiarioOperacoes() {
                   </div>
                 </div>
 
-                {/* Linha 2: Tipo e Data */}
                 <div style={styles.row}>
                   <div style={styles.inputGroup}>
                     <label style={styles.label}>Tipo de Evento</label>
@@ -414,14 +409,13 @@ export default function DiarioOperacoes() {
                   )}
                 </div>
 
-                {/* Autocomplete de Usuário / Contato */}
                 <div style={styles.inputGroup}>
                   <label style={styles.label}>
                     Professor(a) ou Contato Livre
                   </label>
                   <div style={{ position: "relative" }}>
                     <div style={styles.inputWrapper}>
-                      <Search size={16} color="#94A3B8" />
+                      <Search size={16} color="var(--text-muted)" />
                       <input
                         type="text"
                         value={buscaUsuario}
@@ -431,7 +425,7 @@ export default function DiarioOperacoes() {
                             ...formData,
                             contato: e.target.value,
                             docente_id: "",
-                          }) // Assume texto livre primeiro
+                          })
                           setMostrarAutocomplete(true)
                         }}
                         onBlur={() =>
@@ -462,7 +456,10 @@ export default function DiarioOperacoes() {
                             >
                               <strong>{u.username}</strong>{" "}
                               <span
-                                style={{ color: "#94A3B8", fontSize: "12px" }}
+                                style={{
+                                  color: "var(--text-muted)",
+                                  fontSize: "12px",
+                                }}
                               >
                                 - {u.disciplina}
                               </span>
@@ -473,7 +470,7 @@ export default function DiarioOperacoes() {
                             style={{
                               padding: "10px",
                               fontSize: "13px",
-                              color: "#94A3B8",
+                              color: "var(--text-muted)",
                             }}
                           >
                             Nenhum usuário encontrado. Será salvo como contato
@@ -485,7 +482,6 @@ export default function DiarioOperacoes() {
                   </div>
                 </div>
 
-                {/* Seleção de Tags Rápidas */}
                 <div style={styles.inputGroup}>
                   <label style={styles.label}>
                     <Tag
@@ -510,9 +506,15 @@ export default function DiarioOperacoes() {
                           onClick={() => toggleTag(tag)}
                           style={{
                             ...styles.tagChip,
-                            backgroundColor: isSelected ? "#DBEAFE" : "#F8FAFC",
-                            borderColor: isSelected ? "#3B82F6" : "#E2E8F0",
-                            color: isSelected ? "#1D4ED8" : "#64748B",
+                            backgroundColor: isSelected
+                              ? "var(--bg-info)"
+                              : "var(--bg-card)",
+                            borderColor: isSelected
+                              ? "var(--text-info)"
+                              : "var(--border-color)",
+                            color: isSelected
+                              ? "var(--text-info)"
+                              : "var(--text-secondary)",
                           }}
                         >
                           {isSelected && (
@@ -525,7 +527,6 @@ export default function DiarioOperacoes() {
                   </div>
                 </div>
 
-                {/* Descrição Principal */}
                 <div style={styles.inputGroup}>
                   <label style={styles.label}>Relato da Interação</label>
                   <textarea
@@ -538,10 +539,11 @@ export default function DiarioOperacoes() {
                   />
                 </div>
 
-                {/* Próximos Passos (Para pendências) */}
                 {formData.status !== "Resolvido" && (
                   <div style={styles.inputGroup}>
-                    <label style={{ ...styles.label, color: "#D97706" }}>
+                    <label
+                      style={{ ...styles.label, color: "var(--text-warning)" }}
+                    >
                       <ListChecks
                         size={14}
                         style={{ display: "inline", marginRight: "4px" }}
@@ -555,14 +557,13 @@ export default function DiarioOperacoes() {
                       style={{
                         ...styles.textarea,
                         minHeight: "60px",
-                        borderColor: "#FCD34D",
+                        borderColor: "var(--border-warning)",
                       }}
                       placeholder="Ex: Ligar na próxima semana para verificar se conseguiu o acesso."
                     />
                   </div>
                 )}
 
-                {/* --- CAMPO DE UPLOAD DE FOTO --- */}
                 <div style={styles.inputGroup}>
                   <label style={styles.label}>Foto / Anexo (Opcional)</label>
                   <input
@@ -575,8 +576,13 @@ export default function DiarioOperacoes() {
                   <label htmlFor="foto-diario" style={styles.uploadBtn}>
                     {foto ? (
                       <>
-                        <CheckCircle2 size={18} color="#10B981" />{" "}
-                        <span style={{ color: "#10B981", fontWeight: "bold" }}>
+                        <CheckCircle2 size={18} color="var(--text-success)" />{" "}
+                        <span
+                          style={{
+                            color: "var(--text-success)",
+                            fontWeight: "bold",
+                          }}
+                        >
                           {foto.name}
                         </span>
                       </>
@@ -597,14 +603,13 @@ export default function DiarioOperacoes() {
                     <Loader2 size={18} className="spin" />
                   ) : (
                     <Save size={18} />
-                  )}
+                  )}{" "}
                   {isSubmitting ? "Salvando..." : "Salvar Registro"}
                 </button>
               </form>
             </div>
           </div>
 
-          {/* --- COLUNA DIREITA: TIMELINE COM FILTROS --- */}
           <div style={{ flex: 1.2, width: "100%" }}>
             <div style={styles.timelineContainer}>
               <div
@@ -628,7 +633,6 @@ export default function DiarioOperacoes() {
                 </h3>
               </div>
 
-              {/* Barra de Busca e Filtro da Timeline */}
               <div
                 style={{
                   display: "flex",
@@ -641,10 +645,10 @@ export default function DiarioOperacoes() {
                   style={{
                     ...styles.inputWrapper,
                     flex: 1,
-                    backgroundColor: "#F8FAFC",
+                    backgroundColor: "var(--bg-main)",
                   }}
                 >
-                  <Search size={16} color="#94A3B8" />
+                  <Search size={16} color="var(--text-muted)" />
                   <input
                     type="text"
                     value={buscaTimeline}
@@ -657,10 +661,10 @@ export default function DiarioOperacoes() {
                   style={{
                     ...styles.inputWrapper,
                     width: "auto",
-                    backgroundColor: "#F8FAFC",
+                    backgroundColor: "var(--bg-main)",
                   }}
                 >
-                  <Filter size={16} color="#94A3B8" />
+                  <Filter size={16} color="var(--text-muted)" />
                   <select
                     value={filtroStatus}
                     onChange={(e) => setFiltroStatus(e.target.value)}
@@ -746,7 +750,10 @@ export default function DiarioOperacoes() {
                                 </div>
                                 {log.participantes > 1 && (
                                   <div style={styles.logContact}>
-                                    <Users size={12} color="#10B981" />{" "}
+                                    <Users
+                                      size={12}
+                                      color="var(--text-success)"
+                                    />{" "}
                                     {log.participantes} Participantes
                                   </div>
                                 )}
@@ -778,7 +785,6 @@ export default function DiarioOperacoes() {
 
                           <p style={styles.logDesc}>{descResumo}</p>
 
-                          {/* Exibição das Tags */}
                           {log.tags && (
                             <div
                               style={{
@@ -793,8 +799,8 @@ export default function DiarioOperacoes() {
                                   key={idx}
                                   style={{
                                     fontSize: "10px",
-                                    backgroundColor: "#E2E8F0",
-                                    color: "#475569",
+                                    backgroundColor: "var(--bg-alt)",
+                                    color: "var(--text-secondary)",
                                     padding: "3px 8px",
                                     borderRadius: "4px",
                                     fontWeight: "700",
@@ -806,18 +812,17 @@ export default function DiarioOperacoes() {
                             </div>
                           )}
 
-                          {/* Exibição dos próximos passos na timeline */}
                           {log.proximos_passos &&
                             log.status !== "Resolvido" && (
                               <div
                                 style={{
                                   marginTop: "12px",
-                                  backgroundColor: "#FFFBEB",
+                                  backgroundColor: "var(--bg-warning)",
                                   padding: "10px",
                                   borderRadius: "8px",
-                                  borderLeft: "3px solid #F59E0B",
+                                  borderLeft: "3px solid var(--border-warning)",
                                   fontSize: "13px",
-                                  color: "#92400E",
+                                  color: "var(--text-warning)",
                                 }}
                               >
                                 <strong>Próximos Passos:</strong>{" "}
@@ -870,7 +875,7 @@ export default function DiarioOperacoes() {
 
 const styles = {
   wrapper: {
-    backgroundColor: "#F1F5F9",
+    backgroundColor: "var(--bg-main)",
     minHeight: "100vh",
     fontFamily: "Inter, sans-serif",
   },
@@ -882,7 +887,6 @@ const styles = {
     justifyContent: "center",
     height: "80vh",
   },
-
   header: { marginBottom: "30px" },
   backButton: {
     display: "flex",
@@ -892,7 +896,7 @@ const styles = {
     border: "none",
     cursor: "pointer",
     fontSize: "14px",
-    color: "#64748B",
+    color: "var(--text-secondary)",
     fontWeight: "700",
     padding: 0,
     marginBottom: "15px",
@@ -901,29 +905,27 @@ const styles = {
   iconCircleYellow: {
     width: "50px",
     height: "50px",
-    backgroundColor: "#FEF9C3",
+    backgroundColor: "rgba(202, 138, 4, 0.1)",
     borderRadius: "12px",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
     flexShrink: 0,
   },
-  pageTitle: { margin: 0, fontWeight: "900", color: "#0F172A" },
+  pageTitle: { margin: 0, fontWeight: "900", color: "var(--text-primary)" },
   pageSubtitle: {
     margin: 0,
-    color: "#64748B",
+    color: "var(--text-muted)",
     marginTop: "5px",
     fontSize: "14px",
   },
-
   splitLayout: { display: "flex", gap: "30px", alignItems: "flex-start" },
-
   formCard: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "var(--bg-card)",
     borderRadius: "16px",
     padding: "25px",
     boxShadow: "0 4px 6px rgba(0,0,0,0.02)",
-    border: "1px solid #E2E8F0",
+    border: "1px solid var(--border-color)",
   },
   cardTitle: {
     display: "flex",
@@ -932,8 +934,8 @@ const styles = {
     margin: "0 0 20px 0",
     fontSize: "16px",
     fontWeight: "800",
-    color: "#1E293B",
-    borderBottom: "1px solid #F1F5F9",
+    color: "var(--text-primary)",
+    borderBottom: "1px solid var(--border-color)",
     paddingBottom: "12px",
   },
   form: { display: "flex", flexDirection: "column", gap: "15px" },
@@ -945,16 +947,19 @@ const styles = {
     gap: "6px",
     minWidth: "150px",
   },
-  label: { fontSize: "13px", fontWeight: "600", color: "#475569" },
-
+  label: {
+    fontSize: "13px",
+    fontWeight: "600",
+    color: "var(--text-secondary)",
+  },
   inputWrapper: {
     display: "flex",
     alignItems: "center",
     gap: "10px",
     padding: "0 12px",
-    border: "1px solid #CBD5E1",
+    border: "1px solid var(--border-color)",
     borderRadius: "8px",
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "var(--input-bg)",
     height: "42px",
     overflow: "hidden",
   },
@@ -964,28 +969,28 @@ const styles = {
     outline: "none",
     width: "100%",
     fontSize: "14px",
-    color: "#1E293B",
+    color: "var(--input-text)",
   },
   input: {
     width: "100%",
     padding: "10px 12px",
     borderRadius: "8px",
-    border: "1px solid #CBD5E1",
+    border: "1px solid var(--border-color)",
     fontSize: "14px",
     outline: "none",
-    color: "#1E293B",
-    backgroundColor: "#FFFFFF",
+    color: "var(--input-text)",
+    backgroundColor: "var(--input-bg)",
     boxSizing: "border-box",
   },
   select: {
     width: "100%",
     padding: "10px 12px",
     borderRadius: "8px",
-    border: "1px solid #CBD5E1",
+    border: "1px solid var(--border-color)",
     fontSize: "14px",
     outline: "none",
-    color: "#1E293B",
-    backgroundColor: "#FFFFFF",
+    color: "var(--input-text)",
+    backgroundColor: "var(--input-bg)",
     boxSizing: "border-box",
     cursor: "pointer",
   },
@@ -993,24 +998,23 @@ const styles = {
     width: "100%",
     padding: "12px",
     borderRadius: "8px",
-    border: "1px solid #CBD5E1",
+    border: "1px solid var(--border-color)",
     fontSize: "14px",
     outline: "none",
-    color: "#1E293B",
-    backgroundColor: "#FFFFFF",
+    color: "var(--input-text)",
+    backgroundColor: "var(--input-bg)",
     minHeight: "90px",
     resize: "vertical",
     fontFamily: "inherit",
     boxSizing: "border-box",
   },
-
   autocompleteDropdown: {
     position: "absolute",
     top: "100%",
     left: 0,
     right: 0,
-    backgroundColor: "white",
-    border: "1px solid #E2E8F0",
+    backgroundColor: "var(--bg-card)",
+    border: "1px solid var(--border-color)",
     borderRadius: "8px",
     marginTop: "4px",
     zIndex: 10,
@@ -1021,11 +1025,10 @@ const styles = {
     padding: "10px 15px",
     cursor: "pointer",
     fontSize: "14px",
-    color: "#1E293B",
-    borderBottom: "1px solid #F1F5F9",
+    color: "var(--text-primary)",
+    borderBottom: "1px solid var(--border-color)",
     transition: "background 0.2s",
   },
-
   tagChip: {
     padding: "6px 12px",
     borderRadius: "20px",
@@ -1037,17 +1040,16 @@ const styles = {
     display: "flex",
     alignItems: "center",
   },
-
   uploadBtn: {
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
     gap: "8px",
     padding: "12px",
-    border: "1px dashed #94A3B8",
+    border: "1px dashed var(--border-color)",
     borderRadius: "8px",
-    backgroundColor: "#F8FAFC",
-    color: "#64748B",
+    backgroundColor: "var(--bg-main)",
+    color: "var(--text-secondary)",
     fontSize: "14px",
     fontWeight: "600",
     cursor: "pointer",
@@ -1061,7 +1063,7 @@ const styles = {
     justifyContent: "center",
     gap: "8px",
     padding: "14px",
-    backgroundColor: "#CA8A04",
+    backgroundColor: "#1565C0",
     color: "white",
     border: "none",
     borderRadius: "8px",
@@ -1073,17 +1075,16 @@ const styles = {
     width: "100%",
     boxSizing: "border-box",
   },
-
   timelineContainer: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "var(--bg-card)",
     borderRadius: "16px",
     padding: "25px",
     boxShadow: "0 4px 6px rgba(0,0,0,0.02)",
-    border: "1px solid #E2E8F0",
+    border: "1px solid var(--border-color)",
     height: "100%",
   },
   emptyText: {
-    color: "#94A3B8",
+    color: "var(--text-muted)",
     fontSize: "14px",
     textAlign: "center",
     marginTop: "40px",
@@ -1105,16 +1106,15 @@ const styles = {
     alignItems: "center",
     justifyContent: "center",
     zIndex: 2,
-    border: "4px solid #FFFFFF",
+    border: "4px solid var(--bg-card)",
   },
   timelineContent: {
-    backgroundColor: "#F8FAFC",
+    backgroundColor: "var(--bg-main)",
     padding: "20px",
     borderRadius: "12px",
-    border: "1px solid #E2E8F0",
+    border: "1px solid var(--border-color)",
     boxShadow: "0 1px 3px rgba(0,0,0,0.02)",
   },
-
   logHeader: {
     display: "flex",
     justifyContent: "space-between",
@@ -1135,12 +1135,12 @@ const styles = {
     fontWeight: "800",
     textTransform: "uppercase",
   },
-  logDate: { fontSize: "12px", color: "#94A3B8", fontWeight: "600" },
+  logDate: { fontSize: "12px", color: "var(--text-muted)", fontWeight: "600" },
   logTitle: {
     margin: "0 0 6px 0",
     fontSize: "16px",
     fontWeight: "800",
-    color: "#0F172A",
+    color: "var(--text-primary)",
     wordBreak: "break-word",
   },
   logContact: {
@@ -1148,23 +1148,22 @@ const styles = {
     alignItems: "center",
     gap: "4px",
     fontSize: "12px",
-    color: "#64748B",
+    color: "var(--text-secondary)",
     fontWeight: "600",
   },
   logDesc: {
     margin: 0,
     fontSize: "14px",
-    color: "#475569",
+    color: "var(--text-secondary)",
     lineHeight: "1.6",
     whiteSpace: "pre-wrap",
     wordBreak: "break-word",
   },
-
   actionButtons: { display: "flex", gap: "5px" },
   viewBtn: {
-    background: "#E0F2FE",
+    background: "var(--bg-info)",
     border: "none",
-    color: "#0284C7",
+    color: "var(--text-info)",
     cursor: "pointer",
     padding: "6px",
     borderRadius: "6px",
@@ -1172,16 +1171,15 @@ const styles = {
     transition: "background 0.2s",
   },
   deleteBtn: {
-    background: "#FEE2E2",
+    background: "var(--bg-danger)",
     border: "none",
-    color: "#DC2626",
+    color: "var(--text-danger)",
     cursor: "pointer",
     padding: "6px",
     borderRadius: "6px",
     display: "flex",
     transition: "background 0.2s",
   },
-
   fotoThumbContainer: {
     marginTop: "15px",
     position: "relative",
@@ -1189,7 +1187,7 @@ const styles = {
     cursor: "pointer",
     borderRadius: "8px",
     overflow: "hidden",
-    border: "1px solid #E2E8F0",
+    border: "1px solid var(--border-color)",
   },
   fotoThumbTimeline: {
     display: "block",

@@ -17,12 +17,16 @@ urlpatterns = [
     path('api/register/', views.api_register_user, name='register_user'),
 
     # ============================================================================
-    # 2. PERFIL DO USUÁRIO E GAMIFICAÇÃO PESSOAL
+    # 2. PERFIL DO USUÁRIO, GAMIFICAÇÃO E NOTIFICAÇÕES
     # ============================================================================
     # Retorna dados pessoais, progresso de nível e lista de conquistas
     path('api/user/me/', views.api_user_profile, name='user_profile'),
     path('api/password_reset/', views.api_password_reset_request, name='password_reset_request'),
     path('api/password_reset_confirm/<uidb64>/<token>/', views.api_password_reset_confirm, name='password_reset_confirm'),
+    
+    # Sistema de Notificações (Sininho)
+    path('api/notificacoes/', views.api_list_notifications, name='list_notifications'),
+    path('api/notificacoes/ler/', views.api_mark_notifications_read, name='mark_notifications_read'),
 
     # ============================================================================
     # 3. PRODUÇÕES DIDÁTICAS (CRUD)

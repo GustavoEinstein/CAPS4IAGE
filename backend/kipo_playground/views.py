@@ -43,10 +43,10 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.throttling import ScopedRateThrottle 
 
-# Importação dos modelos (Incluindo ConfiguracaoXP, Escola e Disciplina)
+# Importação dos modelos (Incluindo ConfiguracaoXP, Escola, Disciplina e Notificacao)
 from .models import (
     Profile, Producao, Avaliacao, Topico, Comentario, RegistroXP, 
-    Conquista, ConquistaUsuario, DiarioOperacao, NotaDiario, ConfiguracaoXP, Escola, Disciplina
+    Conquista, ConquistaUsuario, DiarioOperacao, NotaDiario, ConfiguracaoXP, Escola, Disciplina, Notificacao
 )
 
 
@@ -58,17 +58,38 @@ ALLOWED_EXTENSIONS = [
 ]
 
 # ============================================================================
-# FUNÇÃO AUXILIAR DE GAMIFICAÇÃO
+# FUNÇÃO AUXILIAR DE GAMIFICAÇÃO (ATUALIZADA COM NOTIFICAÇÕES)
 # ============================================================================
 def adicionar_xp(perfil, quantidade, descricao):
-    """Adiciona XP ao perfil e gera um registro no histórico"""
+    """Adiciona XP ao perfil, gera histórico e dispara notificações"""
+    nivel_anterior = perfil.get_nivel()
+    
     perfil.pontos += quantidade
     perfil.save()
+    
     RegistroXP.objects.create(
         perfil=perfil,
         quantidade=quantidade,
         descricao=descricao
     )
+
+    # 1. Notifica o ganho de XP
+    Notificacao.objects.create(
+        user=perfil.user,
+        titulo=f"+{quantidade} XP",
+        mensagem=descricao,
+        tipo='XP'
+    )
+
+    # 2. Verifica se subiu de Nível e notifica!
+    nivel_atual = perfil.get_nivel()
+    if nivel_anterior != nivel_atual:
+        Notificacao.objects.create(
+            user=perfil.user,
+            titulo="🎉 Subiu de Nível!",
+            mensagem=f"Parabéns! Você alcançou o título de: {nivel_atual}",
+            tipo='NIVEL'
+        )
 
 # ----------------------------------------------------
 
@@ -1042,8 +1063,9 @@ def api_ranking_gamificacao(request):
         'nivel': u.profile.get_nivel() if hasattr(u, 'profile') else ''
     } for u in revisores_qs if u.total_revisoes > 0]
 
+    # --- CORREÇÃO APLICADA AQUI: de 'comentarios' para 'comentarios_usuario' ---
     forum_qs = User.objects.annotate(
-        total_forum=Count('topicos_forum', distinct=True) + Count('comentarios', distinct=True)
+        total_forum=Count('topicos_forum', distinct=True) + Count('comentarios_usuario', distinct=True)
     ).order_by('-total_forum')[:10]
     
     top_forum = [{
@@ -1144,7 +1166,7 @@ def api_admin_atribuir_badge(request):
 
 
 # ============================================================================
-# DIÁRIO DE OPERAÇÕES (GET e POST)
+# DIÁRIO DE OPERAÇÕES (CRM INTERNO)
 # ============================================================================
 class DiarioOperacaoView(APIView):
     permission_classes = [IsAdminUser]
@@ -1353,3 +1375,29 @@ class ConfiguracoesGeraisView(APIView):
             return Response({'mensagem': 'Disciplina removida!'})
 
         return Response({'erro': 'Ação desconhecida'}, status=400)
+
+# ============================================================================
+# SISTEMA DE NOTIFICAÇÕES (GET e POST)
+# ============================================================================
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def api_list_notifications(request):
+    """Retorna as 20 notificações mais recentes do usuário."""
+    notificacoes = request.user.notificacoes.all()[:20]
+    lista = [{
+        'id': n.id,
+        'titulo': n.titulo,
+        'mensagem': n.mensagem,
+        'tipo': n.tipo,
+        'lida': n.lida,
+        'data': timezone.localtime(n.data_criacao).strftime('%d/%m %H:%M')
+    } for n in notificacoes]
+    
+    return Response(lista)
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def api_mark_notifications_read(request):
+    """Marca todas as notificações não lidas como lidas."""
+    request.user.notificacoes.filter(lida=False).update(lida=True)
+    return Response({'mensagem': 'Notificações marcadas como lidas.'})

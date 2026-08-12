@@ -1,4 +1,4 @@
-import React, { useState } from "react"
+import React from "react"
 import { useNavigate, useOutletContext } from "react-router-dom"
 import {
   ShieldAlert,
@@ -10,19 +10,12 @@ import {
   ExternalLink,
   Book,
   FileText,
-  Sun,
-  Moon,
 } from "lucide-react"
 
 export default function CentralAdmin() {
   const navigate = useNavigate()
-
-  // --- DETECÇÃO DE MOBILE ---
   const context = useOutletContext()
   const isMobile = context ? context.isMobile : false
-
-  // --- ESTADO DO MODO ESCURO (Visual por enquanto) ---
-  const [isDarkMode, setIsDarkMode] = useState(false)
 
   return (
     <div
@@ -43,7 +36,7 @@ export default function CentralAdmin() {
             }}
           >
             <div style={styles.iconCircleBlue}>
-              <Settings size={28} color="#1565C0" />
+              <Settings size={28} color="var(--text-info)" />
             </div>
             <div style={{ flex: 1 }}>
               <h1
@@ -58,41 +51,26 @@ export default function CentralAdmin() {
                 Selecione a ferramenta de gestão que deseja acessar.
               </p>
             </div>
-
-            {/* --- BOTÃO DE MODO ESCURO (Preparado para o futuro) --- */}
-            <button
-              onClick={() => setIsDarkMode(!isDarkMode)}
-              style={styles.themeToggleBtn}
-              title="Alternar Modo Escuro"
-            >
-              {isDarkMode ? (
-                <Moon size={20} color="#6366F1" />
-              ) : (
-                <Sun size={20} color="#F59E0B" />
-              )}
-              {!isMobile && (
-                <span style={styles.themeToggleText}>
-                  {isDarkMode ? "Modo Escuro" : "Modo Claro"}
-                </span>
-              )}
-            </button>
           </div>
         </div>
 
-        {/* Transformado em Grid (2 colunas no PC, 1 coluna no Mobile) */}
         <div
           style={{
             ...styles.grid,
             gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
           }}
         >
-          {/* 1. Aprovação de Contas */}
           <div
             style={styles.card}
             onClick={() => navigate("/dashboard/aprovacoes")}
           >
-            <div style={{ ...styles.cardIcon, backgroundColor: "#E8F5E9" }}>
-              <UserCheck size={32} color="#2E7D32" />
+            <div
+              style={{
+                ...styles.cardIcon,
+                backgroundColor: "var(--bg-success)",
+              }}
+            >
+              <UserCheck size={32} color="var(--text-success)" />
             </div>
             <div style={styles.cardContent}>
               <h3
@@ -107,16 +85,24 @@ export default function CentralAdmin() {
                 Analise e aprove novos professores que solicitaram acesso.
               </p>
             </div>
-            <ChevronRight size={20} color="#90A4AE" style={styles.arrow} />
+            <ChevronRight
+              size={20}
+              color="var(--text-muted)"
+              style={styles.arrow}
+            />
           </div>
 
-          {/* 2. Gamificação e Hall da Fama */}
           <div
             style={styles.card}
             onClick={() => navigate("/dashboard/admin/gamificacao")}
           >
-            <div style={{ ...styles.cardIcon, backgroundColor: "#FFF7ED" }}>
-              <Trophy size={32} color="#EA580C" />
+            <div
+              style={{
+                ...styles.cardIcon,
+                backgroundColor: "var(--bg-warning)",
+              }}
+            >
+              <Trophy size={32} color="var(--text-warning)" />
             </div>
             <div style={styles.cardContent}>
               <h3
@@ -131,13 +117,21 @@ export default function CentralAdmin() {
                 Gerencie conquistas, atribua XP manual e crie badges.
               </p>
             </div>
-            <ChevronRight size={20} color="#90A4AE" style={styles.arrow} />
+            <ChevronRight
+              size={20}
+              color="var(--text-muted)"
+              style={styles.arrow}
+            />
           </div>
 
-          {/* 3. Auditoria e Gestão de Dados */}
           <div style={styles.card} onClick={() => navigate("/dashboard/admin")}>
-            <div style={{ ...styles.cardIcon, backgroundColor: "#FEE2E2" }}>
-              <ShieldAlert size={32} color="#DC2626" />
+            <div
+              style={{
+                ...styles.cardIcon,
+                backgroundColor: "var(--bg-danger)",
+              }}
+            >
+              <ShieldAlert size={32} color="var(--text-danger)" />
             </div>
             <div style={styles.cardContent}>
               <h3
@@ -152,16 +146,24 @@ export default function CentralAdmin() {
                 Exclua usuários, exporte relatórios e gerencie o fórum.
               </p>
             </div>
-            <ChevronRight size={20} color="#90A4AE" style={styles.arrow} />
+            <ChevronRight
+              size={20}
+              color="var(--text-muted)"
+              style={styles.arrow}
+            />
           </div>
 
-          {/* 4. NOVO: Diário de Bordo / Operacional */}
           <div
             style={styles.card}
             onClick={() => navigate("/dashboard/admin/diario")}
           >
-            <div style={{ ...styles.cardIcon, backgroundColor: "#FEF9C3" }}>
-              <FileText size={32} color="#CA8A04" />
+            <div
+              style={{
+                ...styles.cardIcon,
+                backgroundColor: "var(--bg-warning)",
+              }}
+            >
+              <FileText size={32} color="var(--text-warning)" />
             </div>
             <div style={styles.cardContent}>
               <h3
@@ -176,10 +178,13 @@ export default function CentralAdmin() {
                 Registre reuniões, visitas às escolas e treinamentos.
               </p>
             </div>
-            <ChevronRight size={20} color="#90A4AE" style={styles.arrow} />
+            <ChevronRight
+              size={20}
+              color="var(--text-muted)"
+              style={styles.arrow}
+            />
           </div>
 
-          {/* 5. NOVO: Documentação Técnica (Link Externo) */}
           <div
             style={styles.card}
             onClick={() =>
@@ -189,8 +194,10 @@ export default function CentralAdmin() {
               )
             }
           >
-            <div style={{ ...styles.cardIcon, backgroundColor: "#F3E8FF" }}>
-              <Book size={32} color="#7E22CE" />
+            <div
+              style={{ ...styles.cardIcon, backgroundColor: "var(--bg-info)" }}
+            >
+              <Book size={32} color="var(--text-info)" />
             </div>
             <div style={styles.cardContent}>
               <h3
@@ -205,16 +212,21 @@ export default function CentralAdmin() {
                 Requisitos funcionais, regras de negócio e arquitetura.
               </p>
             </div>
-            <ExternalLink size={20} color="#90A4AE" style={styles.arrow} />
+            <ExternalLink
+              size={20}
+              color="var(--text-muted)"
+              style={styles.arrow}
+            />
           </div>
 
-          {/* 6. Configurações do Sistema */}
           <div
             style={styles.card}
             onClick={() => navigate("/dashboard/admin/configuracoes")}
           >
-            <div style={{ ...styles.cardIcon, backgroundColor: "#F3E5F5" }}>
-              <Database size={32} color="#7B1FA2" />
+            <div
+              style={{ ...styles.cardIcon, backgroundColor: "var(--bg-info)" }}
+            >
+              <Database size={32} color="var(--text-info)" />
             </div>
             <div style={styles.cardContent}>
               <h3
@@ -229,7 +241,11 @@ export default function CentralAdmin() {
                 Ajuste parâmetros globais e pesos da IA do sistema.
               </p>
             </div>
-            <ChevronRight size={20} color="#90A4AE" style={styles.arrow} />
+            <ChevronRight
+              size={20}
+              color="var(--text-muted)"
+              style={styles.arrow}
+            />
           </div>
         </div>
       </div>
@@ -239,7 +255,7 @@ export default function CentralAdmin() {
 
 const styles = {
   wrapper: {
-    backgroundColor: "#F1F5F9",
+    backgroundColor: "var(--bg-main)",
     minHeight: "100vh",
     fontFamily: "Inter, sans-serif",
   },
@@ -249,49 +265,30 @@ const styles = {
   iconCircleBlue: {
     width: "50px",
     height: "50px",
-    backgroundColor: "#E3F2FD",
+    backgroundColor: "var(--bg-info)",
     borderRadius: "12px",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
     flexShrink: 0,
   },
-  pageTitle: { margin: 0, fontWeight: "900", color: "#0F172A" },
+  pageTitle: { margin: 0, fontWeight: "900", color: "var(--text-primary)" },
   pageSubtitle: {
     margin: 0,
-    color: "#64748B",
+    color: "var(--text-muted)",
     marginTop: "5px",
     fontSize: "14px",
   },
-
-  // --- ESTILO DO BOTÃO DE TEMA ---
-  themeToggleBtn: {
-    display: "flex",
-    alignItems: "center",
-    gap: "8px",
-    padding: "10px 16px",
-    backgroundColor: "#FFFFFF",
-    border: "1px solid #E2E8F0",
-    borderRadius: "30px",
-    cursor: "pointer",
-    transition: "all 0.2s ease",
-    boxShadow: "0 2px 4px rgba(0,0,0,0.02)",
-    alignSelf: "center",
-  },
-  themeToggleText: { fontSize: "14px", fontWeight: "600", color: "#475569" },
-
-  // --- MUDANÇA PARA GRID ---
   grid: { display: "grid", gap: "20px" },
-
   card: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "var(--bg-card)",
     borderRadius: "16px",
     padding: "20px",
     display: "flex",
     alignItems: "center",
     gap: "15px",
     boxShadow: "0 4px 6px rgba(0,0,0,0.02)",
-    border: "1px solid #E2E8F0",
+    border: "1px solid var(--border-color)",
     cursor: "pointer",
     transition: "all 0.2s ease",
   },
@@ -305,11 +302,15 @@ const styles = {
     flexShrink: 0,
   },
   cardContent: { flex: 1 },
-  cardTitle: { margin: "0 0 6px 0", fontWeight: "800", color: "#1E293B" },
+  cardTitle: {
+    margin: "0 0 6px 0",
+    fontWeight: "800",
+    color: "var(--text-primary)",
+  },
   cardDesc: {
     margin: 0,
     fontSize: "13px",
-    color: "#64748B",
+    color: "var(--text-secondary)",
     lineHeight: "1.5",
   },
   arrow: { flexShrink: 0 },

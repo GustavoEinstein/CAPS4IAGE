@@ -10,7 +10,6 @@ import {
   Trash2,
   ShieldCheck,
   Loader2,
-  // --- ÍCONES DO SELETOR ---
   Star,
   Zap,
   Crown,
@@ -28,9 +27,6 @@ import { useNavigate, useOutletContext } from "react-router-dom"
 import api from "../services/api"
 import Swal from "sweetalert2"
 
-// ============================================================================
-// LISTA DE NOMES E RENDERIZADOR SEGURO DE ÍCONES (À Prova de Falhas)
-// ============================================================================
 const ICONS_DISPONIVEIS = [
   "award",
   "star",
@@ -48,7 +44,7 @@ const ICONS_DISPONIVEIS = [
   "trophy",
 ]
 
-const getIcon = (name, size = 18, color = "#F59E0B") => {
+const getIcon = (name, size = 18, color = "var(--text-warning)") => {
   switch (name) {
     case "star":
       return <Star size={size} color={color} style={{ flexShrink: 0 }} />
@@ -86,7 +82,6 @@ export default function GamificacaoAdmin() {
   const navigate = useNavigate()
   const context = useOutletContext()
   const isMobile = context ? context.isMobile : false
-
   const [loading, setLoading] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isAssigning, setIsAssigning] = useState(false)
@@ -96,14 +91,12 @@ export default function GamificacaoAdmin() {
     auditoria_xp: [],
   })
   const [usuarios, setUsuarios] = useState([])
-
   const [novaConquista, setNovaConquista] = useState({
     nome: "",
     descricao: "",
     xp_bonus: 50,
-    icone: "award", // Padrão selecionado
+    icone: "award",
   })
-
   const [atribuicao, setAtribuicao] = useState({
     usuario_id: "",
     conquista_id: "",
@@ -119,7 +112,7 @@ export default function GamificacaoAdmin() {
       const response = await api.get("api/admin/gamificacao/")
       setDados(response.data)
     } catch (err) {
-      console.error("Erro ao carregar gestão", err)
+      console.error("Erro", err)
     } finally {
       setLoading(false)
     }
@@ -130,7 +123,7 @@ export default function GamificacaoAdmin() {
       const response = await api.get("api/admin/users/")
       setUsuarios(response.data.filter((u) => !u.is_superuser))
     } catch (err) {
-      console.error("Erro ao buscar usuários", err)
+      console.error("Erro", err)
     }
   }
 
@@ -153,7 +146,7 @@ export default function GamificacaoAdmin() {
         icone: "award",
       })
     } catch (err) {
-      Swal.fire("Erro", "Ocorreu um erro ao criar a badge.", "error")
+      Swal.fire("Erro", "Erro ao criar badge.", "error")
     } finally {
       setIsSubmitting(false)
     }
@@ -161,29 +154,22 @@ export default function GamificacaoAdmin() {
 
   const handleAtribuirBadge = async (e) => {
     e.preventDefault()
-    if (!atribuicao.usuario_id || !atribuicao.conquista_id) {
-      return Swal.fire(
-        "Atenção",
-        "Selecione um usuário e uma medalha.",
-        "warning",
-      )
-    }
-
+    if (!atribuicao.usuario_id || !atribuicao.conquista_id)
+      return Swal.fire("Atenção", "Selecione usuário e medalha.", "warning")
     setIsAssigning(true)
     try {
       await api.post("api/admin/gamificacao/atribuir/", atribuicao)
       Swal.fire({
         icon: "success",
         title: "Atribuída!",
-        text: "A medalha e o XP foram concedidos ao professor.",
+        text: "Concedido ao professor.",
         timer: 2000,
         showConfirmButton: false,
       })
       fetchDados()
       setAtribuicao({ usuario_id: "", conquista_id: "" })
     } catch (err) {
-      const msg = err.response?.data?.erro || "Erro ao atribuir medalha."
-      Swal.fire("Ops!", msg, "error")
+      Swal.fire("Ops!", err.response?.data?.erro || "Erro", "error")
     } finally {
       setIsAssigning(false)
     }
@@ -198,20 +184,19 @@ export default function GamificacaoAdmin() {
       confirmButtonColor: "#DC2626",
     })
     if (!confirm.isConfirmed) return
-
     try {
       await api.delete(`api/admin/gamificacao/${id}/delete/`)
       fetchDados()
     } catch (err) {
-      Swal.fire("Erro", "Erro ao excluir badge.", "error")
+      Swal.fire("Erro", "Erro ao excluir.", "error")
     }
   }
 
   if (loading)
     return (
       <div style={styles.loadingContainer}>
-        <Loader2 className="spin" size={32} color="#EA580C" />
-        <p style={{ marginTop: "10px", color: "#64748B" }}>
+        <Loader2 className="spin" size={32} color="var(--text-warning)" />
+        <p style={{ marginTop: "10px", color: "var(--text-muted)" }}>
           Carregando Hall da Fama...
         </p>
         <style>{`@keyframes spin { 100% { transform: rotate(360deg); } } .spin { animation: spin 1s linear infinite; }`}</style>
@@ -226,9 +211,9 @@ export default function GamificacaoAdmin() {
       }}
     >
       <style>{`
-        input::placeholder, textarea::placeholder { color: #94A3B8 !important; opacity: 1 !important; }
-        ::-webkit-input-placeholder { color: #94A3B8 !important; opacity: 1 !important; }
-        :-moz-placeholder { color: #94A3B8 !important; opacity: 1 !important; }
+        input::placeholder, textarea::placeholder { color: var(--text-muted) !important; opacity: 1 !important; }
+        ::-webkit-input-placeholder { color: var(--text-muted) !important; opacity: 1 !important; }
+        :-moz-placeholder { color: var(--text-muted) !important; opacity: 1 !important; }
       `}</style>
 
       <div style={styles.container}>
@@ -241,7 +226,7 @@ export default function GamificacaoAdmin() {
           </button>
           <div style={styles.titleGroup}>
             <div style={styles.iconCircleOrange}>
-              <Trophy size={28} color="#EA580C" />
+              <Trophy size={28} color="var(--text-warning)" />
             </div>
             <div>
               <h1
@@ -261,12 +246,12 @@ export default function GamificacaoAdmin() {
 
         <div style={styles.statsGrid}>
           <StatCard
-            icon={<Trophy color="#F59E0B" />}
+            icon={<Trophy color="var(--text-warning)" />}
             label="Total de Badges"
             value={dados.conquistas_disponiveis.length}
           />
           <StatCard
-            icon={<TrendingUp color="#10B981" />}
+            icon={<TrendingUp color="var(--text-success)" />}
             label="Movimentações de XP"
             value={dados.auditoria_xp.length}
           />
@@ -278,18 +263,16 @@ export default function GamificacaoAdmin() {
             flexDirection: isMobile ? "column" : "row",
           }}
         >
-          {/* --- COLUNA ESQUERDA --- */}
           <div style={styles.columnLeft}>
-            {/* ATRIBUIÇÃO MANUAL DE MEDALHAS PARA OS USUÁRIOS */}
             <section style={styles.section}>
               <div style={styles.sectionHeader}>
-                <ShieldCheck size={20} color="#EA580C" />
+                <ShieldCheck size={20} color="var(--text-warning)" />
                 <h2 style={styles.sectionTitle}>Conceder Medalha e XP</h2>
               </div>
               <p
                 style={{
                   fontSize: "13px",
-                  color: "#64748B",
+                  color: "var(--text-secondary)",
                   marginBottom: "15px",
                 }}
               >
@@ -361,10 +344,9 @@ export default function GamificacaoAdmin() {
               </form>
             </section>
 
-            {/* AUDITORIA DE XP */}
             <section style={styles.section}>
               <div style={styles.sectionHeader}>
-                <History size={20} color="#1565C0" />
+                <History size={20} color="var(--text-info)" />
                 <h2 style={styles.sectionTitle}>Auditoria de XP</h2>
               </div>
 
@@ -391,7 +373,7 @@ export default function GamificacaoAdmin() {
                           </span>
                           <span
                             style={{
-                              color: "#10B981",
+                              color: "var(--text-success)",
                               fontWeight: "bold",
                               fontSize: "14px",
                             }}
@@ -403,12 +385,17 @@ export default function GamificacaoAdmin() {
                           style={{
                             margin: "0 0 5px 0",
                             fontSize: "13px",
-                            color: "#475569",
+                            color: "var(--text-secondary)",
                           }}
                         >
                           {log.descricao}
                         </p>
-                        <span style={{ fontSize: "11px", color: "#94A3B8" }}>
+                        <span
+                          style={{
+                            fontSize: "11px",
+                            color: "var(--text-muted)",
+                          }}
+                        >
                           {log.data}
                         </span>
                       </div>
@@ -436,7 +423,7 @@ export default function GamificacaoAdmin() {
                           <td
                             style={{
                               ...styles.td,
-                              color: "#10B981",
+                              color: "var(--text-success)",
                               fontWeight: "bold",
                             }}
                           >
@@ -452,11 +439,10 @@ export default function GamificacaoAdmin() {
             </section>
           </div>
 
-          {/* --- COLUNA DIREITA --- */}
           <aside style={styles.sidebar}>
             <div style={styles.formCard}>
               <div style={styles.sectionHeader}>
-                <Plus size={20} color="#1565C0" />
+                <Plus size={20} color="var(--text-info)" />
                 <h2 style={styles.sectionTitle}>Nova Badge</h2>
               </div>
               <form onSubmit={handleCreateBadge} style={styles.form}>
@@ -475,7 +461,6 @@ export default function GamificacaoAdmin() {
                     required
                   />
                 </div>
-
                 <div style={styles.inputGroup}>
                   <label style={styles.label}>Descrição</label>
                   <textarea
@@ -491,8 +476,6 @@ export default function GamificacaoAdmin() {
                     required
                   />
                 </div>
-
-                {/* --- SELETOR DE ÍCONES CORRIGIDO --- */}
                 <div style={styles.inputGroup}>
                   <label style={styles.label}>Escolha o Ícone</label>
                   <div style={styles.iconSelectorGrid}>
@@ -511,21 +494,26 @@ export default function GamificacaoAdmin() {
                           title={iconName}
                           style={{
                             ...styles.iconSelectBtn,
-                            backgroundColor: isSelected ? "#FEF3C7" : "#FFFFFF",
-                            borderColor: isSelected ? "#F59E0B" : "#E2E8F0",
+                            backgroundColor: isSelected
+                              ? "var(--bg-warning)"
+                              : "var(--bg-card)",
+                            borderColor: isSelected
+                              ? "var(--text-warning)"
+                              : "var(--border-color)",
                           }}
                         >
                           {getIcon(
                             iconName,
                             20,
-                            isSelected ? "#D97706" : "#94A3B8",
+                            isSelected
+                              ? "var(--text-warning)"
+                              : "var(--text-muted)",
                           )}
                         </button>
                       )
                     })}
                   </div>
                 </div>
-
                 <div style={styles.inputGroup}>
                   <label style={styles.label}>XP Bônus (Recompensa)</label>
                   <input
@@ -540,7 +528,6 @@ export default function GamificacaoAdmin() {
                     }
                   />
                 </div>
-
                 <button
                   type="submit"
                   disabled={isSubmitting}
@@ -556,28 +543,25 @@ export default function GamificacaoAdmin() {
               </form>
             </div>
 
-            {/* LISTAGEM DAS BADGES CORRIGIDA */}
             <div style={styles.listCard}>
               <h3 style={styles.miniTitle}>Badges Ativas</h3>
               {dados.conquistas_disponiveis.map((c) => (
                 <div key={c.id} style={styles.badgeItem}>
-                  {/* Puxa o ícone dinâmico direto da função JSX */}
-                  {getIcon(c.icone, 22, "#F59E0B")}
-
+                  {getIcon(c.icone, 22, "var(--text-warning)")}
                   <div
                     style={{
                       display: "flex",
                       flexDirection: "column",
                       flex: 1,
                       overflow: "hidden",
-                      marginLeft: "6px", // Espaçamento extra pro ícone
+                      marginLeft: "6px",
                     }}
                   >
                     <span
                       style={{
                         fontSize: "14px",
                         fontWeight: "800",
-                        color: "#1E293B",
+                        color: "var(--text-primary)",
                         whiteSpace: "nowrap",
                         textOverflow: "ellipsis",
                         overflow: "hidden",
@@ -585,7 +569,9 @@ export default function GamificacaoAdmin() {
                     >
                       {c.nome}
                     </span>
-                    <small style={{ color: "#64748B", fontWeight: "600" }}>
+                    <small
+                      style={{ color: "var(--text-muted)", fontWeight: "600" }}
+                    >
                       +{c.xp_bonus} XP
                     </small>
                   </div>
@@ -599,16 +585,7 @@ export default function GamificacaoAdmin() {
                 </div>
               ))}
               {dados.conquistas_disponiveis.length === 0 && (
-                <p
-                  style={{
-                    fontSize: "13px",
-                    color: "#94A3B8",
-                    textAlign: "center",
-                    marginTop: "20px",
-                  }}
-                >
-                  Nenhuma badge criada ainda.
-                </p>
+                <p style={styles.emptyText}>Nenhuma badge criada ainda.</p>
               )}
             </div>
           </aside>
@@ -630,7 +607,7 @@ const StatCard = ({ icon, label, value }) => (
 
 const styles = {
   wrapper: {
-    backgroundColor: "#F8FAFC",
+    backgroundColor: "var(--bg-main)",
     minHeight: "100vh",
     fontFamily: "Inter, sans-serif",
   },
@@ -650,7 +627,7 @@ const styles = {
     border: "none",
     background: "none",
     cursor: "pointer",
-    color: "#64748B",
+    color: "var(--text-secondary)",
     marginBottom: "15px",
     fontWeight: "700",
     padding: 0,
@@ -659,16 +636,15 @@ const styles = {
   iconCircleOrange: {
     width: "50px",
     height: "50px",
-    backgroundColor: "#FFF7ED",
+    backgroundColor: "var(--bg-warning)",
     borderRadius: "12px",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
     flexShrink: 0,
   },
-  title: { fontWeight: "900", color: "#0F172A", margin: 0 },
-  subtitle: { color: "#64748B", marginTop: "5px", fontSize: "14px" },
-
+  title: { fontWeight: "900", color: "var(--text-primary)", margin: 0 },
+  subtitle: { color: "var(--text-muted)", marginTop: "5px", fontSize: "14px" },
   statsGrid: {
     display: "grid",
     gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
@@ -676,20 +652,20 @@ const styles = {
     marginBottom: "30px",
   },
   statCard: {
-    backgroundColor: "white",
+    backgroundColor: "var(--bg-card)",
     padding: "20px",
     borderRadius: "16px",
     display: "flex",
     alignItems: "center",
     gap: "15px",
-    border: "1px solid #E2E8F0",
+    border: "1px solid var(--border-color)",
     boxShadow: "0 2px 4px rgba(0,0,0,0.02)",
   },
   statIcon: {
     width: "48px",
     height: "48px",
     borderRadius: "12px",
-    backgroundColor: "#F1F5F9",
+    backgroundColor: "var(--bg-alt)",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
@@ -697,16 +673,15 @@ const styles = {
   statLabel: {
     margin: 0,
     fontSize: "13px",
-    color: "#64748B",
+    color: "var(--text-secondary)",
     fontWeight: "600",
   },
   statValue: {
     margin: 0,
     fontSize: "24px",
     fontWeight: "800",
-    color: "#0F172A",
+    color: "var(--text-primary)",
   },
-
   mainGrid: { display: "flex", gap: "30px", alignItems: "flex-start" },
   columnLeft: {
     flex: 1,
@@ -715,12 +690,11 @@ const styles = {
     gap: "30px",
     minWidth: 0,
   },
-
   section: {
-    backgroundColor: "white",
+    backgroundColor: "var(--bg-card)",
     borderRadius: "20px",
     padding: "25px",
-    border: "1px solid #E2E8F0",
+    border: "1px solid var(--border-color)",
     boxShadow: "0 4px 6px rgba(0,0,0,0.02)",
   },
   sectionHeader: {
@@ -732,18 +706,17 @@ const styles = {
   sectionTitle: {
     fontSize: "18px",
     fontWeight: "800",
-    color: "#1E293B",
+    color: "var(--text-primary)",
     margin: 0,
   },
-
   formRow: {
     display: "flex",
     gap: "15px",
     flexWrap: "wrap",
-    backgroundColor: "#F8FAFC",
+    backgroundColor: "var(--bg-main)",
     padding: "15px",
     borderRadius: "12px",
-    border: "1px solid #E2E8F0",
+    border: "1px solid var(--border-color)",
   },
   inputGroupFlex: {
     display: "flex",
@@ -756,28 +729,27 @@ const styles = {
     width: "100%",
     padding: "10px 12px",
     borderRadius: "8px",
-    border: "1px solid #CBD5E1",
-    backgroundColor: "#FFFFFF",
-    color: "#1E293B",
+    border: "1px solid var(--border-color)",
+    backgroundColor: "var(--input-bg)",
+    color: "var(--input-text)",
     fontSize: "14px",
     outline: "none",
     boxSizing: "border-box",
   },
-
   tableContainer: { overflowX: "auto" },
   table: { width: "100%", borderCollapse: "collapse", textAlign: "left" },
   th: {
     padding: "12px",
-    borderBottom: "2px solid #F1F5F9",
-    color: "#94A3B8",
+    borderBottom: "2px solid var(--bg-main)",
+    color: "var(--text-muted)",
     fontSize: "12px",
     textTransform: "uppercase",
   },
   td: {
     padding: "12px",
-    borderBottom: "1px solid #F1F5F9",
+    borderBottom: "1px solid var(--bg-main)",
     fontSize: "14px",
-    color: "#475569",
+    color: "var(--text-secondary)",
   },
   tr: { transition: "background 0.2s" },
   userName: {
@@ -785,15 +757,14 @@ const styles = {
     alignItems: "center",
     gap: "6px",
     fontWeight: "600",
-    color: "#1E293B",
+    color: "var(--text-primary)",
   },
   mobileLogCard: {
-    backgroundColor: "#F8FAFC",
+    backgroundColor: "var(--bg-main)",
     padding: "15px",
     borderRadius: "10px",
-    border: "1px solid #E2E8F0",
+    border: "1px solid var(--border-color)",
   },
-
   sidebar: {
     display: "flex",
     flexDirection: "column",
@@ -802,23 +773,26 @@ const styles = {
     maxWidth: "350px",
   },
   formCard: {
-    backgroundColor: "white",
+    backgroundColor: "var(--bg-card)",
     padding: "25px",
     borderRadius: "16px",
-    border: "1px solid #E2E8F0",
+    border: "1px solid var(--border-color)",
     boxShadow: "0 4px 6px rgba(0,0,0,0.02)",
   },
   form: { display: "flex", flexDirection: "column", gap: "15px" },
   inputGroup: { display: "flex", flexDirection: "column", gap: "6px", flex: 1 },
-  label: { fontSize: "13px", color: "#475569", fontWeight: "600" },
-
+  label: {
+    fontSize: "13px",
+    color: "var(--text-secondary)",
+    fontWeight: "600",
+  },
   input: {
     width: "100%",
     padding: "10px 12px",
     borderRadius: "8px",
-    border: "1px solid #CBD5E1",
-    backgroundColor: "#FFFFFF",
-    color: "#1E293B",
+    border: "1px solid var(--border-color)",
+    backgroundColor: "var(--input-bg)",
+    color: "var(--input-text)",
     fontSize: "14px",
     outline: "none",
     boxSizing: "border-box",
@@ -827,25 +801,23 @@ const styles = {
     width: "100%",
     padding: "10px 12px",
     borderRadius: "8px",
-    border: "1px solid #CBD5E1",
-    backgroundColor: "#FFFFFF",
-    color: "#1E293B",
+    border: "1px solid var(--border-color)",
+    backgroundColor: "var(--input-bg)",
+    color: "var(--input-text)",
     fontSize: "14px",
     outline: "none",
     minHeight: "80px",
     boxSizing: "border-box",
     fontFamily: "inherit",
   },
-
-  // --- ESTILOS DO SELETOR DE ÍCONES ---
   iconSelectorGrid: {
     display: "flex",
     flexWrap: "wrap",
     gap: "8px",
     padding: "12px",
-    backgroundColor: "#F8FAFC",
+    backgroundColor: "var(--bg-main)",
     borderRadius: "8px",
-    border: "1px solid #E2E8F0",
+    border: "1px solid var(--border-color)",
   },
   iconSelectBtn: {
     width: "38px",
@@ -858,7 +830,6 @@ const styles = {
     cursor: "pointer",
     transition: "all 0.2s",
   },
-
   submitBtn: {
     display: "flex",
     alignItems: "center",
@@ -875,17 +846,16 @@ const styles = {
     marginTop: "10px",
     boxSizing: "border-box",
   },
-
   listCard: {
-    backgroundColor: "#F8FAFC",
+    backgroundColor: "var(--bg-main)",
     padding: "20px",
     borderRadius: "16px",
-    border: "1px solid #E2E8F0",
+    border: "1px solid var(--border-color)",
   },
   miniTitle: {
     fontSize: "14px",
     fontWeight: "800",
-    color: "#475569",
+    color: "var(--text-secondary)",
     marginBottom: "15px",
     marginTop: 0,
     textTransform: "uppercase",
@@ -895,17 +865,16 @@ const styles = {
     alignItems: "center",
     gap: "12px",
     padding: "12px",
-    backgroundColor: "white",
+    backgroundColor: "var(--bg-card)",
     borderRadius: "12px",
     marginBottom: "10px",
-    border: "1px solid #E2E8F0",
+    border: "1px solid var(--border-color)",
     boxShadow: "0 1px 2px rgba(0,0,0,0.02)",
   },
-
   deleteBtn: {
-    background: "#FEE2E2",
-    border: "1px solid #FECACA",
-    color: "#DC2626",
+    background: "var(--bg-danger)",
+    border: "1px solid var(--border-danger)",
+    color: "var(--text-danger)",
     cursor: "pointer",
     padding: "6px",
     borderRadius: "8px",
@@ -914,5 +883,14 @@ const styles = {
     justifyContent: "center",
     transition: "all 0.2s ease",
     flexShrink: 0,
+  },
+  emptyText: {
+    color: "var(--text-muted)",
+    fontSize: "14px",
+    width: "100%",
+    padding: "20px",
+    textAlign: "center",
+    border: "1px dashed var(--border-color)",
+    borderRadius: "12px",
   },
 }

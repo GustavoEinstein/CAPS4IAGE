@@ -1,609 +1,448 @@
-import React, { useState, useEffect } from 'react';
-import api from '../services/api'; 
-import { useParams, useNavigate, useOutletContext } from 'react-router-dom';
-import { Alert } from '../utils/alerts'; 
-import { 
-    ArrowLeft, Calendar, Clock, Bot, BookOpen, CheckCircle2,
-    XCircle, Wrench, Lightbulb, Target, Download, FileText, User, Package, Star,
-    Send, MapPin, Search, AlertCircle, RefreshCw, File, ChevronRight,
-    BarChart3, ShieldAlert, ThumbsUp, AlertTriangle, 
-    Terminal, Cpu, Bookmark, ShieldCheck, Link, ExternalLink
-} from 'lucide-react';
+import React, { useState, useEffect } from "react"
+import api from "../services/api"
+import { useParams, useNavigate, useOutletContext } from "react-router-dom"
+import {
+  ArrowLeft,
+  Calendar,
+  Clock,
+  Bot,
+  BookOpen,
+  CheckCircle2,
+  XCircle,
+  Wrench,
+  Lightbulb,
+  Target,
+  Download,
+  FileText,
+  User,
+  Package,
+  Star,
+  MapPin,
+  File,
+  ExternalLink,
+  Bookmark,
+  ShieldAlert,
+  BarChart3,
+  ThumbsUp,
+  AlertTriangle,
+} from "lucide-react"
 
 const VisualizarMinhaProducao = () => {
-    const { id } = useParams();
-    const navigate = useNavigate();
-    const context = useOutletContext();
-    const isMobile = context ? context.isMobile : false;
+  const { id } = useParams()
+  const navigate = useNavigate()
+  const context = useOutletContext()
+  const isMobile = context ? context.isMobile : false
+  const [data, setData] = useState(null)
+  const [loading, setLoading] = useState(true)
 
-    const [data, setData] = useState(null);
-    const [loading, setLoading] = useState(true);
+  useEffect(() => {
+    const fetchDetails = async () => {
+      try {
+        const response = await api.get(`api/production/${id}/`)
+        setData(response.data)
+      } catch (error) {
+        console.error("Erro ao carregar detalhes:", error)
+      } finally {
+        setLoading(false)
+      }
+    }
+    if (id) fetchDetails()
+  }, [id])
 
-    const handleDownload = async () => {
-        if (!data || !data.arquivo) return;
-
-        try {
-            const urlRelativa = data.arquivo.replace('https://teia.cic.unb.br/kipo_playground/', '');
-            const response = await api.get(urlRelativa, { responseType: 'blob' });
-            const urlBlob = window.URL.createObjectURL(new Blob([response.data]));
-            const link = document.createElement('a');
-            link.href = urlBlob;
-            link.setAttribute('download', `producao-${data.id}.pdf`);
-            document.body.appendChild(link);
-            link.click();
-            link.remove();
-            window.URL.revokeObjectURL(urlBlob);
-        } catch (error) {
-            console.error("Erro no download:", error);
-            Alert.erro("Download Falhou", "Não foi possível baixar o arquivo. Verifique sua conexão.");
-        }
-    };
-
-    useEffect(() => {
-        const fetchDetails = async () => {
-            try {
-                const response = await api.get(`api/production/${id}/`);
-                setData(response.data);
-            } catch (error) {
-                console.error("Erro ao carregar detalhes:", error);
-                Alert.erro("Erro de Carregamento", "Não foi possível carregar os detalhes da produção.");
-            } finally {
-                setLoading(false);
-            }
-        };
-        if (id) fetchDetails();
-    }, [id]);
-
-    if (loading) return <div style={{padding: '50px', textAlign: 'center', color: '#90A4AE'}}>Carregando detalhes...</div>;
-    if (!data) return null;
-
-    const statusLower = data.status ? data.status.toLowerCase() : "";
-    const isApproved = statusLower.includes('aprovado') || statusLower.includes('publicado') || statusLower.includes('concluído');
-    const isRejected = statusLower.includes('rejeitado') || statusLower.includes('correção');
-    const isPending = !isApproved && !isRejected;
-
-    const theme = { main: '#1565C0', bg: '#E3F2FD' }; 
-
-    const TimelineCard = () => {
-        const steps = [
-            { id: 1, label: "Envio Realizado", date: data.created_at || data.data, status: "done" },
-            { id: 2, label: `Revisão por Pares (${data.total_aprovacoes || 0}/2)`, date: isPending ? "Em andamento..." : "Concluída", status: isPending ? "current" : "done" },
-            { id: 3, label: "Resultado Final", date: (isApproved || isRejected) ? (isApproved ? "Aprovado" : "Devolvido") : "Aguardando", status: (isApproved || isRejected) ? (isApproved ? "approved" : "rejected") : "waiting" }
-        ];
-
-        return (
-            <div style={styles.timelineCard}>
-                <h3 style={styles.sectionTitleSmall}>Andamento do Processo</h3>
-                <div style={styles.timelineList}>
-                    {steps.map((step, index) => {
-                        let icon = <div style={styles.dotWaiting}></div>;
-                        let lineColor = '#E0E0E0';
-                        let textColor = '#90A4AE';
-
-                        if (step.status === "done") {
-                            icon = <CheckCircle2 size={20} color="#2E7D32" fill="#E8F5E9"/>;
-                            lineColor = '#2E7D32';
-                            textColor = '#37474F';
-                        } else if (step.status === "current") {
-                            icon = <div style={styles.dotCurrent}><div style={styles.pulse}></div></div>;
-                            lineColor = '#E0E0E0';
-                            textColor = '#1565C0';
-                        } else if (step.status === "approved") {
-                            icon = <CheckCircle2 size={20} color="#2E7D32" fill="#E8F5E9"/>;
-                            textColor = '#2E7D32';
-                        } else if (step.status === "rejected") {
-                            icon = <XCircle size={20} color="#C62828" fill="#FFEBEE"/>;
-                            textColor = '#C62828';
-                        }
-
-                        const showLine = index < steps.length - 1;
-
-                        return (
-                            <div key={step.id} style={styles.timelineItem}>
-                                <div style={styles.timelineIconCol}>
-                                    {icon}
-                                    {showLine && <div style={{...styles.timelineLine, backgroundColor: step.status === 'done' ? '#2E7D32' : '#E0E0E0'}}></div>}
-                                </div>
-                                <div style={styles.timelineContent}>
-                                    <span style={{...styles.stepTitle, color: textColor}}>{step.label}</span>
-                                    <span style={styles.stepDate}>{step.date}</span>
-                                </div>
-                            </div>
-                        );
-                    })}
-                </div>
-            </div>
-        );
-    };
-
+  if (loading)
     return (
-        <div style={styles.fullPageWrapper}>
-            <div style={styles.container}>
-                
-                <button onClick={() => navigate(-1)} style={styles.backButton}>
-                    <ArrowLeft size={18} /> Voltar
-                </button>
+      <div
+        style={{
+          padding: "50px",
+          textAlign: "center",
+          color: "var(--text-muted)",
+        }}
+      >
+        Carregando detalhes...
+      </div>
+    )
+  if (!data) return null
 
-                <div style={{...styles.grid, flexDirection: isMobile ? 'column' : 'row'}}>
-                    
-                    <div style={styles.columnContent}>
-                        <div style={styles.materialCard}>
-                            
-                            <div style={styles.headerSection}>
-                                <div>
-                                    <div style={styles.badgesRow}>
-                                        <span style={{...styles.badge, backgroundColor: theme.bg, color: theme.main}}>{data.disciplina}</span>
-                                        <span style={styles.badgeNeutral}>{data.nivel_ensino || data.nivel}</span>
-                                    </div>
-                                    <h1 style={styles.title}>{data.titulo}</h1>
-                                </div>
-                                
-                                <div style={styles.metaRow}>
-                                    <div style={styles.iaTag}><Bot size={14} /> {data.modelo_ia || "Nenhum modelo informado"}</div>
-                                    <span style={styles.dateText}><User size={14} /> Autor: {data.autor || "Você"}</span>
-                                </div>
-                            </div>
+  const statusLower = data.status ? data.status.toLowerCase() : ""
+  const isApproved =
+    statusLower.includes("aprovado") ||
+    statusLower.includes("publicado") ||
+    statusLower.includes("concluído")
+  const isRejected =
+    statusLower.includes("rejeitado") || statusLower.includes("correção")
+  const isPending = !isApproved && !isRejected
 
-                            {data.producao_base && (
-                              <div style={{
-                                backgroundColor: "#E3F2FD", 
-                                borderLeft: "4px solid #1565C0", 
-                                padding: "12px 15px", 
-                                borderRadius: "6px", 
-                                marginBottom: "25px", 
-                                display: "flex", 
-                                alignItems: "center", 
-                                gap: "10px"
-                              }}>
-                                <Bookmark size={20} color="#1565C0" />
-                                <span style={{ fontSize: "14px", color: "#1A237E" }}>
-                                  Esta prática foi inspirada no material: <strong>
-                                    <a 
-                                      href={`/dashboard/producao/${data.producao_base.id}`} 
-                                      style={{ color: "#1565C0", textDecoration: "underline" }}
-                                    >
-                                      {data.producao_base.titulo || "Acessar produção original"}
-                                    </a>
-                                  </strong>
-                                </span>
-                              </div>
-                            )}
-
-                            <div style={styles.techSheet}>
-                                <div style={styles.techItem}>
-                                    <div style={styles.iconCircle}>
-                                        <Wrench size={18} color={theme.main} />
-                                    </div>
-                                    <div>
-                                        <span style={{ ...styles.techLabel, color: theme.main }}>Metodologia</span>
-                                        <span style={styles.techValue}>{data.metodologia || '-'}</span>
-                                    </div>
-                                </div>
-                                <div style={styles.techItem}>
-                                    <div style={styles.iconCircle}>
-                                        <Clock size={18} color={theme.main} />
-                                    </div>
-                                    <div>
-                                        <span style={{ ...styles.techLabel, color: theme.main }}>Duração</span>
-                                        <span style={styles.techValue}>{data.duracao || '-'}</span>
-                                    </div>
-                                </div>
-                                <div style={styles.techItem}>
-                                    <div style={styles.iconCircle}>
-                                        <Package size={18} color={theme.main} />
-                                    </div>
-                                    <div>
-                                        <span style={{ ...styles.techLabel, color: theme.main }}>Recursos</span>
-                                        <span style={styles.techValue}>
-                                            {Array.isArray(data.recursos) ? data.recursos.join(', ') : (data.recursos || '-')}
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* --- CORREÇÃO DO TEXTO DA BNCC APLICADA AQUI --- */}
-                            <div style={styles.section}>
-                                <h3 style={styles.sectionTitle}><BookOpen size={18}/> Intencionalidade (BNCC)</h3>
-                                <div style={styles.bnccBox}>
-                                    <p style={styles.bnccText}>{data.bncc || "Não informado."}</p>
-                                </div>
-                            </div>
-
-                            <div style={styles.section}>
-                                <h3 style={styles.sectionTitle}><Cpu size={18}/> BNCC Computação</h3>
-                                <div style={{ ...styles.bnccBox, backgroundColor: '#E3F2FD', borderLeftColor: '#1565C0' }}>
-                                    <p style={{ ...styles.bnccText, color: '#0D47A1' }}>
-                                        {data.bncc_computacao || "Nenhuma habilidade de computação registrada."}
-                                    </p>
-                                </div>
-                            </div>
-
-                            <div style={styles.section}>
-                                <h3 style={styles.sectionTitle}><Terminal size={18}/> Prompts Utilizados na IA</h3>
-                                <div style={styles.promptBox}>
-                                    {data.prompts_ia || "Nenhum prompt foi registrado nesta produção."}
-                                </div>
-                            </div>
-
-                            <div style={styles.section}>
-                                <h3 style={styles.sectionTitle}><Lightbulb size={18}/> Relato de Experiência</h3>
-                                <p style={styles.textBody}>{data.experiencia || data.relato || "Não informado."}</p>
-                            </div>
-                            
-                            <div style={styles.section}>
-                                <h3 style={styles.sectionTitle}><Target size={18}/> Resultados</h3>
-                                <div style={styles.resultsBox}>{data.resultados || "Sem resultados registrados."}</div>
-                            </div>
-                            
-                            <ParecerTecnico producao={data} />
-
-                        </div>
-                    </div>
-
-                    <div style={styles.columnSidebar}>
-                        
-                        <TimelineCard />
-
-                        {isRejected && (
-                            <button onClick={() => navigate(`/dashboard/editar-producao/${data.id}`)} style={styles.editButton}>
-                                <Wrench size={16} /> Realizar Correções
-                            </button>
-                        )}
-
-                        <div style={{...styles.sidebarCard, marginTop: '20px'}}>
-                            
-                            <h3 style={styles.sidebarTitle}>Status da Avaliação</h3>
-
-                            {isRejected && (
-                                <div style={styles.statusBoxRejected}>
-                                    <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "10px" }}>
-                                        <XCircle size={20} color="#C62828" />
-                                        <span style={styles.statusTitleRejected}>AJUSTES NECESSÁRIOS</span>
-                                    </div>
-                                    <p style={{...styles.statusDesc, marginBottom: '12px'}}>
-                                        Sua prática foi analisada e precisa de correções antes de ser publicada.
-                                    </p>
-                                </div>
-                            )}
-
-                            {!isApproved && !isRejected && (
-                                <div style={styles.statusBoxPending}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
-                                        <Clock size={20} color="#EF6C00" />
-                                        <span style={styles.statusTitlePending}>AGUARDANDO VALIDAÇÃO</span>
-                                    </div>
-                                    
-                                    <div style={{ backgroundColor: 'rgba(255,255,255,0.6)', padding: '10px', borderRadius: '6px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                        <span style={{ fontSize: '12px', fontWeight: '700', color: '#E65100', textTransform: 'uppercase' }}>Aprovações:</span>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                                            <span style={{ fontSize: '16px', fontWeight: '900', color: '#E65100' }}>{data.total_aprovacoes || 0}/2</span>
-                                        </div>
-                                    </div>
-                                    
-                                    <p style={{...styles.statusDesc, marginTop: '10px'}}>
-                                        Sua prática está na fila e será avaliada por 2 colegas (revisão cega).
-                                    </p>
-                                </div>
-                            )}
-
-                            {isApproved && (
-                                <div style={styles.statusBoxApproved}>
-                                    <ShieldCheck size={24} color="#2E7D32" />
-                                    <div>
-                                        <span style={styles.statusTitleApproved}>PUBLICADA!</span>
-                                        <p style={styles.statusDesc}>Prática validada e disponível na comunidade.</p>
-                                    </div>
-                                </div>
-                            )}
-
-                            <div style={styles.divider}></div>
-
-                            <h3 style={styles.sidebarTitle}>Arquivos e Links</h3>
-                            
-                            {data.arquivo && (
-                                <div style={styles.downloadContainer}>
-                                    <div style={styles.fileInfoBox}>
-                                        <FileText size={32} color="#1565C0" style={{flexShrink: 0}} />
-                                        <div style={{overflow: 'hidden'}}>
-                                            <span style={styles.fileName}>{decodeURIComponent(data.arquivo.split('/').pop())}</span>
-                                            <span style={styles.fileType}>Documento Anexado</span>
-                                        </div>
-                                    </div>
-                                    <button onClick={handleDownload} style={styles.downloadBtnPrimary}>
-                                        <Download size={18} /> Baixar Arquivo
-                                    </button>
-                                </div>
-                            )}
-
-                            {data.link_material && (
-                                <div style={{...styles.downloadContainer, marginTop: data.arquivo ? '15px' : '0'}}>
-                                    <div style={styles.fileInfoBox}>
-                                        <Link size={32} color="#1565C0" style={{flexShrink: 0}} />
-                                        <div style={{overflow: 'hidden'}}>
-                                            <span style={styles.fileName}>Link Externo</span>
-                                            <span style={styles.fileType}>Acessar material online</span>
-                                        </div>
-                                    </div>
-                                    <a href={data.link_material} target="_blank" rel="noopener noreferrer" style={{textDecoration: 'none', width: '100%'}}>
-                                        <button style={{...styles.downloadBtnPrimary, width: '100%'}}>
-                                            <ExternalLink size={18} /> Abrir Link
-                                        </button>
-                                    </a>
-                                </div>
-                            )}
-
-                            {!data.arquivo && !data.link_material && (
-                                <div style={styles.emptyState}>
-                                    <File size={24} color="#CFD8DC"/>
-                                    <p>Nenhum material anexado.</p>
-                                </div>
-                            )}
-                            
-                            <button 
-                              onClick={() => navigate("/dashboard/catalogar/manual", { state: { baseData: data } })} 
-                              style={{ 
-                                ...styles.downloadBtn, 
-                                backgroundColor: "#E8F5E9", 
-                                color: "#2E7D32", 
-                                border: "1px solid #C8E6C9",
-                                marginTop: "20px" 
-                              }}
-                            >
-                              <Bookmark size={18} color="#2E7D32" /> Referenciar Prática
-                            </button>
-                        </div>
-
-                    </div>
-                </div>
-            </div>
-        </div>
-    );
-};
-
-// ============================================================================
-// NOVO COMPONENTE: PARECER TÉCNICO EMBUTIDO E MELHORADO
-// ============================================================================
-const ParecerTecnico = ({ producao }) => {
-    if (!producao || (!producao.revisao_realizada && (!producao.avaliacoes_detalhadas || producao.avaliacoes_detalhadas.length === 0))) return null;
-
-    const avaliacoes = producao.avaliacoes_detalhadas || [];
-    
-    return (
-        <div style={styles.ptContainer}>
-            <div style={styles.ptMainHeader}>
-                <BarChart3 size={24} color="#1565C0" />
+  return (
+    <div style={styles.fullPageWrapper}>
+      <div style={styles.container}>
+        <button onClick={() => navigate(-1)} style={styles.backButton}>
+          <ArrowLeft size={18} /> Voltar
+        </button>
+        <div
+          style={{ ...styles.grid, flexDirection: isMobile ? "column" : "row" }}
+        >
+          <div style={styles.columnContent}>
+            <div style={styles.materialCard}>
+              <div style={styles.headerSection}>
                 <div>
-                    <h3 style={styles.ptMainTitle}>Histórico de Revisão</h3>
-                    <p style={styles.ptMainSubtitle}>Veja o detalhamento do que os avaliadores acharam da sua prática.</p>
+                  <div style={styles.badgesRow}>
+                    <span
+                      style={{
+                        ...styles.badge,
+                        backgroundColor: "var(--bg-info)",
+                        color: "var(--text-info)",
+                      }}
+                    >
+                      {data.disciplina}
+                    </span>
+                    <span style={styles.badgeNeutral}>
+                      {data.nivel_ensino || data.nivel}
+                    </span>
+                  </div>
+                  <h1 style={styles.title}>{data.titulo}</h1>
                 </div>
-            </div>
+                <div style={styles.metaRow}>
+                  <div style={styles.iaTag}>
+                    <Bot size={14} />{" "}
+                    {data.modelo_ia || "Nenhum modelo informado"}
+                  </div>
+                  <span style={styles.dateText}>
+                    <User size={14} /> Autor: {data.autor || "Você"}
+                  </span>
+                </div>
+              </div>
 
-            <div style={styles.ptCardsWrapper}>
-                {avaliacoes.map((aval) => (
-                    <ReviewCard key={aval.ordem} avaliacao={aval} />
-                ))}
+              <div style={styles.techSheet}>
+                <div style={styles.techItem}>
+                  <div style={styles.iconCircle}>
+                    <Wrench size={18} color="var(--text-info)" />
+                  </div>
+                  <div>
+                    <span style={styles.techLabel}>Metodologia</span>
+                    <span style={styles.techValue}>
+                      {data.metodologia || "-"}
+                    </span>
+                  </div>
+                </div>
+                <div style={styles.techItem}>
+                  <div style={styles.iconCircle}>
+                    <Clock size={18} color="var(--text-info)" />
+                  </div>
+                  <div>
+                    <span style={styles.techLabel}>Duração</span>
+                    <span style={styles.techValue}>{data.duracao || "-"}</span>
+                  </div>
+                </div>
+                <div style={styles.techItem}>
+                  <div style={styles.iconCircle}>
+                    <Package size={18} color="var(--text-info)" />
+                  </div>
+                  <div>
+                    <span style={styles.techLabel}>Recursos</span>
+                    <span style={styles.techValue}>
+                      {Array.isArray(data.recursos)
+                        ? data.recursos.join(", ")
+                        : data.recursos || "-"}
+                    </span>
+                  </div>
+                </div>
+              </div>
 
-                {/* Ghost Card aguardando o segundo revisor */}
-                {avaliacoes.length === 1 && !producao.status.toLowerCase().includes('rejeitado') && (
-                    <GhostCard />
-                )}
+              <div style={styles.section}>
+                <h3 style={styles.sectionTitle}>
+                  <BookOpen size={18} /> Intencionalidade (BNCC)
+                </h3>
+                <div style={styles.bnccBox}>
+                  <p style={styles.bnccText}>{data.bncc || "Não informado."}</p>
+                </div>
+              </div>
+
+              <div style={styles.section}>
+                <h3 style={styles.sectionTitle}>
+                  <Lightbulb size={18} /> Relato de Experiência
+                </h3>
+                <p style={styles.textBody}>
+                  {data.experiencia || data.relato || "Não informado."}
+                </p>
+              </div>
+
+              <div style={styles.section}>
+                <h3 style={styles.sectionTitle}>
+                  <Target size={18} /> Resultados
+                </h3>
+                <div style={styles.resultsBox}>
+                  {data.resultados || "Sem resultados registrados."}
+                </div>
+              </div>
             </div>
+          </div>
+
+          <div style={styles.columnSidebar}>
+            <div style={styles.sidebarCard}>
+              <h3 style={styles.sidebarTitle}>Status da Avaliação</h3>
+              {isPending && (
+                <div style={styles.statusBoxPending}>
+                  <span style={styles.statusTitlePending}>
+                    AGUARDANDO VALIDAÇÃO
+                  </span>
+                  <p style={styles.statusDesc}>
+                    Sua prática está na fila e será avaliada por colegas.
+                  </p>
+                </div>
+              )}
+              {isApproved && (
+                <div style={styles.statusBoxApproved}>
+                  <span style={styles.statusTitleApproved}>PUBLICADA!</span>
+                  <p style={styles.statusDesc}>
+                    Prática validada e disponível na comunidade.
+                  </p>
+                </div>
+              )}
+              {isRejected && (
+                <div style={styles.statusBoxRejected}>
+                  <span style={styles.statusTitleRejected}>
+                    AJUSTES NECESSÁRIOS
+                  </span>
+                  <p style={styles.statusDesc}>
+                    Sua prática precisa de correções antes de ser publicada.
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
-    );
-};
-
-const ReviewCard = ({ avaliacao }) => {
-    const isAprovado = avaliacao.aprovado;
-    const { notas, pontos_fortes, pontos_melhoria, ordem } = avaliacao;
-
-    return (
-        <div style={styles.rcCard(isAprovado)}>
-            <div style={styles.rcHeader(isAprovado)}>
-                <div style={styles.rcHeaderTitle(isAprovado)}>
-                    {isAprovado ? <CheckCircle2 size={22}/> : <ShieldAlert size={22}/>}
-                    <span>PARECER DO {ordem}º AVALIADOR</span>
-                </div>
-                <div style={styles.rcBadge(isAprovado)}>
-                    {isAprovado ? 'APROVADO' : 'AJUSTES NECESSÁRIOS'}
-                </div>
-            </div>
-
-            <div style={styles.rcContent}>
-                <div style={styles.rcSectionTitle}>
-                    <BarChart3 size={16} color="#546E7A"/> 
-                    Notas Atribuídas
-                </div>
-                <div style={styles.rcGridScores}>
-                    <ScoreItem label="Coerência Pedagógica" valor={notas.coerencia} />
-                    <ScoreItem label="Qualidade do Prompt" valor={notas.qualidade} />
-                    <ScoreItem label="Metodologia Ativa" valor={notas.metodologia} />
-                    <ScoreItem label="Critérios de Avaliação" valor={notas.avaliacao} />
-                    <ScoreItem label="Inclusão e Acessibilidade" valor={notas.inclusao} />
-                    <ScoreItem label="Inovação e Criatividade" valor={notas.inovacao} />
-                </div>
-
-                <hr style={styles.rcDivider} />
-
-                <div style={styles.rcSectionTitle}>
-                    <User size={16} color="#546E7A"/> 
-                    Comentários do Revisor
-                </div>
-                <div style={styles.rcFeedbackGrid}>
-                    {pontos_fortes && (
-                        <div style={styles.rcFeedbackBoxSuccess}>
-                            <div style={styles.rcFeedbackLabelSuccess}><ThumbsUp size={16}/> Pontos Fortes</div>
-                            <div style={styles.rcFeedbackTextSuccess}>{pontos_fortes}</div>
-                        </div>
-                    )}
-                    {pontos_melhoria && (
-                        <div style={styles.rcFeedbackBoxDanger}>
-                            <div style={styles.rcFeedbackLabelDanger}><AlertTriangle size={16}/> Sugestões de Melhoria</div>
-                            <div style={styles.rcFeedbackTextDanger}>{pontos_melhoria}</div>
-                        </div>
-                    )}
-                    {!pontos_fortes && !pontos_melhoria && avaliacao.feedback_texto && (
-                         <div style={styles.rcFeedbackBoxNeutral}>
-                            <div style={styles.rcFeedbackTextNeutral}>{avaliacao.feedback_texto}</div>
-                        </div>
-                    )}
-                </div>
-            </div>
-        </div>
-    );
-};
-
-const GhostCard = () => (
-    <div style={styles.gcCard}>
-        <div style={styles.gcHeader}>
-            <div style={styles.gcTitle}>
-                <Clock size={22} color="#90A4AE" />
-                <span>AGUARDANDO 2º AVALIADOR</span>
-            </div>
-            <div style={styles.gcBadge}>NA FILA</div>
-        </div>
-        <div style={styles.gcContent}>
-            <p style={styles.gcText}>
-                Esta produção já recebeu a sua primeira avaliação e agora aguarda o parecer de mais um colega educador para ser finalizada no formato de duplo-cego.
-            </p>
-        </div>
+      </div>
     </div>
-);
+  )
+}
 
-const ScoreItem = ({ label, valor }) => (
-    <div style={styles.rcScoreRow}>
-        <span style={styles.rcLabel}>{label}</span>
-        <div style={styles.rcStarsContainer}>
-            {[1, 2, 3, 4, 5].map((star) => (
-                <Star
-                    key={star}
-                    size={14}
-                    fill={star <= valor ? (valor <= 2 ? "#EF5350" : "#FFB300") : "#E0E0E0"}
-                    color="transparent" 
-                    style={{ marginRight: 2 }}
-                />
-            ))}
-            <span style={{...styles.rcNumberValue, color: valor <= 2 ? '#D32F2F' : '#2E7D32'}}>
-                {valor}/5
-            </span>
-        </div>
-    </div>
-);
-
-// ============================================================================
-// ESTILOS GERAIS
-// ============================================================================
 const styles = {
-    fullPageWrapper: { backgroundColor: '#F0F2F5', minHeight: '100vh', width: '100%', boxSizing: 'border-box', paddingTop: '20px' },
-    container: { maxWidth: '1100px', margin: '0 auto', padding: '0 20px 40px 20px' },
-    backButton: { display: 'flex', alignItems: 'center', gap: '6px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '14px', color: '#546E7A', fontWeight: '700', marginBottom: '15px' },
-    
-    grid: { display: 'flex', gap: '20px', alignItems: 'flex-start' },
-    columnContent: { flex: 1, minWidth: '0' }, 
-    columnSidebar: { width: '300px', minWidth: '300px', position: 'sticky', top: '20px' },
+  fullPageWrapper: {
+    backgroundColor: "var(--bg-main)",
+    minHeight: "100vh",
+    width: "100%",
+    boxSizing: "border-box",
+    paddingTop: "20px",
+  },
+  container: {
+    maxWidth: "1100px",
+    margin: "0 auto",
+    padding: "0 20px 40px 20px",
+  },
+  backButton: {
+    display: "flex",
+    alignItems: "center",
+    gap: "6px",
+    background: "none",
+    border: "none",
+    cursor: "pointer",
+    fontSize: "14px",
+    color: "var(--text-secondary)",
+    fontWeight: "700",
+    marginBottom: "15px",
+  },
 
-    materialCard: { backgroundColor: '#FFFFFF', borderRadius: '12px', padding: '35px', boxShadow: '0 2px 5px rgba(0,0,0,0.05)', border: '1px solid #E0E0E0' },
-    
-    headerSection: { marginBottom: '25px' },
-    badgesRow: { display: 'flex', gap: '8px', marginBottom: '8px' },
-    badge: { padding: '4px 10px', borderRadius: '6px', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase' },
-    badgeNeutral: { backgroundColor: '#F5F5F5', color: '#616161', padding: '4px 10px', borderRadius: '6px', fontSize: '11px', fontWeight: '700' },
-    title: { fontSize: '26px', fontWeight: '800', color: '#1A237E', margin: 0, lineHeight: '1.2', wordBreak: 'break-word', overflowWrap: 'break-word' },
-    metaRow: { display: 'flex', alignItems: 'center', gap: '15px', marginTop: '12px' },
-    iaTag: { display:'flex', alignItems: 'center', gap: '5px', fontSize: '12px', color: '#546E7A', backgroundColor: '#F5F5F5', padding: '4px 8px', borderRadius: '6px', fontWeight: '600' },
-    dateText: { display:'flex', alignItems: 'center', gap: '5px', fontSize: '12px', color: '#90A4AE' },
+  grid: { display: "flex", gap: "20px", alignItems: "flex-start" },
+  columnContent: { flex: 1, minWidth: "0" },
+  columnSidebar: {
+    width: "300px",
+    minWidth: "300px",
+    position: "sticky",
+    top: "20px",
+  },
 
-    techSheet: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '15px', marginBottom: '30px', padding: '15px', backgroundColor: '#FAFAFA', borderRadius: '8px' },
-    techItem: { display: 'flex', alignItems: 'flex-start', gap: '10px' },
-    iconCircle: { width: '32px', height: '32px', borderRadius: '50%', backgroundColor: '#FFFFFF', border: '1px solid #E0E0E0', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
-    techLabel: { display: 'block', fontSize: '10px', textTransform: 'uppercase', fontWeight: '800', color: '#90A4AE', marginBottom: '2px' },
-    techValue: { fontSize: '13px', color: '#37474F', fontWeight: '600', wordBreak: 'break-word', overflowWrap: 'break-word' },
+  materialCard: {
+    backgroundColor: "var(--bg-card)",
+    borderRadius: "12px",
+    padding: "35px",
+    boxShadow: "0 2px 5px rgba(0,0,0,0.05)",
+    border: "1px solid var(--border-color)",
+  },
 
-    section: { marginBottom: '30px' },
-    sectionTitle: { fontSize: '16px', fontWeight: '800', color: '#37474F', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '8px' },
-    
-    // CORREÇÕES DE ESTILO DA BNCC APLICADAS AQUI:
-    bnccBox: { backgroundColor: "#FFF8E1", borderLeft: "4px solid #FFC107", padding: "15px", borderRadius: "6px", marginBottom: "30px", wordBreak: "break-word", overflowWrap: "break-word" },
-    bnccText: { margin: 0, fontSize: "15px", color: "#3E2723", lineHeight: "1.6", wordBreak: "break-word", overflowWrap: "break-word", whiteSpace: "pre-wrap" },
-    
-    textBody: { fontSize: '15px', lineHeight: '1.6', color: '#455A64', whiteSpace: 'pre-wrap', wordBreak: 'break-word', overflowWrap: 'break-word' },
-    promptBox: { backgroundColor: '#F8FAFC', padding: '15px', borderRadius: '8px', borderLeft: '4px solid #8B5CF6', color: '#475569', fontSize: '14px', fontStyle: 'italic', whiteSpace: 'pre-wrap', lineHeight: '1.6', wordBreak: 'break-word', overflowWrap: 'break-word' },
-    resultsBox: { backgroundColor: '#E8F5E9', border: '1px solid #C8E6C9', padding: '15px', borderRadius: '8px', color: '#1B5E20', fontSize: '14px', fontStyle: 'italic', whiteSpace: 'pre-wrap', wordBreak: 'break-word', overflowWrap: 'break-word' },
+  headerSection: { marginBottom: "25px" },
+  badgesRow: { display: "flex", gap: "8px", marginBottom: "8px" },
+  badge: {
+    padding: "4px 10px",
+    borderRadius: "6px",
+    fontSize: "11px",
+    fontWeight: "800",
+    textTransform: "uppercase",
+  },
+  badgeNeutral: {
+    backgroundColor: "var(--bg-main)",
+    color: "var(--text-secondary)",
+    padding: "4px 10px",
+    borderRadius: "6px",
+    fontSize: "11px",
+    fontWeight: "700",
+  },
+  title: {
+    fontSize: "26px",
+    fontWeight: "800",
+    color: "var(--text-primary)",
+    margin: 0,
+    lineHeight: "1.2",
+    wordBreak: "break-word",
+  },
+  metaRow: {
+    display: "flex",
+    alignItems: "center",
+    gap: "15px",
+    marginTop: "12px",
+  },
+  iaTag: {
+    display: "flex",
+    alignItems: "center",
+    gap: "5px",
+    fontSize: "12px",
+    color: "var(--text-secondary)",
+    backgroundColor: "var(--bg-main)",
+    padding: "4px 8px",
+    borderRadius: "6px",
+    fontWeight: "600",
+  },
+  dateText: {
+    display: "flex",
+    alignItems: "center",
+    gap: "5px",
+    fontSize: "12px",
+    color: "var(--text-muted)",
+  },
 
-    timelineCard: { backgroundColor: 'white', border: '1px solid #E0E0E0', borderRadius: '12px', padding: '20px', boxShadow: '0 2px 5px rgba(0,0,0,0.03)' },
-    sectionTitleSmall: { fontSize: '12px', textTransform: 'uppercase', color: '#90A4AE', fontWeight: '800', marginBottom: '15px' },
-    timelineList: { display: 'flex', flexDirection: 'column' },
-    timelineItem: { display: 'flex', gap: '12px', minHeight: '50px' },
-    timelineIconCol: { display: 'flex', flexDirection: 'column', alignItems: 'center', width: '24px' },
-    timelineLine: { width: '2px', flex: 1, backgroundColor: '#E0E0E0', margin: '4px 0' },
-    dotWaiting: { width: '12px', height: '12px', borderRadius: '50%', backgroundColor: '#E0E0E0', border: '2px solid #FFF', boxShadow: '0 0 0 1px #B0BEC5' },
-    dotCurrent: { width: '14px', height: '14px', borderRadius: '50%', backgroundColor: '#1565C0', border: '2px solid #E3F2FD', position: 'relative' },
-    timelineContent: { paddingBottom: '20px' },
-    stepTitle: { display: 'block', fontSize: '13px', fontWeight: '700', lineHeight: '1.2' },
-    stepDate: { fontSize: '11px', color: '#90A4AE' },
+  techSheet: {
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))",
+    gap: "15px",
+    marginBottom: "30px",
+    padding: "15px",
+    backgroundColor: "var(--bg-main)",
+    borderRadius: "8px",
+  },
+  techItem: { display: "flex", alignItems: "flex-start", gap: "10px" },
+  iconCircle: {
+    width: "32px",
+    height: "32px",
+    borderRadius: "50%",
+    backgroundColor: "var(--bg-card)",
+    border: "1px solid var(--border-color)",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    flexShrink: 0,
+  },
+  techLabel: {
+    display: "block",
+    fontSize: "10px",
+    textTransform: "uppercase",
+    fontWeight: "800",
+    color: "var(--text-muted)",
+    marginBottom: "2px",
+  },
+  techValue: {
+    fontSize: "13px",
+    color: "var(--text-primary)",
+    fontWeight: "600",
+    wordBreak: "break-word",
+  },
 
-    sidebarCard: { backgroundColor: 'white', border: '1px solid #E0E0E0', borderRadius: '12px', padding: '20px' },
-    sidebarTitle: { margin: '0 0 15px 0', fontSize: '12px', textTransform: 'uppercase', fontWeight: '800', color: '#90A4AE', borderBottom: '1px solid #EEE', paddingBottom: '8px' },
-    editButton: { marginTop: '12px', width: '100%', padding: '10px', backgroundColor: '#C62828', color: 'white', border: 'none', borderRadius: '6px', fontWeight: '700', fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' },
+  section: { marginBottom: "30px" },
+  sectionTitle: {
+    fontSize: "16px",
+    fontWeight: "800",
+    color: "var(--text-primary)",
+    marginBottom: "10px",
+    display: "flex",
+    alignItems: "center",
+    gap: "8px",
+  },
+  bnccBox: {
+    backgroundColor: "var(--bg-warning)",
+    borderLeft: "4px solid var(--border-warning)",
+    padding: "15px",
+    borderRadius: "6px",
+    marginBottom: "30px",
+  },
+  bnccText: {
+    margin: 0,
+    fontSize: "15px",
+    color: "var(--text-primary)",
+    lineHeight: "1.6",
+    whiteSpace: "pre-wrap",
+  },
+  textBody: {
+    fontSize: "15px",
+    lineHeight: "1.6",
+    color: "var(--text-secondary)",
+    whiteSpace: "pre-wrap",
+  },
+  resultsBox: {
+    backgroundColor: "var(--bg-success)",
+    border: "1px solid var(--border-success)",
+    padding: "15px",
+    borderRadius: "8px",
+    color: "var(--text-primary)",
+    fontSize: "14px",
+    fontStyle: "italic",
+    whiteSpace: "pre-wrap",
+  },
 
-    downloadContainer: { display: 'flex', flexDirection: 'column', gap: '10px', padding: '12px', backgroundColor: '#F8F9FA', borderRadius: '10px', border: '1px solid #E0E0E0' },
-    fileInfoBox: { display: 'flex', alignItems: 'center', gap: '12px' },
-    fileName: { display: 'block', fontSize: '13px', fontWeight: '700', color: '#333', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%' },
-    fileType: { fontSize: '11px', color: '#90A4AE' },
-    downloadBtnPrimary: { backgroundColor: '#1565C0', color: 'white', border: 'none', width: '100%', padding: '10px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', cursor: 'pointer', fontSize: '13px', fontWeight: '700', boxShadow: '0 4px 12px rgba(21, 101, 192, 0.2)', transition: 'background 0.2s' },
-    emptyState: { textAlign: 'center', padding: '15px', color: '#B0BEC5', fontSize: '13px', fontStyle: 'italic', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '5px' },
-    divider: { height: "1px", backgroundColor: "#EEE", margin: "20px 0" },
+  sidebarCard: {
+    backgroundColor: "var(--bg-card)",
+    border: "1px solid var(--border-color)",
+    borderRadius: "12px",
+    padding: "20px",
+  },
+  sidebarTitle: {
+    margin: "0 0 15px 0",
+    fontSize: "12px",
+    textTransform: "uppercase",
+    fontWeight: "800",
+    color: "var(--text-muted)",
+    borderBottom: "1px solid var(--border-color)",
+    paddingBottom: "8px",
+  },
 
-    statusBoxApproved: { display: "flex", alignItems: "center", gap: "12px", padding: "15px", backgroundColor: "#E8F5E9", borderRadius: "8px", border: "1px solid #C8E6C9" },
-    statusTitleApproved: { display: "block", fontSize: "14px", fontWeight: "900", color: "#2E7D32", marginBottom: "2px" },
-    
-    statusBoxPending: { display: "flex", flexDirection: "column", padding: "15px", backgroundColor: "#FFF3E0", borderRadius: "8px", border: "1px solid #FFE0B2" },
-    statusTitlePending: { display: "block", fontSize: "14px", fontWeight: "900", color: "#EF6C00" },
-    
-    statusBoxRejected: { display: "flex", flexDirection: "column", padding: "15px", backgroundColor: "#FFEBEE", borderRadius: "8px", border: "1px solid #FFCDD2" },
-    statusTitleRejected: { fontSize: "13px", fontWeight: "900", color: "#C62828" },
-    
-    statusDesc: { fontSize: "12px", color: "#546E7A", margin: 0, lineHeight: "1.4" },
-    
-    downloadBtn: { width: "100%", padding: "12px", backgroundColor: "#1565C0", color: "white", border: "none", borderRadius: "8px", fontWeight: "600", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", fontSize: "14px" },
+  statusBoxApproved: {
+    padding: "15px",
+    backgroundColor: "var(--bg-success)",
+    borderRadius: "8px",
+    border: "1px solid var(--border-success)",
+  },
+  statusTitleApproved: {
+    display: "block",
+    fontSize: "14px",
+    fontWeight: "900",
+    color: "var(--text-success)",
+  },
+  statusBoxPending: {
+    padding: "15px",
+    backgroundColor: "var(--bg-warning)",
+    borderRadius: "8px",
+    border: "1px solid var(--border-warning)",
+  },
+  statusTitlePending: {
+    display: "block",
+    fontSize: "14px",
+    fontWeight: "900",
+    color: "var(--text-warning)",
+  },
+  statusBoxRejected: {
+    padding: "15px",
+    backgroundColor: "var(--bg-danger)",
+    borderRadius: "8px",
+    border: "1px solid var(--border-danger)",
+  },
+  statusTitleRejected: {
+    fontSize: "13px",
+    fontWeight: "900",
+    color: "var(--text-danger)",
+  },
+  statusDesc: {
+    fontSize: "12px",
+    color: "var(--text-secondary)",
+    margin: "5px 0 0 0",
+    lineHeight: "1.4",
+  },
+}
 
-    // --- ESTILOS DO NOVO PARECER TÉCNICO ---
-    ptContainer: { marginTop: '40px', borderTop: '1px solid #E0E0E0', paddingTop: '30px' },
-    ptMainHeader: { display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' },
-    ptMainTitle: { fontSize: '20px', fontWeight: '800', color: '#1A237E', margin: '0 0 4px 0' },
-    ptMainSubtitle: { fontSize: '14px', color: '#546E7A', margin: 0 },
-    ptCardsWrapper: { display: 'flex', flexDirection: 'column', gap: '20px' },
-
-    rcCard: (aprovado) => ({ backgroundColor: '#FFFFFF', borderRadius: '12px', border: aprovado ? '1px solid #A5D6A7' : '1px solid #EF9A9A', boxShadow: '0 4px 15px rgba(0,0,0,0.05)', overflow: 'hidden' }),
-    rcHeader: (aprovado) => ({ backgroundColor: aprovado ? '#E8F5E9' : '#FFEBEE', padding: '15px 25px', borderBottom: aprovado ? '1px solid #C8E6C9' : '1px solid #FFCDD2', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }),
-    rcHeaderTitle: (aprovado) => ({ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '15px', fontWeight: '900', letterSpacing: '0.5px', color: aprovado ? '#2E7D32' : '#C62828' }),
-    rcBadge: (aprovado) => ({ fontSize: '11px', fontWeight: '800', letterSpacing: '1px', backgroundColor: aprovado ? '#C8E6C9' : '#FFCDD2', color: aprovado ? '#1B5E20' : '#B71C1C', padding: '6px 12px', borderRadius: '20px' }),
-    rcContent: { padding: '25px' },
-    rcSectionTitle: { fontSize: '13px', fontWeight: '800', color: '#78909C', marginBottom: '15px', display: 'flex', alignItems: 'center', gap: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' },
-    rcGridScores: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '12px 30px' },
-    rcScoreRow: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#FAFAFA', padding: '8px 12px', borderRadius: '8px', border: '1px solid #F0F0F0' },
-    rcLabel: { fontSize: '13px', color: '#455A64', fontWeight: '600' },
-    rcStarsContainer: { display: 'flex', alignItems: 'center' },
-    rcNumberValue: { fontSize: '13px', fontWeight: '800', marginLeft: '8px', minWidth: '25px', textAlign: 'right' },
-    rcDivider: { border: 'none', borderTop: '1px dashed #CFD8DC', margin: '25px 0' },
-    rcFeedbackGrid: { display: 'flex', flexDirection: 'column', gap: '15px' },
-    
-    rcFeedbackBoxSuccess: { backgroundColor: '#F1F8E9', borderRadius: '8px', padding: '15px', borderLeft: '4px solid #7CB342' },
-    rcFeedbackLabelSuccess: { display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', fontWeight: '800', color: '#33691E', marginBottom: '8px', textTransform: 'uppercase' },
-    rcFeedbackTextSuccess: { fontSize: '14px', color: '#33691E', lineHeight: '1.6', whiteSpace: 'pre-wrap', fontFamily: 'inherit', wordBreak: 'break-word', overflowWrap: 'break-word' },
-    
-    rcFeedbackBoxDanger: { backgroundColor: '#FFF3E0', borderRadius: '8px', padding: '15px', borderLeft: '4px solid #FF9800' },
-    rcFeedbackLabelDanger: { display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', fontWeight: '800', color: '#E65100', marginBottom: '8px', textTransform: 'uppercase' },
-    rcFeedbackTextDanger: { fontSize: '14px', color: '#E65100', lineHeight: '1.6', whiteSpace: 'pre-wrap', fontFamily: 'inherit', wordBreak: 'break-word', overflowWrap: 'break-word' },
-
-    rcFeedbackBoxNeutral: { backgroundColor: '#FAFAFA', borderRadius: '8px', padding: '15px', borderLeft: '4px solid #90A4AE' },
-    rcFeedbackTextNeutral: { fontSize: '14px', color: '#455A64', lineHeight: '1.6', whiteSpace: 'pre-wrap', fontFamily: 'inherit', wordBreak: 'break-word', overflowWrap: 'break-word' },
-
-    gcCard: { backgroundColor: '#FAFAFA', borderRadius: '12px', border: '2px dashed #CFD8DC', overflow: 'hidden', opacity: 0.8 },
-    gcHeader: { backgroundColor: '#F5F7FA', padding: '15px 25px', borderBottom: '1px solid #ECEFF1', display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
-    gcTitle: { display: 'flex', alignItems: 'center', gap: '8px', fontSize: '15px', fontWeight: '900', letterSpacing: '0.5px', color: '#90A4AE' },
-    gcBadge: { fontSize: '11px', fontWeight: '800', letterSpacing: '1px', backgroundColor: '#ECEFF1', color: '#90A4AE', padding: '6px 12px', borderRadius: '20px' },
-    gcContent: { padding: '25px', textAlign: 'center' },
-    gcText: { margin: 0, fontSize: '14px', color: '#78909C', lineHeight: '1.6' }
-};
-
-export default VisualizarMinhaProducao;
+export default VisualizarMinhaProducao

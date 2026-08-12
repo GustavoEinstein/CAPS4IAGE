@@ -1,4 +1,3 @@
-// src/styles/theme.js
 export const lightTheme = {
   bgWrapper: "#F8FAFC",
   bgCard: "#FFFFFF",

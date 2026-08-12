@@ -2,12 +2,9 @@ import React, { useState, useEffect } from "react"
 import { useNavigate, useOutletContext } from "react-router-dom"
 import api from "../services/api"
 import Swal from "sweetalert2"
-
-// --- BIBLIOTECAS DE RELATÓRIO ---
 import jsPDF from "jspdf"
 import autoTable from "jspdf-autotable"
 import * as XLSX from "xlsx"
-
 import {
   Users,
   FileText,
@@ -18,14 +15,13 @@ import {
   Search,
   Loader2,
   FileSpreadsheet,
-  Download, // IMPORTANTE: Ícone de Download
+  Download,
 } from "lucide-react"
 
 export default function Admin() {
   const navigate = useNavigate()
   const context = useOutletContext()
   const isMobile = context ? context.isMobile : false
-
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState("usuarios")
   const [busca, setBusca] = useState("")
@@ -50,19 +46,16 @@ export default function Admin() {
         Swal.fire({
           icon: "error",
           title: "Acesso Negado",
-          text: "Você não tem permissão de administrador.",
+          text: "Você não tem permissão.",
         })
         navigate("/dashboard")
         return
       }
-
       await buscarDados("usuarios")
       await buscarDados("producoes")
       await buscarDados("topicos")
-
       setLoading(false)
     } catch (error) {
-      console.error("Erro na verificação de admin", error)
       navigate("/dashboard")
     }
   }
@@ -75,7 +68,6 @@ export default function Admin() {
       else if (tipo === "topicos") endpoint = "api/admin/forum/"
 
       const res = await api.get(endpoint)
-
       if (tipo === "usuarios") {
         setUsuarios(res.data)
         setEstatisticas((prev) => ({ ...prev, users: res.data.length }))
@@ -87,11 +79,10 @@ export default function Admin() {
         setEstatisticas((prev) => ({ ...prev, forum: res.data.length }))
       }
     } catch (e) {
-      console.error(`Erro ao buscar dados da aba ${tipo}:`, e)
+      console.error(`Erro ao buscar ${tipo}:`, e)
     }
   }
 
-  // --- NOVA FUNÇÃO DE DOWNLOAD DE ARQUIVO ---
   const handleDownload = async (arquivoUrl, id) => {
     if (!arquivoUrl) return
     try {
@@ -109,7 +100,6 @@ export default function Admin() {
       link.remove()
       window.URL.revokeObjectURL(urlBlob)
     } catch (error) {
-      console.error("Erro no download:", error)
       Swal.fire("Erro", "Não foi possível baixar o arquivo.", "error")
     }
   }
@@ -118,7 +108,7 @@ export default function Admin() {
     let dados = []
     let nomeArquivo = `relatorio_${activeTab}_teia.xlsx`
 
-    if (activeTab === "usuarios") {
+    if (activeTab === "usuarios")
       dados = usuariosFiltrados.map((u) => ({
         ID: u.id,
         Nome: u.username,
@@ -126,7 +116,7 @@ export default function Admin() {
         Disciplina: u.disciplina,
         Perfil: u.is_superuser ? "Administrador" : "Docente",
       }))
-    } else if (activeTab === "producoes") {
+    else if (activeTab === "producoes")
       dados = producoesFiltradas.map((p) => ({
         ID: p.id,
         Título: p.titulo,
@@ -134,14 +124,13 @@ export default function Admin() {
         Status: p.status,
         Data: p.data,
       }))
-    } else {
+    else
       dados = topicosFiltrados.map((t) => ({
         ID: t.id,
         Título: t.titulo,
         Autor: t.autor,
         Categoria: t.categoria,
       }))
-    }
 
     if (dados.length === 0)
       return Swal.fire("Aviso", "Não há dados para exportar.", "info")
@@ -207,12 +196,11 @@ export default function Admin() {
   const handleDeletar = async (tipo, id, nome) => {
     const result = await Swal.fire({
       title: "Excluir registro?",
-      text: `Deseja realmente apagar ${nome}?`,
+      text: `Deseja apagar ${nome}?`,
       icon: "warning",
       showCancelButton: true,
       confirmButtonColor: "#DC2626",
     })
-
     if (result.isConfirmed) {
       try {
         const endpoint =
@@ -245,8 +233,10 @@ export default function Admin() {
   if (loading)
     return (
       <div style={styles.loadingContainer}>
-        <Loader2 className="spin" size={32} color="#1565C0" />
-        <p style={{ marginTop: "10px" }}>Carregando Painel...</p>
+        <Loader2 className="spin" size={32} color="var(--text-info)" />
+        <p style={{ marginTop: "10px", color: "var(--text-muted)" }}>
+          Carregando Painel...
+        </p>
         <style>{`@keyframes spin { 100% { transform: rotate(360deg); } } .spin { animation: spin 1s linear infinite; }`}</style>
       </div>
     )
@@ -267,7 +257,7 @@ export default function Admin() {
         >
           <div style={styles.titleGroup}>
             <div style={styles.iconCircleRed}>
-              <ShieldAlert size={28} color="#DC2626" />
+              <ShieldAlert size={28} color="var(--text-danger)" />
             </div>
             <div>
               <h1
@@ -292,7 +282,7 @@ export default function Admin() {
               borderLeft:
                 activeTab === "usuarios"
                   ? "4px solid #2563EB"
-                  : "1px solid #E2E8F0",
+                  : "1px solid var(--border-color)",
             }}
             onClick={() => {
               setActiveTab("usuarios")
@@ -311,7 +301,7 @@ export default function Admin() {
               borderLeft:
                 activeTab === "producoes"
                   ? "4px solid #10B981"
-                  : "1px solid #E2E8F0",
+                  : "1px solid var(--border-color)",
             }}
             onClick={() => {
               setActiveTab("producoes")
@@ -330,7 +320,7 @@ export default function Admin() {
               borderLeft:
                 activeTab === "topicos"
                   ? "4px solid #8B5CF6"
-                  : "1px solid #E2E8F0",
+                  : "1px solid var(--border-color)",
             }}
             onClick={() => {
               setActiveTab("topicos")
@@ -411,10 +401,9 @@ export default function Admin() {
                 style={{
                   ...styles.searchBox,
                   width: isMobile ? "100%" : "auto",
-                  boxSizing: "border-box",
                 }}
               >
-                <Search size={16} color="#94A3B8" />
+                <Search size={16} color="var(--text-muted)" />
                 <input
                   type="text"
                   placeholder="Buscar..."
@@ -437,7 +426,6 @@ export default function Admin() {
                     ...styles.btnExport,
                     backgroundColor: "#10B981",
                     flex: isMobile ? 1 : "none",
-                    justifyContent: "center",
                   }}
                 >
                   <FileSpreadsheet size={16} /> Excel
@@ -448,7 +436,6 @@ export default function Admin() {
                     ...styles.btnExport,
                     backgroundColor: "#DC2626",
                     flex: isMobile ? 1 : "none",
-                    justifyContent: "center",
                   }}
                 >
                   <FileText size={16} /> PDF
@@ -459,12 +446,11 @@ export default function Admin() {
 
           <div style={styles.tableContainer}>
             {isMobile ? (
-              // --- VISÃO MOBILE (CARDS) ---
               <div
                 style={{
                   display: "flex",
                   flexDirection: "column",
-                  gap: "15px",
+                  gap: "10px",
                 }}
               >
                 {activeTab === "usuarios" &&
@@ -473,7 +459,7 @@ export default function Admin() {
                       <div
                         style={{
                           fontSize: "11px",
-                          color: "#94A3B8",
+                          color: "var(--text-muted)",
                           marginBottom: "5px",
                         }}
                       >
@@ -483,14 +469,14 @@ export default function Admin() {
                         style={{
                           fontWeight: "bold",
                           fontSize: "16px",
-                          color: "#0F172A",
+                          color: "var(--text-primary)",
                         }}
                       >
                         {u.username}
                       </div>
                       <div
                         style={{
-                          color: "#64748B",
+                          color: "var(--text-secondary)",
                           fontSize: "13px",
                           marginBottom: "10px",
                         }}
@@ -508,7 +494,9 @@ export default function Admin() {
                           style={{
                             fontSize: "12px",
                             fontWeight: "bold",
-                            color: u.is_superuser ? "#1565C0" : "#475569",
+                            color: u.is_superuser
+                              ? "var(--text-info)"
+                              : "var(--text-secondary)",
                           }}
                         >
                           {u.is_superuser ? "Admin" : "Docente"}
@@ -531,7 +519,7 @@ export default function Admin() {
                       <div
                         style={{
                           fontSize: "11px",
-                          color: "#94A3B8",
+                          color: "var(--text-muted)",
                           marginBottom: "5px",
                         }}
                       >
@@ -541,7 +529,7 @@ export default function Admin() {
                         style={{
                           fontWeight: "bold",
                           fontSize: "15px",
-                          color: "#0F172A",
+                          color: "var(--text-primary)",
                           marginBottom: "5px",
                         }}
                       >
@@ -549,7 +537,7 @@ export default function Admin() {
                       </div>
                       <div
                         style={{
-                          color: "#64748B",
+                          color: "var(--text-secondary)",
                           fontSize: "13px",
                           marginBottom: "10px",
                         }}
@@ -570,8 +558,6 @@ export default function Admin() {
                         >
                           <Eye size={16} /> Ver
                         </button>
-
-                        {/* O BOTÃO DE DOWNLOAD AQUI NO MOBILE */}
                         {p.arquivo && (
                           <button
                             onClick={() => handleDownload(p.arquivo, p.id)}
@@ -585,7 +571,6 @@ export default function Admin() {
                             <Download size={16} /> Baixar
                           </button>
                         )}
-
                         <button
                           onClick={() =>
                             handleDeletar("producao", p.id, p.titulo)
@@ -608,7 +593,7 @@ export default function Admin() {
                       <div
                         style={{
                           fontSize: "11px",
-                          color: "#94A3B8",
+                          color: "var(--text-muted)",
                           marginBottom: "5px",
                         }}
                       >
@@ -618,7 +603,7 @@ export default function Admin() {
                         style={{
                           fontWeight: "bold",
                           fontSize: "15px",
-                          color: "#0F172A",
+                          color: "var(--text-primary)",
                           marginBottom: "5px",
                         }}
                       >
@@ -626,7 +611,7 @@ export default function Admin() {
                       </div>
                       <div
                         style={{
-                          color: "#64748B",
+                          color: "var(--text-secondary)",
                           fontSize: "13px",
                           marginBottom: "10px",
                         }}
@@ -663,7 +648,6 @@ export default function Admin() {
                   ))}
               </div>
             ) : (
-              // --- VISÃO DESKTOP (TABELA) ---
               <table style={styles.table}>
                 <thead>
                   <tr>
@@ -705,7 +689,6 @@ export default function Admin() {
                         </td>
                       </tr>
                     ))}
-
                   {activeTab === "producoes" &&
                     producoesFiltradas.map((p) => (
                       <tr key={p.id} style={styles.tr}>
@@ -726,8 +709,6 @@ export default function Admin() {
                             >
                               <Eye size={16} />
                             </button>
-
-                            {/* O BOTÃO DE DOWNLOAD AQUI NO DESKTOP */}
                             {p.arquivo && (
                               <button
                                 onClick={() => handleDownload(p.arquivo, p.id)}
@@ -737,7 +718,6 @@ export default function Admin() {
                                 <Download size={16} />
                               </button>
                             )}
-
                             <button
                               onClick={() =>
                                 handleDeletar("producao", p.id, p.titulo)
@@ -751,7 +731,6 @@ export default function Admin() {
                         </td>
                       </tr>
                     ))}
-
                   {activeTab === "topicos" &&
                     topicosFiltrados.map((t) => (
                       <tr key={t.id} style={styles.tr}>
@@ -788,7 +767,6 @@ export default function Admin() {
                 </tbody>
               </table>
             )}
-
             {activeTab === "usuarios" && usuariosFiltrados.length === 0 && (
               <p style={styles.emptyText}>Nenhum usuário encontrado.</p>
             )}
@@ -807,7 +785,7 @@ export default function Admin() {
 
 const styles = {
   wrapper: {
-    backgroundColor: "#F1F5F9",
+    backgroundColor: "var(--bg-main)",
     minHeight: "100vh",
     fontFamily: "Inter, sans-serif",
   },
@@ -821,15 +799,15 @@ const styles = {
   iconCircleRed: {
     width: "50px",
     height: "50px",
-    backgroundColor: "#FEE2E2",
+    backgroundColor: "var(--bg-danger)",
     borderRadius: "12px",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
     flexShrink: 0,
   },
-  pageTitle: { margin: 0, fontWeight: "900", color: "#0F172A" },
-  pageSubtitle: { margin: 0, color: "#64748B", fontSize: "14px" },
+  pageTitle: { margin: 0, fontWeight: "900", color: "var(--text-primary)" },
+  pageSubtitle: { margin: 0, color: "var(--text-muted)", fontSize: "14px" },
   statsGrid: {
     display: "grid",
     gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
@@ -837,7 +815,7 @@ const styles = {
     marginBottom: "30px",
   },
   statCard: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "var(--bg-card)",
     padding: "20px",
     borderRadius: "12px",
     display: "flex",
@@ -849,28 +827,28 @@ const styles = {
   statLabel: {
     margin: 0,
     fontSize: "12px",
-    color: "#64748B",
+    color: "var(--text-muted)",
     fontWeight: "bold",
   },
   statNumber: {
     margin: 0,
     fontSize: "24px",
     fontWeight: "900",
-    color: "#0F172A",
+    color: "var(--text-primary)",
   },
 
   mainContent: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "var(--bg-card)",
     borderRadius: "12px",
     overflow: "hidden",
-    border: "1px solid #E2E8F0",
+    border: "1px solid var(--border-color)",
   },
   toolbar: {
     display: "flex",
     justifyContent: "space-between",
     padding: "15px 20px",
-    backgroundColor: "#F8FAFC",
-    borderBottom: "1px solid #E2E8F0",
+    backgroundColor: "var(--bg-alt)",
+    borderBottom: "1px solid var(--border-color)",
   },
   tabs: { display: "flex", gap: "5px" },
   tabActive: {
@@ -888,7 +866,7 @@ const styles = {
     borderRadius: "8px",
     border: "none",
     backgroundColor: "transparent",
-    color: "#64748B",
+    color: "var(--text-secondary)",
     cursor: "pointer",
     whiteSpace: "nowrap",
   },
@@ -897,16 +875,16 @@ const styles = {
     display: "flex",
     alignItems: "center",
     gap: "10px",
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "var(--input-bg)",
     padding: "8px 15px",
     borderRadius: "8px",
-    border: "1px solid #E2E8F0",
+    border: "1px solid var(--border-color)",
   },
   searchInput: {
     border: "none",
     outline: "none",
     fontSize: "14px",
-    color: "#1E293B",
+    color: "var(--input-text)",
     backgroundColor: "transparent",
   },
   btnExport: {
@@ -927,30 +905,30 @@ const styles = {
   th: {
     textAlign: "left",
     padding: "12px",
-    borderBottom: "2px solid #E2E8F0",
-    color: "#64748B",
+    borderBottom: "2px solid var(--border-color)",
+    color: "var(--text-muted)",
     fontSize: "12px",
     textTransform: "uppercase",
   },
-  tr: { backgroundColor: "#FFFFFF" },
+  tr: { backgroundColor: "transparent", transition: "background 0.2s" },
   td: {
     padding: "12px",
-    borderBottom: "1px solid #E2E8F0",
+    borderBottom: "1px solid var(--border-color)",
     fontSize: "14px",
-    color: "#334155",
+    color: "var(--text-secondary)",
   },
 
   mobileCard: {
-    backgroundColor: "#F8FAFC",
-    border: "1px solid #E2E8F0",
+    backgroundColor: "var(--bg-card)",
+    border: "1px solid var(--border-color)",
     borderRadius: "10px",
     padding: "15px",
   },
 
   btnDelete: {
     padding: "8px",
-    backgroundColor: "#FEE2E2",
-    color: "#DC2626",
+    backgroundColor: "var(--bg-danger)",
+    color: "var(--text-danger)",
     border: "none",
     borderRadius: "6px",
     cursor: "pointer",
@@ -960,8 +938,8 @@ const styles = {
   },
   btnView: {
     padding: "8px",
-    backgroundColor: "#E0F2FE",
-    color: "#0284C7",
+    backgroundColor: "var(--bg-info)",
+    color: "var(--text-info)",
     border: "none",
     borderRadius: "6px",
     cursor: "pointer",
@@ -971,8 +949,8 @@ const styles = {
   },
   btnDownload: {
     padding: "8px",
-    backgroundColor: "#DCFCE7",
-    color: "#166534",
+    backgroundColor: "var(--bg-success)",
+    color: "var(--text-success)",
     border: "none",
     borderRadius: "6px",
     cursor: "pointer",
@@ -987,12 +965,12 @@ const styles = {
     alignItems: "center",
     justifyContent: "center",
     height: "80vh",
-    color: "#546E7A",
+    color: "var(--text-secondary)",
   },
   emptyText: {
     textAlign: "center",
     padding: "40px",
-    color: "#94A3B8",
+    color: "var(--text-muted)",
     fontSize: "15px",
   },
 }

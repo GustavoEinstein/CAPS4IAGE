@@ -1,16 +1,83 @@
 :root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  /* MODO CLARO */
+  --bg-main: #f1f5f9;
+  --bg-alt: #e2e8f0;
+  --bg-card: #ffffff;
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #64748b;
+  --border-color: #e2e8f0;
+  --border-hover: #cbd5e1;
+  --input-bg: #ffffff;
+  --input-text: #1e293b;
+
+  /* Alertas/Status (Claro) */
+  --bg-warning: #fff8e1;
+  --border-warning: #ffe082;
+  --text-warning: #e65100;
+
+  --bg-success: #e8f5e9;
+  --border-success: #c8e6c9;
+  --text-success: #1b5e20;
+
+  --bg-info: #e3f2fd;
+  --border-info: #bbdefb;
+  --text-info: #0d47a1;
+
+  --bg-danger: #ffebee;
+  --border-danger: #ffcdd2;
+  --text-danger: #c62828;
+
+  font-family: "Inter", system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
-
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
-
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+html.dark {
+  /* MODO ESCURO */
+  --bg-main: #0b1120;
+  --bg-alt: #0f172a;
+  --bg-card: #1e293b;
+  --text-primary: #f8fafc;
+  --text-secondary: #cbd5e1;
+  --text-muted: #94a3b8;
+  --border-color: #334155;
+  --border-hover: #475569;
+  --input-bg: #0f172a;
+  --input-text: #f8fafc;
+
+  /* Alertas/Status (Escuro - usando opacidade para ficar suave) */
+  --bg-warning: rgba(245, 158, 11, 0.1);
+  --border-warning: rgba(245, 158, 11, 0.3);
+  --text-warning: #fcd34d;
+
+  --bg-success: rgba(16, 185, 129, 0.1);
+  --border-success: rgba(16, 185, 129, 0.3);
+  --text-success: #6ee7b7;
+
+  --bg-info: rgba(59, 130, 246, 0.1);
+  --border-info: rgba(59, 130, 246, 0.3);
+  --text-info: #93c5fd;
+
+  --bg-danger: rgba(239, 68, 68, 0.1);
+  --border-danger: rgba(239, 68, 68, 0.3);
+  --text-danger: #fca5a5;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  overflow-x: hidden;
+  background-color: var(--bg-main);
+  color: var(--text-primary);
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease;
 }
 
 a {
@@ -22,46 +89,67 @@ a:hover {
   color: #535bf2;
 }
 
-body {
-  margin: 0;
-  min-width: 320px;
+/* Dashboard global resets */
+.dashboard {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
   min-height: 100vh;
-  overflow-x: hidden;
 }
-
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
+.dashboard-body {
+  display: flex;
+  flex: 1;
+  width: 100%;
 }
-
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
+.sidebar {
+  background-color: var(--bg-card);
+  border-right: 1px solid var(--border-color);
+  width: 220px;
+  min-height: calc(100vh - 64px);
+  padding: 1rem;
+  transition: background-color 0.3s ease;
+}
+.sidebar ul {
+  list-style: none;
+  padding-left: 0;
+  margin-top: 0.5rem;
+}
+.sidebar li {
+  padding: 0.6rem 0.5rem;
+  margin-bottom: 0.3rem;
   cursor: pointer;
-  transition: border-color 0.25s;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  line-height: 1.3;
+  color: var(--text-secondary);
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
 }
-button:hover {
-  border-color: #646cff;
+.sidebar li:hover {
+  background-color: var(--bg-main);
+  color: var(--text-primary);
+  text-decoration: none;
 }
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
+.sidebar li.active {
+  background-color: var(--bg-main);
+  color: var(--text-primary);
+  font-weight: 600;
+  border: 1px solid var(--border-color);
+}
+.main-content {
+  flex: 1;
+  padding: 1.5rem;
+  background-color: var(--bg-main);
+  transition: background-color 0.3s ease;
 }
 
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
+@media (max-width: 768px) {
+  .dashboard-body {
+    flex-direction: column;
   }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
+  .sidebar {
+    width: 100%;
+    min-height: auto;
   }
 }

@@ -23,17 +23,12 @@ import {
 export default function DiarioDetalhes() {
   const { id } = useParams()
   const navigate = useNavigate()
-
   const context = useOutletContext()
   const isMobile = context ? context.isMobile : false
-
   const [loading, setLoading] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
-
   const [ticket, setTicket] = useState(null)
   const [notas, setNotas] = useState([])
-
-  // Estados para nova interação
   const [novaNota, setNovaNota] = useState("")
   const [novoStatus, setNovoStatus] = useState("")
 
@@ -48,7 +43,6 @@ export default function DiarioDetalhes() {
       setNotas(response.data.notas)
       setNovoStatus(response.data.diario.status)
     } catch (error) {
-      console.error("Erro ao carregar detalhes", error)
       Swal.fire(
         "Erro",
         "Não foi possível carregar os detalhes do registro.",
@@ -63,23 +57,19 @@ export default function DiarioDetalhes() {
   const handleAtualizarTicket = async (e) => {
     e.preventDefault()
     setIsSubmitting(true)
-
     try {
       await api.post(`api/admin/diario/${id}/notas/`, {
         texto: novaNota,
         status: novoStatus,
       })
-
       setNovaNota("")
-      carregarDetalhes() // Recarrega para buscar a nova nota e o status atualizado
-
-      const Toast = Swal.mixin({
+      carregarDetalhes()
+      Swal.mixin({
         toast: true,
         position: "top-end",
         showConfirmButton: false,
         timer: 2000,
-      })
-      Toast.fire({ icon: "success", title: "Atendimento atualizado!" })
+      }).fire({ icon: "success", title: "Atendimento atualizado!" })
     } catch (error) {
       Swal.fire("Erro", "Falha ao adicionar evolução ao chamado.", "error")
     } finally {
@@ -95,7 +85,6 @@ export default function DiarioDetalhes() {
       showCancelButton: true,
       confirmButtonColor: "#DC2626",
     })
-
     if (confirm.isConfirmed) {
       try {
         await api.delete(`api/admin/diario/${id}/delete/`)
@@ -110,19 +99,35 @@ export default function DiarioDetalhes() {
   const getTipoMeta = (tipo) => {
     switch (tipo) {
       case "Treinamento":
-        return { bg: "#D1FAE5", cor: "#10B981", icone: <BookOpen size={16} /> }
+        return {
+          bg: "var(--bg-success)",
+          cor: "var(--text-success)",
+          icone: <BookOpen size={16} />,
+        }
       case "Reunião":
-        return { bg: "#DBEAFE", cor: "#2563EB", icone: <Users size={16} /> }
+        return {
+          bg: "var(--bg-info)",
+          cor: "var(--text-info)",
+          icone: <Users size={16} />,
+        }
       case "Visita Escolar":
-        return { bg: "#EDE9FE", cor: "#8B5CF6", icone: <MapPin size={16} /> }
+        return {
+          bg: "rgba(139, 92, 246, 0.1)",
+          cor: "#A78BFA",
+          icone: <MapPin size={16} />,
+        }
       case "Suporte":
         return {
-          bg: "#FEF3C7",
-          cor: "#F59E0B",
+          bg: "var(--bg-warning)",
+          cor: "var(--text-warning)",
           icone: <MessageCircle size={16} />,
         }
       default:
-        return { bg: "#F1F5F9", cor: "#64748B", icone: <FileText size={16} /> }
+        return {
+          bg: "var(--bg-alt)",
+          cor: "var(--text-secondary)",
+          icone: <FileText size={16} />,
+        }
     }
   }
 
@@ -130,7 +135,7 @@ export default function DiarioDetalhes() {
     return (
       <div style={styles.loadingContainer}>
         <Loader2 className="spin" size={32} color="#CA8A04" />
-        <p style={{ marginTop: "10px", color: "#64748B" }}>
+        <p style={{ marginTop: "10px", color: "var(--text-muted)" }}>
           Carregando histórico do atendimento...
         </p>
         <style>{`@keyframes spin { 100% { transform: rotate(360deg); } } .spin { animation: spin 1s linear infinite; }`}</style>
@@ -154,7 +159,6 @@ export default function DiarioDetalhes() {
           <ArrowLeft size={16} /> Voltar para o Diário
         </button>
 
-        {/* HEADER DO TICKET */}
         <div style={styles.headerCard}>
           <div style={styles.headerTags}>
             <span
@@ -174,22 +178,21 @@ export default function DiarioDetalhes() {
                 ...styles.badge,
                 backgroundColor:
                   ticket.status === "Resolvido"
-                    ? "#D1FAE5"
+                    ? "var(--bg-success)"
                     : ticket.status === "Pendente"
-                      ? "#FEE2E2"
-                      : "#FEF3C7",
+                      ? "var(--bg-danger)"
+                      : "var(--bg-warning)",
                 color:
                   ticket.status === "Resolvido"
-                    ? "#059669"
+                    ? "var(--text-success)"
                     : ticket.status === "Pendente"
-                      ? "#DC2626"
-                      : "#D97706",
+                      ? "var(--text-danger)"
+                      : "var(--text-warning)",
               }}
             >
               {ticket.status}
             </span>
           </div>
-
           <h1 style={styles.title}>{ticket.titulo}</h1>
           <p style={styles.contactInfo}>
             <Users size={16} /> Com quem: <strong>{ticket.contato}</strong>
@@ -202,9 +205,7 @@ export default function DiarioDetalhes() {
             flexDirection: isMobile ? "column" : "row",
           }}
         >
-          {/* COLUNA ESQUERDA: RELATO E HISTÓRICO */}
           <div style={styles.mainCol}>
-            {/* Relato Inicial */}
             <div style={styles.card}>
               <h3 style={styles.sectionTitle}>
                 <FileText size={18} /> Relato Original
@@ -212,13 +213,11 @@ export default function DiarioDetalhes() {
               <div style={styles.descBox}>{ticket.descricao}</div>
             </div>
 
-            {/* Linha do Tempo de Evolução (Notas) */}
             <div style={styles.card}>
               <h3 style={styles.sectionTitle}>
                 <MessageCircle size={18} /> Evolução do Atendimento (
                 {notas.length})
               </h3>
-
               <div style={styles.threadContainer}>
                 {notas.map((nota) => (
                   <div key={nota.id} style={styles.noteCard}>
@@ -237,7 +236,7 @@ export default function DiarioDetalhes() {
                 {notas.length === 0 && (
                   <p
                     style={{
-                      color: "#94A3B8",
+                      color: "var(--text-muted)",
                       fontSize: "14px",
                       textAlign: "center",
                       margin: "20px 0",
@@ -248,7 +247,6 @@ export default function DiarioDetalhes() {
                 )}
               </div>
 
-              {/* Caixa de Resposta */}
               <div style={styles.replyBox}>
                 <form onSubmit={handleAtualizarTicket}>
                   <textarea
@@ -269,7 +267,7 @@ export default function DiarioDetalhes() {
                         style={{
                           fontSize: "13px",
                           fontWeight: "600",
-                          color: "#475569",
+                          color: "var(--text-secondary)",
                         }}
                       >
                         Alterar Status:
@@ -305,11 +303,9 @@ export default function DiarioDetalhes() {
             </div>
           </div>
 
-          {/* COLUNA DIREITA: PROPRIEDADES E ANEXO */}
           <div style={styles.sideCol}>
             <div style={styles.sideCard}>
               <h3 style={styles.sideTitle}>Propriedades</h3>
-
               <div style={styles.propertyGroup}>
                 <div style={styles.propertyLabel}>
                   <Users size={14} /> Participantes
@@ -319,7 +315,6 @@ export default function DiarioDetalhes() {
                   {ticket.participantes > 1 ? "pessoas" : "pessoa"}
                 </div>
               </div>
-
               {ticket.tags && (
                 <div style={styles.propertyGroup}>
                   <div style={styles.propertyLabel}>
@@ -341,19 +336,23 @@ export default function DiarioDetalhes() {
                   </div>
                 </div>
               )}
-
               {ticket.proximos_passos && (
                 <div style={styles.propertyGroup}>
-                  <div style={{ ...styles.propertyLabel, color: "#D97706" }}>
+                  <div
+                    style={{
+                      ...styles.propertyLabel,
+                      color: "var(--text-warning)",
+                    }}
+                  >
                     <ListChecks size={14} /> Próximos Passos
                   </div>
                   <div
                     style={{
                       ...styles.propertyValue,
-                      backgroundColor: "#FFFBEB",
+                      backgroundColor: "var(--bg-warning)",
                       padding: "10px",
                       borderRadius: "8px",
-                      border: "1px solid #FDE68A",
+                      border: "1px solid var(--border-warning)",
                     }}
                   >
                     {ticket.proximos_passos}
@@ -384,7 +383,7 @@ export default function DiarioDetalhes() {
                 <div style={styles.emptyFoto}>
                   <Paperclip
                     size={24}
-                    color="#CBD5E1"
+                    color="var(--text-muted)"
                     style={{ marginBottom: "10px" }}
                   />
                   Nenhum registro fotográfico anexado.
@@ -393,7 +392,7 @@ export default function DiarioDetalhes() {
             </div>
 
             <div style={styles.sideCard}>
-              <h3 style={{ ...styles.sideTitle, color: "#DC2626" }}>
+              <h3 style={{ ...styles.sideTitle, color: "var(--text-danger)" }}>
                 Gerenciamento
               </h3>
               <button onClick={handleDelete} style={styles.btnDeleteGlobal}>
@@ -409,7 +408,7 @@ export default function DiarioDetalhes() {
 
 const styles = {
   wrapper: {
-    backgroundColor: "#F8FAFC",
+    backgroundColor: "var(--bg-main)",
     minHeight: "100vh",
     fontFamily: "Inter, sans-serif",
   },
@@ -421,7 +420,6 @@ const styles = {
     justifyContent: "center",
     height: "80vh",
   },
-
   backButton: {
     display: "flex",
     alignItems: "center",
@@ -430,17 +428,16 @@ const styles = {
     border: "none",
     cursor: "pointer",
     fontSize: "14px",
-    color: "#64748B",
+    color: "var(--text-secondary)",
     fontWeight: "700",
     padding: 0,
     marginBottom: "20px",
   },
-
   headerCard: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "var(--bg-card)",
     padding: "30px",
     borderRadius: "12px",
-    border: "1px solid #E2E8F0",
+    border: "1px solid var(--border-color)",
     marginBottom: "20px",
   },
   headerTags: {
@@ -464,7 +461,7 @@ const styles = {
     display: "flex",
     alignItems: "center",
     gap: "6px",
-    color: "#64748B",
+    color: "var(--text-muted)",
     fontSize: "13px",
     fontWeight: "600",
   },
@@ -472,17 +469,16 @@ const styles = {
     margin: "0 0 10px 0",
     fontSize: "28px",
     fontWeight: "900",
-    color: "#0F172A",
+    color: "var(--text-primary)",
   },
   contactInfo: {
     margin: 0,
     display: "flex",
     alignItems: "center",
     gap: "6px",
-    color: "#475569",
+    color: "var(--text-secondary)",
     fontSize: "15px",
   },
-
   splitLayout: {
     display: "flex",
     gap: "20px",
@@ -503,12 +499,11 @@ const styles = {
     flexDirection: "column",
     gap: "20px",
   },
-
   card: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "var(--bg-card)",
     padding: "25px",
     borderRadius: "12px",
-    border: "1px solid #E2E8F0",
+    border: "1px solid var(--border-color)",
   },
   sectionTitle: {
     display: "flex",
@@ -517,20 +512,19 @@ const styles = {
     margin: "0 0 15px 0",
     fontSize: "16px",
     fontWeight: "800",
-    color: "#1E293B",
+    color: "var(--text-primary)",
     paddingBottom: "12px",
-    borderBottom: "1px solid #F1F5F9",
+    borderBottom: "1px solid var(--border-color)",
   },
   descBox: {
-    backgroundColor: "#F8FAFC",
+    backgroundColor: "var(--bg-main)",
     padding: "20px",
     borderRadius: "10px",
-    color: "#334155",
+    color: "var(--text-secondary)",
     fontSize: "15px",
     lineHeight: "1.6",
     whiteSpace: "pre-wrap",
   },
-
   threadContainer: {
     display: "flex",
     flexDirection: "column",
@@ -538,10 +532,10 @@ const styles = {
     marginBottom: "20px",
   },
   noteCard: {
-    border: "1px solid #E2E8F0",
+    border: "1px solid var(--border-color)",
     borderRadius: "10px",
     padding: "15px",
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "var(--bg-card)",
   },
   noteHeader: {
     display: "flex",
@@ -552,8 +546,8 @@ const styles = {
   avatar: {
     width: "32px",
     height: "32px",
-    backgroundColor: "#CA8A04",
-    color: "white",
+    backgroundColor: "rgba(202, 138, 4, 0.2)",
+    color: "#CA8A04",
     borderRadius: "50%",
     display: "flex",
     alignItems: "center",
@@ -561,18 +555,21 @@ const styles = {
     fontWeight: "bold",
     fontSize: "14px",
   },
-  noteAuthor: { fontWeight: "700", color: "#1E293B", fontSize: "14px" },
-  noteTime: { color: "#94A3B8", fontSize: "12px" },
+  noteAuthor: {
+    fontWeight: "700",
+    color: "var(--text-primary)",
+    fontSize: "14px",
+  },
+  noteTime: { color: "var(--text-muted)", fontSize: "12px" },
   noteBody: {
-    color: "#475569",
+    color: "var(--text-secondary)",
     fontSize: "14px",
     lineHeight: "1.5",
     whiteSpace: "pre-wrap",
     paddingLeft: "42px",
   },
-
   replyBox: {
-    borderTop: "2px dashed #E2E8F0",
+    borderTop: "2px dashed var(--border-color)",
     paddingTop: "20px",
     marginTop: "10px",
   },
@@ -580,10 +577,10 @@ const styles = {
     width: "100%",
     padding: "15px",
     borderRadius: "10px",
-    border: "1px solid #CBD5E1",
+    border: "1px solid var(--border-color)",
     fontSize: "14px",
-    color: "#1E293B",
-    backgroundColor: "#FFFFFF" /* <-- CORREÇÃO AQUI */,
+    color: "var(--input-text)",
+    backgroundColor: "var(--input-bg)",
     outline: "none",
     resize: "vertical",
     minHeight: "100px",
@@ -591,7 +588,6 @@ const styles = {
     fontFamily: "inherit",
     marginBottom: "15px",
   },
-
   replyFooter: {
     display: "flex",
     justifyContent: "space-between",
@@ -599,23 +595,22 @@ const styles = {
     flexWrap: "wrap",
     gap: "15px",
   },
-
   statusSelect: {
     padding: "8px 12px",
     borderRadius: "8px",
-    border: "1px solid #CBD5E1",
+    border: "1px solid var(--border-color)",
     fontSize: "13px",
     fontWeight: "600",
     outline: "none",
-    color: "#1E293B",
-    backgroundColor: "#FFFFFF" /* <-- CORREÇÃO AQUI */,
+    color: "var(--input-text)",
+    backgroundColor: "var(--input-bg)",
     cursor: "pointer",
   },
   sendBtn: {
     display: "flex",
     alignItems: "center",
     gap: "8px",
-    backgroundColor: "#2563EB",
+    backgroundColor: "#1565C0",
     color: "white",
     padding: "10px 20px",
     borderRadius: "8px",
@@ -625,18 +620,17 @@ const styles = {
     cursor: "pointer",
     transition: "background 0.2s",
   },
-
   sideCard: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "var(--bg-card)",
     padding: "20px",
     borderRadius: "12px",
-    border: "1px solid #E2E8F0",
+    border: "1px solid var(--border-color)",
   },
   sideTitle: {
     margin: "0 0 15px 0",
     fontSize: "15px",
     fontWeight: "800",
-    color: "#0F172A",
+    color: "var(--text-primary)",
   },
   propertyGroup: { marginBottom: "15px" },
   propertyLabel: {
@@ -645,64 +639,62 @@ const styles = {
     gap: "6px",
     fontSize: "12px",
     fontWeight: "700",
-    color: "#64748B",
+    color: "var(--text-secondary)",
     textTransform: "uppercase",
     marginBottom: "5px",
   },
   propertyValue: {
     fontSize: "14px",
-    color: "#1E293B",
+    color: "var(--text-primary)",
     fontWeight: "500",
     whiteSpace: "pre-wrap",
   },
   tagChip: {
-    backgroundColor: "#F1F5F9",
-    color: "#475569",
+    backgroundColor: "var(--bg-main)",
+    color: "var(--text-secondary)",
     fontSize: "12px",
     fontWeight: "600",
     padding: "4px 8px",
     borderRadius: "6px",
   },
-
   fotoContainer: {
     overflow: "hidden",
     borderRadius: "8px",
-    border: "1px solid #E2E8F0",
+    border: "1px solid var(--border-color)",
   },
   fotoImg: { width: "100%", height: "auto", display: "block" },
   downloadLink: {
     display: "block",
     textAlign: "center",
-    backgroundColor: "#F8FAFC",
+    backgroundColor: "var(--bg-main)",
     padding: "10px",
-    color: "#2563EB",
+    color: "var(--text-info)",
     fontSize: "13px",
     fontWeight: "600",
     textDecoration: "none",
-    borderTop: "1px solid #E2E8F0",
+    borderTop: "1px solid var(--border-color)",
   },
   emptyFoto: {
-    backgroundColor: "#F8FAFC",
+    backgroundColor: "var(--bg-main)",
     padding: "30px",
     borderRadius: "8px",
-    border: "1px dashed #CBD5E1",
+    border: "1px dashed var(--border-color)",
     display: "flex",
     flexDirection: "column",
     alignItems: "center",
-    color: "#94A3B8",
+    color: "var(--text-muted)",
     fontSize: "13px",
     textAlign: "center",
   },
-
   btnDeleteGlobal: {
     width: "100%",
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
     gap: "8px",
-    backgroundColor: "#FEF2F2",
-    color: "#DC2626",
-    border: "1px solid #FECACA",
+    backgroundColor: "var(--bg-danger)",
+    color: "var(--text-danger)",
+    border: "1px solid var(--border-danger)",
     padding: "12px",
     borderRadius: "8px",
     fontSize: "14px",

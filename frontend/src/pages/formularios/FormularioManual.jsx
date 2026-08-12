@@ -29,8 +29,8 @@ import bnccPort from "../../data/bncc_port.json"
 import bnccComp from "../../data/bncc_comp.json"
 
 // --- SEPARAÇÃO DAS BASES DE DADOS ---
-const BNCC_GERAL = [...bnccMat, ...bnccPort] // Apenas Mat e Port
-const BNCC_COMPUTACAO = [...bnccComp] // Apenas Computação
+const BNCC_GERAL = [...bnccMat, ...bnccPort]
+const BNCC_COMPUTACAO = [...bnccComp]
 
 const FormularioManual = () => {
   const navigate = useNavigate()
@@ -196,6 +196,7 @@ const FormularioManual = () => {
 
   const handleChange = (e) =>
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }))
+
   const handleFileChange = (e) =>
     setFormData((prev) => ({ ...prev, arquivo: e.target.files[0] }))
 
@@ -286,14 +287,17 @@ const FormularioManual = () => {
     <div style={styles.fullPageWrapper}>
       <style>{`
         input::placeholder, textarea::placeholder {
-          color: #90A4AE !important;
+          color: var(--text-muted) !important;
           opacity: 1 !important;
         }
-        ::-webkit-input-placeholder { color: #90A4AE !important; opacity: 1 !important; }
-        :-moz-placeholder { color: #90A4AE !important; opacity: 1 !important; }
+        ::-webkit-input-placeholder { color: var(--text-muted) !important; opacity: 1 !important; }
+        :-moz-placeholder { color: var(--text-muted) !important; opacity: 1 !important; }
         .toggle-box:hover {
-            background-color: #F1F5F9 !important;
-            border-color: #94A3B8 !important;
+            background-color: var(--bg-main) !important;
+            border-color: var(--border-hover) !important;
+        }
+        .autocomplete-item:hover {
+            background-color: var(--bg-main) !important;
         }
       `}</style>
 
@@ -324,12 +328,13 @@ const FormularioManual = () => {
               {formData.producao_base && (
                 <div
                   style={{
-                    backgroundColor: "#E8F5E9",
+                    backgroundColor: "var(--bg-success)",
+                    border: "1px solid var(--border-success)",
                     padding: "10px",
                     borderRadius: "8px",
                     marginBottom: "15px",
                     fontSize: "12px",
-                    color: "#2E7D32",
+                    color: "var(--text-success)",
                     fontWeight: "bold",
                     display: "flex",
                     alignItems: "center",
@@ -354,12 +359,13 @@ const FormularioManual = () => {
                   placeholder="Ex: Dilemas Éticos com IA"
                 />
               </div>
+
               <div style={styles.inputGroup}>
                 <label style={styles.label}>Disciplina</label>
                 <div style={styles.lockedInputWrapper}>
                   <Lock
                     size={16}
-                    color="#78909C"
+                    color="var(--text-muted)"
                     style={{ marginLeft: "12px" }}
                   />
                   <input
@@ -370,6 +376,7 @@ const FormularioManual = () => {
                   />
                 </div>
               </div>
+
               <div style={styles.inputGroup}>
                 <label style={styles.label}>Nível</label>
                 <select
@@ -385,6 +392,7 @@ const FormularioManual = () => {
                   <option value="Ensino Superior">Ensino Superior</option>
                 </select>
               </div>
+
               <div style={styles.inputGroup}>
                 <label style={styles.label}>
                   <Layers size={14} /> Categoria
@@ -433,6 +441,7 @@ const FormularioManual = () => {
                   </optgroup>
                 </select>
               </div>
+
               <div style={styles.inputGroup}>
                 <label style={styles.label}>Modelo de IA</label>
                 <input
@@ -444,6 +453,7 @@ const FormularioManual = () => {
                   placeholder="Ex: ChatGPT-4, Gemini, Claude..."
                 />
               </div>
+
               <div style={styles.inputGroup}>
                 <label style={styles.label}>Prompts Utilizados</label>
                 <textarea
@@ -503,7 +513,7 @@ const FormularioManual = () => {
                 <span
                   style={{
                     fontSize: "11px",
-                    color: "#78909C",
+                    color: "var(--text-muted)",
                     marginTop: "4px",
                   }}
                 >
@@ -547,14 +557,9 @@ const FormularioManual = () => {
                         bnccFiltradasGeral.map((item) => (
                           <div
                             key={item.id}
+                            className="autocomplete-item"
                             style={styles.autocompleteItem}
                             onClick={() => adicionarBnccGeral(item)}
-                            onMouseEnter={(e) =>
-                              (e.target.style.backgroundColor = "#F5F5F5")
-                            }
-                            onMouseLeave={(e) =>
-                              (e.target.style.backgroundColor = "white")
-                            }
                           >
                             <strong style={{ color: "#1565C0" }}>
                               {item.id}
@@ -566,7 +571,7 @@ const FormularioManual = () => {
                         <div
                           style={{
                             padding: "12px",
-                            color: "#78909C",
+                            color: "var(--text-muted)",
                             fontSize: "13px",
                             textAlign: "center",
                           }}
@@ -587,7 +592,7 @@ const FormularioManual = () => {
                 />
               </div>
 
-              {/* --- TOGGLE INTERDISCIPLINAR DE COMPUTAÇÃO (VISUAL NOVO) --- */}
+              {/* --- TOGGLE INTERDISCIPLINAR DE COMPUTAÇÃO --- */}
               <div
                 className="toggle-box"
                 onClick={handleToggleComp}
@@ -612,7 +617,7 @@ const FormularioManual = () => {
                       display: "flex",
                       alignItems: "center",
                       gap: "8px",
-                      color: "#0D47A1",
+                      color: "var(--text-info)",
                       fontSize: "14px",
                       fontWeight: "800",
                     }}
@@ -632,7 +637,10 @@ const FormularioManual = () => {
                       onBlur={() =>
                         setTimeout(() => setMostrarOpcoesComp(false), 200)
                       }
-                      style={{ ...styles.input, borderColor: "#90CAF9" }}
+                      style={{
+                        ...styles.input,
+                        borderColor: "var(--border-info)",
+                      }}
                     />
                     {mostrarOpcoesComp && bnccBuscaComp && (
                       <div style={styles.autocompleteDropdown}>
@@ -640,16 +648,11 @@ const FormularioManual = () => {
                           bnccFiltradasComp.map((item) => (
                             <div
                               key={item.id}
+                              className="autocomplete-item"
                               style={styles.autocompleteItem}
                               onClick={() => adicionarBnccComp(item)}
-                              onMouseEnter={(e) =>
-                                (e.target.style.backgroundColor = "#F5F5F5")
-                              }
-                              onMouseLeave={(e) =>
-                                (e.target.style.backgroundColor = "white")
-                              }
                             >
-                              <strong style={{ color: "#0D47A1" }}>
+                              <strong style={{ color: "var(--text-info)" }}>
                                 {item.id}
                               </strong>{" "}
                               - {item.texto}
@@ -659,7 +662,7 @@ const FormularioManual = () => {
                           <div
                             style={{
                               padding: "12px",
-                              color: "#78909C",
+                              color: "var(--text-muted)",
                               fontSize: "13px",
                               textAlign: "center",
                             }}
@@ -676,8 +679,7 @@ const FormularioManual = () => {
                     onChange={handleChange}
                     style={{
                       ...styles.textarea,
-                      borderColor: "#90CAF9",
-                      backgroundColor: "#FFFFFF",
+                      borderColor: "var(--border-info)",
                     }}
                     rows="2"
                     placeholder="As habilidades de computação selecionadas aparecerão aqui..."
@@ -834,7 +836,7 @@ const FormularioManual = () => {
 
 const styles = {
   fullPageWrapper: {
-    backgroundColor: "#F8F9FA",
+    backgroundColor: "var(--bg-main)",
     minHeight: "100vh",
     width: "100%",
     boxSizing: "border-box",
@@ -847,16 +849,16 @@ const styles = {
     boxSizing: "border-box",
   },
   mainCard: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "var(--bg-card)",
     borderRadius: "16px",
     padding: "30px",
     boxShadow: "0 4px 20px rgba(0,0,0,0.04)",
-    border: "1px solid #E0E0E0",
+    border: "1px solid var(--border-color)",
   },
   splitLayout: { display: "flex", gap: "40px" },
   verticalDivider: {
     width: "1px",
-    backgroundColor: "#F0F0F0",
+    backgroundColor: "var(--border-color)",
     alignSelf: "stretch",
   },
   leftCol: { display: "flex", flexDirection: "column" },
@@ -864,7 +866,7 @@ const styles = {
   sectionTitle: {
     fontSize: "16px",
     fontWeight: "700",
-    color: "#37474F",
+    color: "var(--text-primary)",
     marginBottom: "25px",
     display: "flex",
     alignItems: "center",
@@ -880,7 +882,7 @@ const styles = {
   label: {
     fontSize: "13px",
     fontWeight: "600",
-    color: "#455A64",
+    color: "var(--text-secondary)",
     marginBottom: "8px",
     display: "flex",
     alignItems: "center",
@@ -890,11 +892,11 @@ const styles = {
     width: "100%",
     padding: "12px 15px",
     borderRadius: "8px",
-    border: "1px solid #CFD8DC",
+    border: "1px solid var(--border-color)",
     fontSize: "14px",
-    color: "#37474F",
+    color: "var(--input-text)",
     outline: "none",
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "var(--input-bg)",
     boxSizing: "border-box",
     height: "45px",
   },
@@ -902,58 +904,47 @@ const styles = {
     width: "100%",
     padding: "12px 15px",
     borderRadius: "8px",
-    border: "1px solid #CFD8DC",
+    border: "1px solid var(--border-color)",
     fontSize: "14px",
-    color: "#37474F",
+    color: "var(--input-text)",
     outline: "none",
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "var(--input-bg)",
     boxSizing: "border-box",
     resize: "vertical",
     fontFamily: "inherit",
     lineHeight: "1.5",
   },
-
-  // --- NOVOS ESTILOS PARA COMPUTAÇÃO (CHECKBOX) ---
   compToggleContainer: {
     display: "flex",
     alignItems: "center",
     gap: "12px",
     padding: "16px 18px",
-    backgroundColor: "#F8FAFC",
-    border: "1px dashed #CBD5E1",
+    backgroundColor: "var(--bg-main)",
+    border: "1px dashed var(--border-color)",
     borderRadius: "10px",
     marginBottom: "20px",
     cursor: "pointer",
     transition: "all 0.2s",
   },
-  compCheckbox: {
-    width: "18px",
-    height: "18px",
-    cursor: "pointer",
-    accentColor: "#1E293B",
-    flexShrink: 0,
-  },
   compToggleLabel: {
     fontSize: "14px",
     fontWeight: "600",
-    color: "#334155",
+    color: "var(--text-primary)",
     margin: 0,
     cursor: "pointer",
   },
   compBox: {
-    backgroundColor: "#F4F9FF",
-    border: "1px solid #BBDEFB",
+    backgroundColor: "var(--bg-info)",
+    border: "1px solid var(--border-info)",
     borderRadius: "12px",
     padding: "20px",
     marginBottom: "20px",
   },
-  // -------------------------------------
-
   lockedInputWrapper: {
     display: "flex",
     alignItems: "center",
-    backgroundColor: "#FAFAFA",
-    border: "1px solid #E0E0E0",
+    backgroundColor: "var(--bg-alt)",
+    border: "1px solid var(--border-color)",
     borderRadius: "8px",
     overflow: "hidden",
     height: "45px",
@@ -965,7 +956,7 @@ const styles = {
     padding: "12px 15px",
     fontSize: "14px",
     fontWeight: "600",
-    color: "#78909C",
+    color: "var(--text-muted)",
     outline: "none",
     cursor: "not-allowed",
   },
@@ -978,9 +969,9 @@ const styles = {
   resourceChip: {
     padding: "8px 14px",
     borderRadius: "20px",
-    border: "1px solid #CFD8DC",
-    backgroundColor: "#FFFFFF",
-    color: "#546E7A",
+    border: "1px solid var(--border-color)",
+    backgroundColor: "var(--bg-card)",
+    color: "var(--text-secondary)",
     fontSize: "13px",
     fontWeight: "500",
     cursor: "pointer",
@@ -989,11 +980,11 @@ const styles = {
     alignItems: "center",
   },
   resourceChipActive: {
-    backgroundColor: "#E3F2FD",
-    color: "#1565C0",
-    borderColor: "#1565C0",
+    backgroundColor: "var(--bg-info)",
+    color: "var(--text-info)",
+    borderColor: "var(--text-info)",
     fontWeight: "600",
-    boxShadow: "0 2px 5px rgba(21, 101, 192, 0.1)",
+    boxShadow: "0 2px 5px rgba(0, 0, 0, 0.1)",
   },
   addResourceRow: { display: "flex", gap: "8px", marginTop: "5px" },
   customChip: {
@@ -1002,9 +993,9 @@ const styles = {
     gap: "6px",
     padding: "6px 12px",
     borderRadius: "20px",
-    backgroundColor: "#FFF3E0",
-    color: "#E65100",
-    border: "1px solid #FFE0B2",
+    backgroundColor: "var(--bg-warning)",
+    color: "var(--text-warning)",
+    border: "1px solid var(--border-warning)",
     fontSize: "12px",
     fontWeight: "600",
   },
@@ -1015,13 +1006,13 @@ const styles = {
     padding: 0,
     display: "flex",
     alignItems: "center",
-    color: "#E65100",
+    color: "var(--text-warning)",
   },
   uploadSection: { marginTop: "auto", paddingTop: "10px" },
   uploadContainer: {
-    border: "2px dashed #BBDEFB",
+    border: "2px dashed var(--border-info)",
     borderRadius: "12px",
-    backgroundColor: "#F8FBFF",
+    backgroundColor: "var(--bg-info)",
     textAlign: "center",
     padding: "20px",
     display: "flex",
@@ -1037,13 +1028,17 @@ const styles = {
     width: "100%",
   },
   uploadIconCircle: {
-    backgroundColor: "white",
+    backgroundColor: "var(--bg-card)",
     padding: "10px",
     borderRadius: "50%",
     marginBottom: "8px",
     boxShadow: "0 2px 5px rgba(0,0,0,0.05)",
   },
-  uploadTextMain: { fontSize: "13px", fontWeight: "700", color: "#1565C0" },
+  uploadTextMain: {
+    fontSize: "13px",
+    fontWeight: "700",
+    color: "var(--text-info)",
+  },
   fileSelected: {
     display: "flex",
     flexDirection: "column",
@@ -1052,7 +1047,7 @@ const styles = {
   fileName: {
     fontSize: "13px",
     fontWeight: "600",
-    color: "#333",
+    color: "var(--text-primary)",
     marginTop: "5px",
   },
   topBar: {
@@ -1070,13 +1065,13 @@ const styles = {
     display: "flex",
     alignItems: "center",
     gap: "8px",
-    color: "#546E7A",
+    color: "var(--text-secondary)",
     fontWeight: "600",
     fontSize: "15px",
   },
   pageTitle: {
     fontSize: "24px",
-    color: "#1565C0",
+    color: "var(--text-primary)",
     fontWeight: "800",
     margin: "0 0 4px 0",
   },
@@ -1093,9 +1088,9 @@ const styles = {
     flexWrap: "wrap",
   },
   draftButton: {
-    backgroundColor: "white",
-    color: "#1565C0",
-    border: "1px solid #1565C0",
+    backgroundColor: "var(--bg-card)",
+    color: "var(--text-primary)",
+    border: "1px solid var(--border-color)",
     borderRadius: "8px",
     padding: "12px 24px",
     fontSize: "15px",
@@ -1126,8 +1121,8 @@ const styles = {
     top: "100%",
     left: 0,
     right: 0,
-    backgroundColor: "white",
-    border: "1px solid #CFD8DC",
+    backgroundColor: "var(--bg-card)",
+    border: "1px solid var(--border-color)",
     borderRadius: "8px",
     marginTop: "4px",
     zIndex: 10,
@@ -1137,10 +1132,10 @@ const styles = {
   },
   autocompleteItem: {
     padding: "12px 15px",
-    borderBottom: "1px solid #F0F0F0",
+    borderBottom: "1px solid var(--border-color)",
     cursor: "pointer",
     fontSize: "13px",
-    color: "#37474F",
+    color: "var(--text-primary)",
     transition: "background 0.2s",
   },
 }

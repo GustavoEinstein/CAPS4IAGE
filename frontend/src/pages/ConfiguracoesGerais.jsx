@@ -3,33 +3,26 @@ import { useNavigate, useOutletContext } from "react-router-dom"
 import api from "../services/api"
 import Swal from "sweetalert2"
 import {
-  ArrowLeft,
-  Database,
   TrendingUp,
   School,
   BookOpen,
   Save,
   Plus,
-  Trash2,
   Loader2,
   Settings,
-  MessageSquare,
   FileCheck,
   ChevronRight,
   Trophy,
-  X, // <--- O ÍCONE DE 'X' ESTÁ DE VOLTA AQUI!
+  X,
 } from "lucide-react"
 
 export default function ConfiguracoesGerais() {
   const navigate = useNavigate()
   const context = useOutletContext()
   const isMobile = context ? context.isMobile : false
-
   const [loading, setLoading] = useState(true)
   const [savingXp, setSavingXp] = useState(false)
-
-  // --- NAVEGAÇÃO INTERNA (TABS) ---
-  const [activeTab, setActiveTab] = useState("economia") // 'economia', 'escolas', 'disciplinas'
+  const [activeTab, setActiveTab] = useState("economia")
 
   const [xpConfig, setXpConfig] = useState({
     xp_revisao: 15,
@@ -37,10 +30,8 @@ export default function ConfiguracoesGerais() {
     xp_topico: 5,
     xp_comentario: 5,
   })
-
   const [escolas, setEscolas] = useState([])
   const [disciplinas, setDisciplinas] = useState([])
-
   const [novaEscola, setNovaEscola] = useState("")
   const [novaDisciplina, setNovaDisciplina] = useState("")
 
@@ -55,19 +46,14 @@ export default function ConfiguracoesGerais() {
       setEscolas(response.data.escolas)
       setDisciplinas(response.data.disciplinas)
     } catch (error) {
-      if (error.response?.status === 403) {
-        navigate("/dashboard")
-      }
-      console.error("Erro ao carregar configurações", error)
+      if (error.response?.status === 403) navigate("/dashboard")
     } finally {
       setLoading(false)
     }
   }
 
-  // --- FUNÇÕES DE XP ---
-  const handleXpChange = (e) => {
+  const handleXpChange = (e) =>
     setXpConfig({ ...xpConfig, [e.target.name]: parseInt(e.target.value) || 0 })
-  }
 
   const salvarXp = async (e) => {
     e.preventDefault()
@@ -91,7 +77,6 @@ export default function ConfiguracoesGerais() {
     }
   }
 
-  // --- FUNÇÕES DE ESCOLAS E DISCIPLINAS ---
   const adicionarItem = async (tipo, nome, setInputFunc) => {
     if (!nome.trim()) return
     try {
@@ -100,7 +85,7 @@ export default function ConfiguracoesGerais() {
         nome: nome,
       })
       setInputFunc("")
-      carregarConfiguracoes() // Recarrega as listas
+      carregarConfiguracoes()
     } catch (error) {
       Swal.fire("Erro", `Não foi possível adicionar a ${tipo}.`, "error")
     }
@@ -122,7 +107,7 @@ export default function ConfiguracoesGerais() {
     return (
       <div style={styles.loadingContainer}>
         <Loader2 className="spin" size={32} color="#7B1FA2" />
-        <p style={{ marginTop: "10px", color: "#64748B" }}>
+        <p style={{ marginTop: "10px", color: "var(--text-muted)" }}>
           Carregando arquitetura do sistema...
         </p>
         <style>{`@keyframes spin { 100% { transform: rotate(360deg); } } .spin { animation: spin 1s linear infinite; }`}</style>
@@ -136,22 +121,14 @@ export default function ConfiguracoesGerais() {
         padding: isMobile ? "20px 10px" : "40px 20px",
       }}
     >
-      {/* CORREÇÃO DO BUG VISUAL DO FUNDO PRETO NOS INPUTS */}
       <style>{`
-            input::placeholder, textarea::placeholder { color: #94A3B8 !important; opacity: 1 !important; }
-            ::-webkit-input-placeholder { color: #94A3B8 !important; opacity: 1 !important; }
-            :-moz-placeholder { color: #94A3B8 !important; opacity: 1 !important; }
-        `}</style>
+        input::placeholder, textarea::placeholder { color: var(--text-muted) !important; opacity: 1 !important; }
+        ::-webkit-input-placeholder { color: var(--text-muted) !important; opacity: 1 !important; }
+        :-moz-placeholder { color: var(--text-muted) !important; opacity: 1 !important; }
+      `}</style>
 
       <div style={styles.container}>
-        {/* --- HEADER --- */}
         <div style={styles.header}>
-          <button
-            onClick={() => navigate("/dashboard/central-admin")}
-            style={styles.backButton}
-          >
-            <ArrowLeft size={16} /> Voltar à Central
-          </button>
           <div style={styles.titleGroup}>
             <div style={styles.iconCirclePurple}>
               <Settings size={28} color="#7B1FA2" />
@@ -172,14 +149,12 @@ export default function ConfiguracoesGerais() {
           </div>
         </div>
 
-        {/* --- LAYOUT EM ABAS (LATERAL) --- */}
         <div
           style={{
             ...styles.layoutWithTabs,
             flexDirection: isMobile ? "column" : "row",
           }}
         >
-          {/* BARRA LATERAL DE NAVEGAÇÃO */}
           <aside
             style={{
               ...styles.tabSidebar,
@@ -194,7 +169,7 @@ export default function ConfiguracoesGerais() {
                 }
                 onClick={() => setActiveTab("economia")}
               >
-                <TrendingUp size={18} /> Economia de XP
+                <TrendingUp size={18} /> Economia de XP{" "}
                 {activeTab === "economia" && (
                   <ChevronRight size={16} style={styles.chevron} />
                 )}
@@ -205,7 +180,7 @@ export default function ConfiguracoesGerais() {
                 }
                 onClick={() => setActiveTab("escolas")}
               >
-                <School size={18} /> Escolas e Instituições
+                <School size={18} /> Escolas{" "}
                 {activeTab === "escolas" && (
                   <ChevronRight size={16} style={styles.chevron} />
                 )}
@@ -218,7 +193,7 @@ export default function ConfiguracoesGerais() {
                 }
                 onClick={() => setActiveTab("disciplinas")}
               >
-                <BookOpen size={18} /> Disciplinas Cadastradas
+                <BookOpen size={18} /> Disciplinas{" "}
                 {activeTab === "disciplinas" && (
                   <ChevronRight size={16} style={styles.chevron} />
                 )}
@@ -226,9 +201,7 @@ export default function ConfiguracoesGerais() {
             </nav>
           </aside>
 
-          {/* ÁREA DE CONTEÚDO PRINCIPAL */}
           <main style={styles.mainContent}>
-            {/* 1. ABA DE ECONOMIA DE XP */}
             {activeTab === "economia" && (
               <div style={styles.card}>
                 <div style={styles.cardHeader}>
@@ -247,8 +220,8 @@ export default function ConfiguracoesGerais() {
                 <form onSubmit={salvarXp} style={styles.formGrid}>
                   <div style={styles.formGroup}>
                     <label style={styles.label}>
-                      <FileCheck size={16} color="#64748B" /> Revisar a prática
-                      de um colega
+                      <FileCheck size={16} color="var(--text-muted)" /> Revisar
+                      a prática de um colega
                     </label>
                     <div style={styles.inputWithAddon}>
                       <input
@@ -261,11 +234,10 @@ export default function ConfiguracoesGerais() {
                       <span style={styles.addonText}>XP</span>
                     </div>
                   </div>
-
                   <div style={styles.formGroup}>
                     <label style={styles.label}>
-                      <Trophy size={16} color="#64748B" /> Ter uma produção
-                      Aprovada
+                      <Trophy size={16} color="var(--text-muted)" /> Ter uma
+                      produção Aprovada
                     </label>
                     <div style={styles.inputWithAddon}>
                       <input
@@ -278,11 +250,10 @@ export default function ConfiguracoesGerais() {
                       <span style={styles.addonText}>XP</span>
                     </div>
                   </div>
-
                   <div style={styles.formGroup}>
                     <label style={styles.label}>
-                      <MessageSquare size={16} color="#64748B" /> Criar um novo
-                      Tópico no Fórum
+                      <MessageSquare size={16} color="var(--text-muted)" />{" "}
+                      Criar um novo Tópico no Fórum
                     </label>
                     <div style={styles.inputWithAddon}>
                       <input
@@ -295,10 +266,9 @@ export default function ConfiguracoesGerais() {
                       <span style={styles.addonText}>XP</span>
                     </div>
                   </div>
-
                   <div style={styles.formGroup}>
                     <label style={styles.label}>
-                      <MessageSquare size={16} color="#64748B" />{" "}
+                      <MessageSquare size={16} color="var(--text-muted)" />{" "}
                       Responder/Comentar no Fórum
                     </label>
                     <div style={styles.inputWithAddon}>
@@ -312,7 +282,6 @@ export default function ConfiguracoesGerais() {
                       <span style={styles.addonText}>XP</span>
                     </div>
                   </div>
-
                   <div style={styles.submitRow}>
                     <button
                       type="submit"
@@ -331,17 +300,16 @@ export default function ConfiguracoesGerais() {
               </div>
             )}
 
-            {/* 2. ABA DE ESCOLAS */}
             {activeTab === "escolas" && (
               <div style={styles.card}>
                 <div style={styles.cardHeader}>
                   <div
                     style={{
                       ...styles.cardHeaderIcon,
-                      backgroundColor: "#D1FAE5",
+                      backgroundColor: "var(--bg-success)",
                     }}
                   >
-                    <School size={24} color="#059669" />
+                    <School size={24} color="var(--text-success)" />
                   </div>
                   <div>
                     <h2 style={styles.cardTitle}>Instituições de Ensino</h2>
@@ -381,7 +349,7 @@ export default function ConfiguracoesGerais() {
                       <button
                         onClick={() => removerItem("escola", e.id)}
                         style={styles.tagDeleteBtn}
-                        title="Remover Escola"
+                        title="Remover"
                       >
                         <X size={14} />
                       </button>
@@ -394,17 +362,16 @@ export default function ConfiguracoesGerais() {
               </div>
             )}
 
-            {/* 3. ABA DE DISCIPLINAS */}
             {activeTab === "disciplinas" && (
               <div style={styles.card}>
                 <div style={styles.cardHeader}>
                   <div
                     style={{
                       ...styles.cardHeaderIcon,
-                      backgroundColor: "#FFEDD5",
+                      backgroundColor: "var(--bg-warning)",
                     }}
                   >
-                    <BookOpen size={24} color="#EA580C" />
+                    <BookOpen size={24} color="var(--text-warning)" />
                   </div>
                   <div>
                     <h2 style={styles.cardTitle}>Disciplinas e Áreas</h2>
@@ -451,21 +418,25 @@ export default function ConfiguracoesGerais() {
                       key={d.id}
                       style={{
                         ...styles.tagItem,
-                        border: "1px solid #FFEDD5",
-                        backgroundColor: "#FFF7ED",
+                        border: "1px solid var(--border-warning)",
+                        backgroundColor: "var(--bg-warning)",
                       }}
                     >
-                      <span style={{ ...styles.tagText, color: "#C2410C" }}>
+                      <span
+                        style={{
+                          ...styles.tagText,
+                          color: "var(--text-warning)",
+                        }}
+                      >
                         {d.nome}
                       </span>
                       <button
                         onClick={() => removerItem("disciplina", d.id)}
                         style={{
                           ...styles.tagDeleteBtn,
-                          color: "#EA580C",
-                          ":hover": { backgroundColor: "#FFEDD5" },
+                          color: "var(--text-warning)",
                         }}
-                        title="Remover Disciplina"
+                        title="Remover"
                       >
                         <X size={14} />
                       </button>
@@ -488,7 +459,7 @@ export default function ConfiguracoesGerais() {
 
 const styles = {
   wrapper: {
-    backgroundColor: "#F8FAFC",
+    backgroundColor: "var(--bg-main)",
     minHeight: "100vh",
     fontFamily: "'Inter', sans-serif",
   },
@@ -500,11 +471,9 @@ const styles = {
     justifyContent: "center",
     height: "80vh",
   },
-
-  // --- HEADER ---
   header: {
     marginBottom: "30px",
-    borderBottom: "1px solid #E2E8F0",
+    borderBottom: "1px solid var(--border-color)",
     paddingBottom: "20px",
   },
   backButton: {
@@ -515,7 +484,7 @@ const styles = {
     border: "none",
     cursor: "pointer",
     fontSize: "14px",
-    color: "#64748B",
+    color: "var(--text-secondary)",
     fontWeight: "700",
     padding: 0,
     marginBottom: "20px",
@@ -524,28 +493,25 @@ const styles = {
   iconCirclePurple: {
     width: "55px",
     height: "55px",
-    backgroundColor: "#F3E8FF",
+    backgroundColor: "rgba(123, 31, 162, 0.1)",
     borderRadius: "16px",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
     flexShrink: 0,
-    boxShadow: "0 4px 6px rgba(123, 31, 162, 0.1)",
   },
   pageTitle: {
     margin: 0,
     fontWeight: "900",
-    color: "#0F172A",
+    color: "var(--text-primary)",
     letterSpacing: "-0.5px",
   },
   pageSubtitle: {
     margin: 0,
-    color: "#64748B",
+    color: "var(--text-muted)",
     marginTop: "4px",
     fontSize: "15px",
   },
-
-  // --- LAYOUT EM ABAS ---
   layoutWithTabs: { display: "flex", gap: "30px", alignItems: "flex-start" },
   tabSidebar: { display: "flex", flexDirection: "column" },
   tabNav: { display: "flex", flexDirection: "column", gap: "8px" },
@@ -560,7 +526,7 @@ const styles = {
     borderRadius: "12px",
     fontSize: "15px",
     fontWeight: "600",
-    color: "#64748B",
+    color: "var(--text-secondary)",
     cursor: "pointer",
     textAlign: "left",
     transition: "all 0.2s",
@@ -571,26 +537,24 @@ const styles = {
     gap: "10px",
     width: "100%",
     padding: "14px 18px",
-    backgroundColor: "#FFFFFF",
-    border: "1px solid #E2E8F0",
+    backgroundColor: "var(--bg-card)",
+    border: "1px solid var(--border-color)",
     borderRadius: "12px",
     fontSize: "15px",
     fontWeight: "700",
-    color: "#0F172A",
+    color: "var(--text-primary)",
     cursor: "pointer",
     textAlign: "left",
     boxShadow: "0 4px 6px rgba(0,0,0,0.02)",
   },
-  chevron: { marginLeft: "auto", color: "#CBD5E1" },
+  chevron: { marginLeft: "auto", color: "var(--text-muted)" },
   mainContent: { flex: 1, width: "100%" },
-
-  // --- COMPONENTES DOS CARDS ---
   card: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "var(--bg-card)",
     borderRadius: "20px",
     padding: "30px",
     boxShadow: "0 10px 25px -5px rgba(0,0,0,0.02)",
-    border: "1px solid #E2E8F0",
+    border: "1px solid var(--border-color)",
   },
   cardHeader: {
     display: "flex",
@@ -602,7 +566,7 @@ const styles = {
     width: "48px",
     height: "48px",
     borderRadius: "12px",
-    backgroundColor: "#EFF6FF",
+    backgroundColor: "var(--bg-info)",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
@@ -612,16 +576,14 @@ const styles = {
     margin: "0 0 6px 0",
     fontSize: "20px",
     fontWeight: "800",
-    color: "#1E293B",
+    color: "var(--text-primary)",
   },
   cardDesc: {
     margin: 0,
     fontSize: "14px",
-    color: "#64748B",
+    color: "var(--text-secondary)",
     lineHeight: "1.5",
   },
-
-  // --- FORMULÁRIO DE XP ---
   formGrid: {
     display: "grid",
     gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
@@ -634,15 +596,14 @@ const styles = {
     gap: "6px",
     fontSize: "14px",
     fontWeight: "700",
-    color: "#334155",
+    color: "var(--text-secondary)",
   },
-
   inputWithAddon: {
     display: "flex",
     alignItems: "center",
-    border: "1px solid #CBD5E1",
+    border: "1px solid var(--border-color)",
     borderRadius: "10px",
-    backgroundColor: "#F8FAFC",
+    backgroundColor: "var(--input-bg)",
     overflow: "hidden",
     height: "45px",
   },
@@ -653,20 +614,19 @@ const styles = {
     outline: "none",
     padding: "10px 15px",
     fontSize: "16px",
-    color: "#0F172A",
+    color: "var(--input-text)",
     fontWeight: "700",
   },
   addonText: {
     padding: "0 15px",
-    color: "#94A3B8",
+    color: "var(--text-muted)",
     fontWeight: "800",
-    backgroundColor: "#F1F5F9",
+    backgroundColor: "var(--bg-alt)",
     height: "100%",
     display: "flex",
     alignItems: "center",
-    borderLeft: "1px solid #E2E8F0",
+    borderLeft: "1px solid var(--border-color)",
   },
-
   submitRow: {
     gridColumn: "1 / -1",
     display: "flex",
@@ -687,16 +647,14 @@ const styles = {
     cursor: "pointer",
     transition: "transform 0.2s",
   },
-
-  // --- LISTAS DE CATEGORIAS (ESCOLAS/DISCIPLINAS) ---
   addBarContainer: {
     display: "flex",
     gap: "10px",
     marginBottom: "25px",
-    backgroundColor: "#F8FAFC",
+    backgroundColor: "var(--bg-alt)",
     padding: "10px",
     borderRadius: "12px",
-    border: "1px solid #E2E8F0",
+    border: "1px solid var(--border-color)",
   },
   inputSearch: {
     flex: 1,
@@ -705,8 +663,8 @@ const styles = {
     border: "none",
     fontSize: "15px",
     outline: "none",
-    color: "#1E293B",
-    backgroundColor: "transparent",
+    color: "var(--input-text)",
+    backgroundColor: "var(--input-bg)",
   },
   btnAdd: {
     color: "white",
@@ -719,24 +677,23 @@ const styles = {
     fontWeight: "700",
     cursor: "pointer",
   },
-
   tagsGrid: { display: "flex", flexWrap: "wrap", gap: "10px" },
   tagItem: {
     display: "flex",
     alignItems: "center",
     gap: "8px",
     padding: "8px 12px 8px 16px",
-    backgroundColor: "#F1F5F9",
-    border: "1px solid #E2E8F0",
+    backgroundColor: "var(--bg-alt)",
+    border: "1px solid var(--border-color)",
     borderRadius: "30px",
     fontSize: "14px",
     fontWeight: "600",
   },
-  tagText: { color: "#334155" },
+  tagText: { color: "var(--text-primary)" },
   tagDeleteBtn: {
-    background: "none",
+    background: "transparent",
     border: "none",
-    color: "#94A3B8",
+    color: "var(--text-danger)",
     cursor: "pointer",
     padding: "4px",
     display: "flex",
@@ -744,15 +701,14 @@ const styles = {
     justifyContent: "center",
     borderRadius: "50%",
     transition: "all 0.2s",
-    backgroundColor: "#FFFFFF",
   },
   emptyText: {
-    color: "#94A3B8",
+    color: "var(--text-muted)",
     fontSize: "14px",
     width: "100%",
     padding: "20px",
     textAlign: "center",
-    border: "1px dashed #CBD5E1",
+    border: "1px dashed var(--border-color)",
     borderRadius: "12px",
   },
 }
