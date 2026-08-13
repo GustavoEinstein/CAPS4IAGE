@@ -711,22 +711,46 @@ def api_password_reset_request(request):
     try:
         user = User.objects.get(email=email)
     except User.DoesNotExist:
+        # Por segurança, sempre dizemos que foi enviado mesmo se não existir
         return Response({'mensagem': 'Se o e-mail existir, um link foi enviado.'})
 
+    # Gera o Token seguro do Django
     token = default_token_generator.make_token(user)
     uid = urlsafe_base64_encode(force_bytes(user.pk))
     reset_link = f"http://localhost:5173/reset-password/{uid}/{token}"
 
-    subject = "Redefinição de Senha - Comunidade IA"
+    subject = "Redefinição de Senha - T.E.I.A"
     from_email = settings.DEFAULT_FROM_EMAIL
     to = [email]
 
     try:
-        text_content = f"Clique no link para redefinir: {reset_link}"
-        send_mail(subject, text_content, from_email, to, fail_silently=False)
+        # Pega a URL base dinamicamente apontando para a pasta assets
+        logo_url = request.build_absolute_uri(settings.STATIC_URL + 'assets/unb.png')
+        
+        # 1. Prepara as variáveis para o seu template HTML
+        nome_usuario = user.first_name if user.first_name else user.username
+        context = {
+            'nome': nome_usuario.split()[0].title(), # Pega só o primeiro nome
+            'link': reset_link,
+            'logo_url': logo_url
+        }
+
+        # 2. Renderiza o HTML que você criou
+        html_content = render_to_string('emails/password_reset_email.html', context)
+        
+        # 3. Cria uma versão em texto puro caso o provedor de e-mail bloqueie HTML
+        text_content = strip_tags(html_content)
+
+        # 4. Monta a mensagem e envia
+        msg = EmailMultiAlternatives(subject, text_content, from_email, to)
+        msg.attach_alternative(html_content, "text/html")
+        msg.send(fail_silently=False)
+
         return Response({'mensagem': 'E-mail enviado com sucesso!'})
+        
     except Exception as e:
-        return Response({'erro': 'Erro ao enviar e-mail.'}, status=500)
+        print(f"ERRO AO ENVIAR E-MAIL: {e}") # Isso vai aparecer no seu terminal do backend para ajudar a debugar!
+        return Response({'erro': 'Erro ao enviar e-mail. Verifique o console.'}, status=500)
 
 @csrf_exempt
 @api_view(['POST'])
