@@ -343,7 +343,7 @@ const Revisao = () => {
           </div>
 
           {/* O COMPONENTE COM A TRAVA ABSOLUTA E DUPLA DE PRIVACIDADE */}
-          {podeVerParecer && <ParecerTecnico producao={producaoEmRevisao} />}
+          {<ParecerTecnico producao={producaoEmRevisao} />}
         </div>
 
         <div style={styles.stepSeparator}>

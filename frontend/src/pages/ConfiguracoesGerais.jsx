@@ -14,6 +14,7 @@ import {
   ChevronRight,
   Trophy,
   X,
+  MessageSquare,
 } from "lucide-react"
 
 export default function ConfiguracoesGerais() {
