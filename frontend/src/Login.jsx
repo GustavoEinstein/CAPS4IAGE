@@ -31,9 +31,6 @@ const Login = () => {
   const [hover, setHover] = useState(false)
   const navigate = useNavigate()
 
-  // NOVO: Estado para controlar a visibilidade da senha
-  const [showPassword, setShowPassword] = useState(false)
-
   const handleLogin = async (e) => {
     e.preventDefault()
     setError("")
@@ -117,26 +114,13 @@ const Login = () => {
             <label style={styles.label}>Senha</label>
             <div style={styles.inputWrapper}>
               <input
-                type={showPassword ? "text" : "password"} // Alterna entre text e password
+                type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 style={styles.input}
                 placeholder="Sua senha"
                 required
               />
-              {/* NOVO: Botão de alternância de visibilidade */}
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                style={styles.eyeButton}
-                aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
-              >
-                {showPassword ? (
-                  <EyeOff size={20} color="#64748B" />
-                ) : (
-                  <Eye size={20} color="#64748B" />
-                )}
-              </button>
             </div>
           </div>
 
@@ -249,7 +233,7 @@ const styles = {
     color: "var(--text-secondary)",
   },
   input: {
-    flex: 1, // Permite que o input ocupe todo o espaço disponível, empurrando o botão para a direita
+    width: "100%",
     padding: "12px",
     border: "none",
     background: "transparent",

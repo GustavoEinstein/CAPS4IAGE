@@ -39,14 +39,7 @@ const FormularioManual = () => {
 
   const storedDisc = localStorage.getItem("user_disciplina") || "Geral"
 
-  const storedDisc = localStorage.getItem("user_disciplina") || "Geral"
-  // Verifica se o professor é estritamente de computação
-  const isProfessorComputacao = storedDisc === "Computação"
-
-  // Estado para controlar se um professor de outra área quer adicionar BNCC de computação
-  const [temInterdisciplinaridade, setTemInterdisciplinaridade] =
-    useState(false)
-
+  // 1. INICIALIZAÇÃO INTELIGENTE DO STATE
   const [formData, setFormData] = useState(() => {
     if (location.state?.baseData) {
       const base = location.state.baseData
@@ -146,6 +139,7 @@ const FormularioManual = () => {
     }
   }
 
+  // 2. RECUPERADOR DE RASCUNHO (Auto-Save)
   useEffect(() => {
     if (!location.state?.baseData) {
       const savedDraft = localStorage.getItem("producao_autosave_draft")
@@ -177,6 +171,7 @@ const FormularioManual = () => {
     }
   }, [location.state])
 
+  // 3. GATILHO DE SALVAMENTO AUTOMÁTICO LOCAL
   useEffect(() => {
     const { arquivo, ...dataToSave } = formData
     if (dataToSave.titulo || dataToSave.experiencia || dataToSave.bncc) {
@@ -201,6 +196,7 @@ const FormularioManual = () => {
 
   const handleChange = (e) =>
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }))
+
   const handleFileChange = (e) =>
     setFormData((prev) => ({ ...prev, arquivo: e.target.files[0] }))
 
@@ -244,16 +240,6 @@ const FormularioManual = () => {
       )
       return
     }
-
-    if (!isDraft && camposFaltando.length > 0) {
-      Swal.fire(
-        "Campos Incompletos",
-        `Os seguintes campos são obrigatórios: ${camposFaltando.join(", ")}`,
-        "warning",
-      )
-      return
-    }
-
     setIsSubmitting(true)
     try {
       const url = "api/production/create/"
@@ -595,55 +581,6 @@ const FormularioManual = () => {
                       )}
                     </div>
                   )}
-                </>
-              ) : (
-                /* SE FOR PROFESSOR DE COMPUTAÇÃO: MOSTRA APENAS O CAMPO DE COMPUTAÇÃO */
-                <div style={styles.inputGroup}>
-                  <label style={styles.label}>
-                    <Monitor size={16} /> BNCC Computação (Sua Disciplina)
-                  </label>
-                  <div style={{ position: "relative", marginBottom: "10px" }}>
-                    <input
-                      type="text"
-                      placeholder="🔍 Busque por código de computação..."
-                      value={bnccBusca}
-                      onChange={(e) => {
-                        setBnccBusca(e.target.value)
-                        setMostrarOpcoesBncc(true)
-                      }}
-                      style={styles.input}
-                    />
-                    {mostrarOpcoesBncc && bnccBusca && (
-                      <div style={styles.autocompleteDropdown}>
-                        {bnccFiltradas.length > 0 ? (
-                          bnccFiltradas.map((item) => (
-                            <div
-                              key={item.id}
-                              style={styles.autocompleteItem}
-                              onClick={() => adicionarBncc(item)}
-                            >
-                              <strong style={{ color: "#1565C0" }}>
-                                {item.id}
-                              </strong>{" "}
-                              - {item.texto}
-                            </div>
-                          ))
-                        ) : (
-                          <div style={{ padding: "12px", color: "#78909C" }}>
-                            Nenhuma encontrada.
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                  <textarea
-                    name="bncc_computacao"
-                    value={formData.bncc_computacao}
-                    onChange={handleChange}
-                    style={styles.textarea}
-                    rows="4"
-                    placeholder="Cite as habilidades de computação da BNCC..."
-                  />
                 </div>
                 <textarea
                   name="bncc"
