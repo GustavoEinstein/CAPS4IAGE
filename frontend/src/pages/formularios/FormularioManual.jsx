@@ -21,19 +21,23 @@ import {
   Send,
   Check,
   Link,
-  Monitor,
+  Cpu,
 } from "lucide-react"
 
 import bnccMat from "../../data/bncc_mat.json"
 import bnccPort from "../../data/bncc_port.json"
 import bnccComp from "../../data/bncc_comp.json"
 
-const BNCC_DADOS = [...bnccMat, ...bnccPort, ...bnccComp]
+// --- SEPARAÇÃO DAS BASES DE DADOS ---
+const BNCC_GERAL = [...bnccMat, ...bnccPort]
+const BNCC_COMPUTACAO = [...bnccComp]
 
 const FormularioManual = () => {
   const navigate = useNavigate()
   const location = useLocation()
   const { isMobile } = useOutletContext() || { isMobile: false }
+
+  const storedDisc = localStorage.getItem("user_disciplina") || "Geral"
 
   const storedDisc = localStorage.getItem("user_disciplina") || "Geral"
   // Verifica se o professor é estritamente de computação
@@ -86,46 +90,84 @@ const FormularioManual = () => {
 
   const [customResource, setCustomResource] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [bnccBusca, setBnccBusca] = useState("")
-  const [mostrarOpcoesBncc, setMostrarOpcoesBncc] = useState(false)
 
-  const bnccFiltradas = BNCC_DADOS.filter(
+  // Controle para exibir o bloco de Computação
+  const [mostrarCampoComp, setMostrarCampoComp] = useState(() => {
+    return formData.bncc_computacao ? true : false
+  })
+
+  // --- ESTADOS DO AUTOCOMPLETE BNCC GERAL ---
+  const [bnccBuscaGeral, setBnccBuscaGeral] = useState("")
+  const [mostrarOpcoesGeral, setMostrarOpcoesGeral] = useState(false)
+
+  const bnccFiltradasGeral = BNCC_GERAL.filter(
     (item) =>
-      item.id.toLowerCase().includes(bnccBusca.toLowerCase()) ||
-      item.texto.toLowerCase().includes(bnccBusca.toLowerCase()),
+      item.id.toLowerCase().includes(bnccBuscaGeral.toLowerCase()) ||
+      item.texto.toLowerCase().includes(bnccBuscaGeral.toLowerCase()),
   ).slice(0, 5)
 
-  const adicionarBncc = (item) => {
+  const adicionarBnccGeral = (item) => {
     const novaCompetencia = `${item.id}: ${item.texto}`
     const textoAtual = formData.bncc ? `\n${formData.bncc}` : ""
     setFormData((prev) => ({ ...prev, bncc: novaCompetencia + textoAtual }))
-    setBnccBusca("")
-    setMostrarOpcoesBncc(false)
+    setBnccBuscaGeral("")
+    setMostrarOpcoesGeral(false)
+  }
+
+  // --- ESTADOS DO AUTOCOMPLETE BNCC COMPUTAÇÃO ---
+  const [bnccBuscaComp, setBnccBuscaComp] = useState("")
+  const [mostrarOpcoesComp, setMostrarOpcoesComp] = useState(false)
+
+  const bnccFiltradasComp = BNCC_COMPUTACAO.filter(
+    (item) =>
+      item.id.toLowerCase().includes(bnccBuscaComp.toLowerCase()) ||
+      item.texto.toLowerCase().includes(bnccBuscaComp.toLowerCase()),
+  ).slice(0, 5)
+
+  const adicionarBnccComp = (item) => {
+    const novaCompetencia = `${item.id}: ${item.texto}`
+    const textoAtual = formData.bncc_computacao
+      ? `\n${formData.bncc_computacao}`
+      : ""
+    setFormData((prev) => ({
+      ...prev,
+      bncc_computacao: novaCompetencia + textoAtual,
+    }))
+    setBnccBuscaComp("")
+    setMostrarOpcoesComp(false)
+  }
+
+  // Função para alternar o checkbox de interdisciplinaridade
+  const handleToggleComp = () => {
+    const newValue = !mostrarCampoComp
+    setMostrarCampoComp(newValue)
+    if (!newValue) {
+      setFormData((prev) => ({ ...prev, bncc_computacao: "" }))
+    }
   }
 
   useEffect(() => {
-    // Se for uma derivação e já tiver BNCC de computação, ativa o box automaticamente
-    if (formData.bncc_computacao && !isProfessorComputacao) {
-      setTemInterdisciplinaridade(true)
-    }
-
     if (!location.state?.baseData) {
       const savedDraft = localStorage.getItem("producao_autosave_draft")
       if (savedDraft) {
         Swal.fire({
           title: "Rascunho Encontrado!",
-          text: "Deseja restaurar os dados?",
+          text: "Deseja restaurar os dados não salvos da última vez?",
           icon: "info",
           showCancelButton: true,
           confirmButtonText: "Sim",
+          cancelButtonText: "Não",
           confirmButtonColor: "#1565C0",
         }).then((result) => {
           if (result.isConfirmed) {
             try {
-              const parsed = JSON.parse(savedDraft)
-              setFormData((prev) => ({ ...prev, ...parsed, arquivo: null }))
-              if (parsed.bncc_computacao && !isProfessorComputacao)
-                setTemInterdisciplinaridade(true)
+              const draftData = JSON.parse(savedDraft)
+              setFormData((prev) => ({
+                ...prev,
+                ...draftData,
+                arquivo: null,
+              }))
+              if (draftData.bncc_computacao) setMostrarCampoComp(true)
             } catch (e) {}
           } else {
             localStorage.removeItem("producao_autosave_draft")
@@ -137,7 +179,7 @@ const FormularioManual = () => {
 
   useEffect(() => {
     const { arquivo, ...dataToSave } = formData
-    if (dataToSave.titulo || dataToSave.experiencia) {
+    if (dataToSave.titulo || dataToSave.experiencia || dataToSave.bncc) {
       localStorage.setItem(
         "producao_autosave_draft",
         JSON.stringify(dataToSave),
@@ -164,10 +206,11 @@ const FormularioManual = () => {
 
   const toggleRecurso = (recurso) => {
     setFormData((prev) => {
-      const exists = prev.recursos.includes(recurso)
+      const currentRecursos = prev.recursos || []
+      const exists = currentRecursos.includes(recurso)
       return exists
-        ? { ...prev, recursos: prev.recursos.filter((r) => r !== recurso) }
-        : { ...prev, recursos: [...prev.recursos, recurso] }
+        ? { ...prev, recursos: currentRecursos.filter((r) => r !== recurso) }
+        : { ...prev, recursos: [...currentRecursos, recurso] }
     })
   }
 
@@ -175,27 +218,31 @@ const FormularioManual = () => {
     if ((e.key === "Enter" || e.type === "click") && customResource.trim()) {
       e.preventDefault()
       const val = customResource.trim()
-      if (!formData.recursos.includes(val)) {
-        setFormData((prev) => ({ ...prev, recursos: [...prev.recursos, val] }))
+      const currentRecursos = formData.recursos || []
+      if (!currentRecursos.includes(val)) {
+        setFormData((prev) => ({
+          ...prev,
+          recursos: [...currentRecursos, val],
+        }))
       }
       setCustomResource("")
     }
   }
 
   const handleSubmit = async (isDraft) => {
-    // LÓGICA DE VALIDAÇÃO CONDICIONAL
-    const camposFaltando = []
-    if (!formData.titulo) camposFaltando.push("Título")
-    if (!formData.nivel) camposFaltando.push("Nível")
-    if (!formData.categoria) camposFaltando.push("Categoria")
-    if (!formData.experiencia) camposFaltando.push("Relato")
-
-    if (isProfessorComputacao) {
-      if (!formData.bncc_computacao) camposFaltando.push("BNCC Computação")
-    } else {
-      if (!formData.bncc) camposFaltando.push("BNCC / Objetivos")
-      if (temInterdisciplinaridade && !formData.bncc_computacao)
-        camposFaltando.push("BNCC Computação")
+    if (
+      !isDraft &&
+      (!formData.titulo ||
+        !formData.nivel ||
+        !formData.categoria ||
+        !formData.experiencia)
+    ) {
+      Swal.fire(
+        "Campos Incompletos",
+        "Preencha Título, Nível, Categoria e Relato para enviar.",
+        "warning",
+      )
+      return
     }
 
     if (!isDraft && camposFaltando.length > 0) {
@@ -214,19 +261,15 @@ const FormularioManual = () => {
       dataToSend.append("is_draft", isDraft)
 
       Object.keys(formData).forEach((key) => {
-        if (key === "recursos")
-          formData.recursos.forEach((r) => dataToSend.append("recursos", r))
-        else if (key === "arquivo" && formData.arquivo)
+        if (key === "recursos") {
+          const recArray = formData.recursos || []
+          if (recArray.length > 0) {
+            dataToSend.append("recursos", recArray.join(", "))
+          }
+        } else if (key === "arquivo" && formData.arquivo)
           dataToSend.append("arquivo", formData.arquivo)
         else if (key === "nivel")
           dataToSend.append("nivel_ensino", formData.nivel)
-        // Se não tem interdisciplinaridade e não é prof de computação, envia BNCC de computação vazio
-        else if (
-          key === "bncc_computacao" &&
-          !isProfessorComputacao &&
-          !temInterdisciplinaridade
-        )
-          dataToSend.append(key, "")
         else if (formData[key] !== null && formData[key] !== "")
           dataToSend.append(key, formData[key])
       })
@@ -243,7 +286,12 @@ const FormularioManual = () => {
       })
       navigate("/dashboard/minhas-producoes")
     } catch (error) {
-      Swal.fire("Erro", "Ocorreu um problema ao salvar.", "error")
+      console.error(error)
+      Swal.fire(
+        "Erro",
+        "Ocorreu um problema ao salvar. Verifique se os dados estão corretos.",
+        "error",
+      )
     } finally {
       setIsSubmitting(false)
     }
@@ -251,6 +299,22 @@ const FormularioManual = () => {
 
   return (
     <div style={styles.fullPageWrapper}>
+      <style>{`
+        input::placeholder, textarea::placeholder {
+          color: var(--text-muted) !important;
+          opacity: 1 !important;
+        }
+        ::-webkit-input-placeholder { color: var(--text-muted) !important; opacity: 1 !important; }
+        :-moz-placeholder { color: var(--text-muted) !important; opacity: 1 !important; }
+        .toggle-box:hover {
+            background-color: var(--bg-main) !important;
+            border-color: var(--border-hover) !important;
+        }
+        .autocomplete-item:hover {
+            background-color: var(--bg-main) !important;
+        }
+      `}</style>
+
       <div style={styles.container}>
         <div style={styles.topBar}>
           <button
@@ -271,19 +335,20 @@ const FormularioManual = () => {
               flexDirection: isMobile ? "column" : "row",
             }}
           >
-            {/* ESQUERDA - Ficha Técnica */}
+            {/* ESQUERDA */}
             <div
               style={{ ...styles.leftCol, width: isMobile ? "100%" : "35%" }}
             >
               {formData.producao_base && (
                 <div
                   style={{
-                    backgroundColor: "#E8F5E9",
+                    backgroundColor: "var(--bg-success)",
+                    border: "1px solid var(--border-success)",
                     padding: "10px",
                     borderRadius: "8px",
                     marginBottom: "15px",
                     fontSize: "12px",
-                    color: "#2E7D32",
+                    color: "var(--text-success)",
                     fontWeight: "bold",
                     display: "flex",
                     alignItems: "center",
@@ -308,12 +373,13 @@ const FormularioManual = () => {
                   placeholder="Ex: Dilemas Éticos com IA"
                 />
               </div>
+
               <div style={styles.inputGroup}>
                 <label style={styles.label}>Disciplina</label>
                 <div style={styles.lockedInputWrapper}>
                   <Lock
                     size={16}
-                    color="#78909C"
+                    color="var(--text-muted)"
                     style={{ marginLeft: "12px" }}
                   />
                   <input
@@ -324,6 +390,7 @@ const FormularioManual = () => {
                   />
                 </div>
               </div>
+
               <div style={styles.inputGroup}>
                 <label style={styles.label}>Nível</label>
                 <select
@@ -339,6 +406,7 @@ const FormularioManual = () => {
                   <option value="Ensino Superior">Ensino Superior</option>
                 </select>
               </div>
+
               <div style={styles.inputGroup}>
                 <label style={styles.label}>
                   <Layers size={14} /> Categoria
@@ -387,6 +455,7 @@ const FormularioManual = () => {
                   </optgroup>
                 </select>
               </div>
+
               <div style={styles.inputGroup}>
                 <label style={styles.label}>Modelo de IA</label>
                 <input
@@ -395,9 +464,10 @@ const FormularioManual = () => {
                   value={formData.modelo_ia}
                   onChange={handleChange}
                   style={styles.input}
-                  placeholder="Ex: ChatGPT-4, Gemini..."
+                  placeholder="Ex: ChatGPT-4, Gemini, Claude..."
                 />
               </div>
+
               <div style={styles.inputGroup}>
                 <label style={styles.label}>Prompts Utilizados</label>
                 <textarea
@@ -405,6 +475,7 @@ const FormularioManual = () => {
                   value={formData.prompts_ia}
                   onChange={handleChange}
                   style={{ ...styles.textarea, minHeight: "80px" }}
+                  placeholder="Ex: 'Atue como um professor do ensino médio e crie uma lista de exercícios sobre...'"
                 />
               </div>
 
@@ -451,14 +522,24 @@ const FormularioManual = () => {
                   value={formData.link_material}
                   onChange={handleChange}
                   style={styles.input}
-                  placeholder="Google Drive, YouTube..."
+                  placeholder="Ex: https://youtu.be/..."
                 />
+                <span
+                  style={{
+                    fontSize: "11px",
+                    color: "var(--text-muted)",
+                    marginTop: "4px",
+                  }}
+                >
+                  Caso o material seja muito pesado (ex: vídeos {">"} 50MB),
+                  cole o link do YouTube ou Drive aqui.
+                </span>
               </div>
             </div>
 
             {!isMobile && <div style={styles.verticalDivider}></div>}
 
-            {/* DIREITA - Detalhamento Pedagógico */}
+            {/* DIREITA */}
             <div
               style={{ ...styles.rightCol, width: isMobile ? "100%" : "65%" }}
             >
@@ -466,114 +547,52 @@ const FormularioManual = () => {
                 <BookOpen size={20} color="#1565C0" /> Detalhamento Pedagógico
               </h3>
 
-              {/* LÓGICA CONDICIONAL DE CAMPOS BNCC */}
-              {!isProfessorComputacao ? (
-                <>
-                  {/* CAMPO BNCC GERAL PARA OUTRAS DISCIPLINAS */}
-                  <div style={styles.inputGroup}>
-                    <label style={styles.label}>
-                      BNCC / Objetivos de Aprendizagem
-                    </label>
-                    <div style={{ position: "relative", marginBottom: "10px" }}>
-                      <input
-                        type="text"
-                        placeholder="🔍 Busque por código ou palavra-chave..."
-                        value={bnccBusca}
-                        onChange={(e) => {
-                          setBnccBusca(e.target.value)
-                          setMostrarOpcoesBncc(true)
-                        }}
-                        onFocus={() => setMostrarOpcoesBncc(true)}
-                        onBlur={() =>
-                          setTimeout(() => setMostrarOpcoesBncc(false), 200)
-                        }
-                        style={styles.input}
-                      />
-                      {mostrarOpcoesBncc && bnccBusca && (
-                        <div style={styles.autocompleteDropdown}>
-                          {bnccFiltradas.length > 0 ? (
-                            bnccFiltradas.map((item) => (
-                              <div
-                                key={item.id}
-                                style={styles.autocompleteItem}
-                                onClick={() => adicionarBncc(item)}
-                              >
-                                <strong style={{ color: "#1565C0" }}>
-                                  {item.id}
-                                </strong>{" "}
-                                - {item.texto}
-                              </div>
-                            ))
-                          ) : (
-                            <div
-                              style={{
-                                padding: "12px",
-                                color: "#78909C",
-                                fontSize: "13px",
-                              }}
-                            >
-                              Nenhuma encontrada.
-                            </div>
-                          )}
+              {/* BNCC GERAL (Matemática e Português) */}
+              <div style={styles.inputGroup}>
+                <label style={styles.label}>BNCC / Objetivos</label>
+                <div style={{ position: "relative", marginBottom: "10px" }}>
+                  <input
+                    type="text"
+                    placeholder="🔍 Busque por código ou palavra-chave..."
+                    value={bnccBuscaGeral}
+                    onChange={(e) => {
+                      setBnccBuscaGeral(e.target.value)
+                      setMostrarOpcoesGeral(true)
+                    }}
+                    onFocus={() => setMostrarOpcoesGeral(true)}
+                    onBlur={() =>
+                      setTimeout(() => setMostrarOpcoesGeral(false), 200)
+                    }
+                    style={styles.input}
+                  />
+                  {mostrarOpcoesGeral && bnccBuscaGeral && (
+                    <div style={styles.autocompleteDropdown}>
+                      {bnccFiltradasGeral.length > 0 ? (
+                        bnccFiltradasGeral.map((item) => (
+                          <div
+                            key={item.id}
+                            className="autocomplete-item"
+                            style={styles.autocompleteItem}
+                            onClick={() => adicionarBnccGeral(item)}
+                          >
+                            <strong style={{ color: "#1565C0" }}>
+                              {item.id}
+                            </strong>{" "}
+                            - {item.texto}
+                          </div>
+                        ))
+                      ) : (
+                        <div
+                          style={{
+                            padding: "12px",
+                            color: "var(--text-muted)",
+                            fontSize: "13px",
+                            textAlign: "center",
+                          }}
+                        >
+                          Nenhuma encontrada.
                         </div>
                       )}
-                    </div>
-                    <textarea
-                      name="bncc"
-                      value={formData.bncc}
-                      onChange={handleChange}
-                      style={styles.textarea}
-                      rows="3"
-                    />
-                  </div>
-
-                  {/* BOX DE INTERDISCIPLINARIDADE */}
-                  <div style={styles.interdisciplinaryBox}>
-                    <label
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        cursor: "pointer",
-                        gap: "10px",
-                        fontSize: "14px",
-                        fontWeight: "600",
-                        color: "#37474F",
-                      }}
-                    >
-                      <input
-                        type="checkbox"
-                        checked={temInterdisciplinaridade}
-                        onChange={(e) =>
-                          setTemInterdisciplinaridade(e.target.checked)
-                        }
-                        style={{ width: "18px", height: "18px" }}
-                      />
-                      Esta prática possui interdisciplinaridade com Computação?
-                    </label>
-                  </div>
-
-                  {/* CAMPO BNCC COMPUTAÇÃO (APARECE APENAS SE CHECKED) */}
-                  {temInterdisciplinaridade && (
-                    <div
-                      style={{
-                        ...styles.inputGroup,
-                        backgroundColor: "#F1F8E9",
-                        padding: "15px",
-                        borderRadius: "10px",
-                        border: "1px solid #C8E6C9",
-                      }}
-                    >
-                      <label style={{ ...styles.label, color: "#2E7D32" }}>
-                        <Monitor size={14} /> BNCC Computação
-                      </label>
-                      <textarea
-                        name="bncc_computacao"
-                        value={formData.bncc_computacao}
-                        onChange={handleChange}
-                        style={styles.textarea}
-                        rows="2"
-                        placeholder="Descreva as habilidades de computação..."
-                      />
                     </div>
                   )}
                 </>
@@ -626,7 +645,111 @@ const FormularioManual = () => {
                     placeholder="Cite as habilidades de computação da BNCC..."
                   />
                 </div>
+                <textarea
+                  name="bncc"
+                  value={formData.bncc}
+                  onChange={handleChange}
+                  style={styles.textarea}
+                  rows="3"
+                  placeholder="Cite os códigos e objetivos de aprendizagem da BNCC relacionados..."
+                />
+              </div>
+
+              {/* --- TOGGLE INTERDISCIPLINAR DE COMPUTAÇÃO --- */}
+              <div
+                className="toggle-box"
+                onClick={handleToggleComp}
+                style={styles.compToggleContainer}
+              >
+                <input
+                  type="checkbox"
+                  checked={mostrarCampoComp}
+                  readOnly
+                  style={styles.compCheckbox}
+                />
+                <span style={styles.compToggleLabel}>
+                  Esta prática possui interdisciplinaridade com Computação?
+                </span>
+              </div>
+
+              {mostrarCampoComp && (
+                <div style={styles.compBox}>
+                  <h4
+                    style={{
+                      margin: "0 0 15px 0",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
+                      color: "var(--text-info)",
+                      fontSize: "14px",
+                      fontWeight: "800",
+                    }}
+                  >
+                    <Cpu size={16} /> Eixo BNCC Computação
+                  </h4>
+                  <div style={{ position: "relative", marginBottom: "10px" }}>
+                    <input
+                      type="text"
+                      placeholder="🔍 Busque por eixo ou habilidade de computação..."
+                      value={bnccBuscaComp}
+                      onChange={(e) => {
+                        setBnccBuscaComp(e.target.value)
+                        setMostrarOpcoesComp(true)
+                      }}
+                      onFocus={() => setMostrarOpcoesComp(true)}
+                      onBlur={() =>
+                        setTimeout(() => setMostrarOpcoesComp(false), 200)
+                      }
+                      style={{
+                        ...styles.input,
+                        borderColor: "var(--border-info)",
+                      }}
+                    />
+                    {mostrarOpcoesComp && bnccBuscaComp && (
+                      <div style={styles.autocompleteDropdown}>
+                        {bnccFiltradasComp.length > 0 ? (
+                          bnccFiltradasComp.map((item) => (
+                            <div
+                              key={item.id}
+                              className="autocomplete-item"
+                              style={styles.autocompleteItem}
+                              onClick={() => adicionarBnccComp(item)}
+                            >
+                              <strong style={{ color: "var(--text-info)" }}>
+                                {item.id}
+                              </strong>{" "}
+                              - {item.texto}
+                            </div>
+                          ))
+                        ) : (
+                          <div
+                            style={{
+                              padding: "12px",
+                              color: "var(--text-muted)",
+                              fontSize: "13px",
+                              textAlign: "center",
+                            }}
+                          >
+                            Nenhuma encontrada.
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                  <textarea
+                    name="bncc_computacao"
+                    value={formData.bncc_computacao}
+                    onChange={handleChange}
+                    style={{
+                      ...styles.textarea,
+                      borderColor: "var(--border-info)",
+                    }}
+                    rows="2"
+                    placeholder="As habilidades de computação selecionadas aparecerão aqui..."
+                  />
+                </div>
               )}
+              {/* --- FIM DO BLOCO DE COMPUTAÇÃO --- */}
 
               <div style={styles.gridThree}>
                 <div style={styles.inputGroup}>
@@ -639,6 +762,7 @@ const FormularioManual = () => {
                     value={formData.metodologia}
                     onChange={handleChange}
                     style={styles.input}
+                    placeholder="Ex: Sala Invertida, PBL..."
                   />
                 </div>
                 <div style={styles.inputGroup}>
@@ -651,6 +775,7 @@ const FormularioManual = () => {
                     value={formData.duracao}
                     onChange={handleChange}
                     style={styles.input}
+                    placeholder="Ex: 50 min, 2 aulas..."
                   />
                 </div>
               </div>
@@ -661,7 +786,7 @@ const FormularioManual = () => {
                 </label>
                 <div style={styles.resourcesGrid}>
                   {RECURSOS_COMUNS.map((res) => {
-                    const isSelected = formData.recursos.includes(res)
+                    const isSelected = (formData.recursos || []).includes(res)
                     return (
                       <button
                         key={res}
@@ -683,13 +808,40 @@ const FormularioManual = () => {
                 <div style={styles.addResourceRow}>
                   <input
                     type="text"
-                    placeholder="Outro recurso..."
+                    placeholder="Outro recurso (Enter)..."
                     value={customResource}
                     onChange={(e) => setCustomResource(e.target.value)}
                     onKeyDown={addCustomResource}
                     style={{ ...styles.input, flex: 1 }}
                   />
                 </div>
+                {(formData.recursos || []).some(
+                  (r) => !RECURSOS_COMUNS.includes(r),
+                ) && (
+                  <div
+                    style={{
+                      marginTop: "10px",
+                      display: "flex",
+                      gap: "6px",
+                      flexWrap: "wrap",
+                    }}
+                  >
+                    {(formData.recursos || [])
+                      .filter((r) => !RECURSOS_COMUNS.includes(r))
+                      .map((res, i) => (
+                        <span key={i} style={styles.customChip}>
+                          {res}{" "}
+                          <button
+                            type="button"
+                            onClick={() => toggleRecurso(res)}
+                            style={styles.removeChipBtn}
+                          >
+                            <X size={12} />
+                          </button>
+                        </span>
+                      ))}
+                  </div>
+                )}
               </div>
 
               <div style={styles.inputGroup}>
@@ -701,6 +853,7 @@ const FormularioManual = () => {
                   value={formData.experiencia}
                   onChange={handleChange}
                   style={{ ...styles.textarea, minHeight: "100px" }}
+                  placeholder="Descreva como foi a aplicação em sala de aula, o engajamento dos alunos e os desafios encontrados..."
                 />
               </div>
               <div style={styles.inputGroup}>
@@ -713,6 +866,7 @@ const FormularioManual = () => {
                   onChange={handleChange}
                   style={styles.textarea}
                   rows="2"
+                  placeholder="Quais foram as evidências de aprendizagem? O que os alunos produziram ou demonstraram?"
                 />
               </div>
 
@@ -723,7 +877,7 @@ const FormularioManual = () => {
                   onClick={() => handleSubmit(true)}
                   style={styles.draftButton}
                 >
-                  <Save size={18} /> Salvar Rascunho
+                  <Save size={18} /> Salvar como Rascunho
                 </button>
                 <button
                   type="button"
@@ -744,9 +898,8 @@ const FormularioManual = () => {
 }
 
 const styles = {
-  // ... (mantenha os estilos anteriores)
   fullPageWrapper: {
-    backgroundColor: "#F8F9FA",
+    backgroundColor: "var(--bg-main)",
     minHeight: "100vh",
     width: "100%",
     boxSizing: "border-box",
@@ -759,16 +912,16 @@ const styles = {
     boxSizing: "border-box",
   },
   mainCard: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "var(--bg-card)",
     borderRadius: "16px",
     padding: "30px",
     boxShadow: "0 4px 20px rgba(0,0,0,0.04)",
-    border: "1px solid #E0E0E0",
+    border: "1px solid var(--border-color)",
   },
   splitLayout: { display: "flex", gap: "40px" },
   verticalDivider: {
     width: "1px",
-    backgroundColor: "#F0F0F0",
+    backgroundColor: "var(--border-color)",
     alignSelf: "stretch",
   },
   leftCol: { display: "flex", flexDirection: "column" },
@@ -776,7 +929,7 @@ const styles = {
   sectionTitle: {
     fontSize: "16px",
     fontWeight: "700",
-    color: "#37474F",
+    color: "var(--text-primary)",
     marginBottom: "25px",
     display: "flex",
     alignItems: "center",
@@ -792,7 +945,7 @@ const styles = {
   label: {
     fontSize: "13px",
     fontWeight: "600",
-    color: "#455A64",
+    color: "var(--text-secondary)",
     marginBottom: "8px",
     display: "flex",
     alignItems: "center",
@@ -802,11 +955,11 @@ const styles = {
     width: "100%",
     padding: "12px 15px",
     borderRadius: "8px",
-    border: "1px solid #CFD8DC",
+    border: "1px solid var(--border-color)",
     fontSize: "14px",
-    color: "#37474F",
+    color: "var(--input-text)",
     outline: "none",
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "var(--input-bg)",
     boxSizing: "border-box",
     height: "45px",
   },
@@ -814,21 +967,47 @@ const styles = {
     width: "100%",
     padding: "12px 15px",
     borderRadius: "8px",
-    border: "1px solid #CFD8DC",
+    border: "1px solid var(--border-color)",
     fontSize: "14px",
-    color: "#37474F",
+    color: "var(--input-text)",
     outline: "none",
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "var(--input-bg)",
     boxSizing: "border-box",
     resize: "vertical",
     fontFamily: "inherit",
     lineHeight: "1.5",
   },
+  compToggleContainer: {
+    display: "flex",
+    alignItems: "center",
+    gap: "12px",
+    padding: "16px 18px",
+    backgroundColor: "var(--bg-main)",
+    border: "1px dashed var(--border-color)",
+    borderRadius: "10px",
+    marginBottom: "20px",
+    cursor: "pointer",
+    transition: "all 0.2s",
+  },
+  compToggleLabel: {
+    fontSize: "14px",
+    fontWeight: "600",
+    color: "var(--text-primary)",
+    margin: 0,
+    cursor: "pointer",
+  },
+  compBox: {
+    backgroundColor: "var(--bg-info)",
+    border: "1px solid var(--border-info)",
+    borderRadius: "12px",
+    padding: "20px",
+    marginBottom: "20px",
+  },
   lockedInputWrapper: {
     display: "flex",
     alignItems: "center",
-    backgroundColor: "#FAFAFA",
-    border: "1px solid #E0E0E0",
+    backgroundColor: "var(--bg-alt)",
+    border: "1px solid var(--border-color)",
     borderRadius: "8px",
     overflow: "hidden",
     height: "45px",
@@ -840,7 +1019,7 @@ const styles = {
     padding: "12px 15px",
     fontSize: "14px",
     fontWeight: "600",
-    color: "#78909C",
+    color: "var(--text-muted)",
     outline: "none",
     cursor: "not-allowed",
   },
@@ -853,9 +1032,9 @@ const styles = {
   resourceChip: {
     padding: "8px 14px",
     borderRadius: "20px",
-    border: "1px solid #CFD8DC",
-    backgroundColor: "#FFFFFF",
-    color: "#546E7A",
+    border: "1px solid var(--border-color)",
+    backgroundColor: "var(--bg-card)",
+    color: "var(--text-secondary)",
     fontSize: "13px",
     fontWeight: "500",
     cursor: "pointer",
@@ -864,11 +1043,11 @@ const styles = {
     alignItems: "center",
   },
   resourceChipActive: {
-    backgroundColor: "#E3F2FD",
-    color: "#1565C0",
-    borderColor: "#1565C0",
+    backgroundColor: "var(--bg-info)",
+    color: "var(--text-info)",
+    borderColor: "var(--text-info)",
     fontWeight: "600",
-    boxShadow: "0 2px 5px rgba(21, 101, 192, 0.1)",
+    boxShadow: "0 2px 5px rgba(0, 0, 0, 0.1)",
   },
   addResourceRow: { display: "flex", gap: "8px", marginTop: "5px" },
   customChip: {
@@ -877,9 +1056,9 @@ const styles = {
     gap: "6px",
     padding: "6px 12px",
     borderRadius: "20px",
-    backgroundColor: "#FFF3E0",
-    color: "#E65100",
-    border: "1px solid #FFE0B2",
+    backgroundColor: "var(--bg-warning)",
+    color: "var(--text-warning)",
+    border: "1px solid var(--border-warning)",
     fontSize: "12px",
     fontWeight: "600",
   },
@@ -890,13 +1069,13 @@ const styles = {
     padding: 0,
     display: "flex",
     alignItems: "center",
-    color: "#E65100",
+    color: "var(--text-warning)",
   },
   uploadSection: { marginTop: "auto", paddingTop: "10px" },
   uploadContainer: {
-    border: "2px dashed #BBDEFB",
+    border: "2px dashed var(--border-info)",
     borderRadius: "12px",
-    backgroundColor: "#F8FBFF",
+    backgroundColor: "var(--bg-info)",
     textAlign: "center",
     padding: "20px",
     display: "flex",
@@ -912,13 +1091,17 @@ const styles = {
     width: "100%",
   },
   uploadIconCircle: {
-    backgroundColor: "white",
+    backgroundColor: "var(--bg-card)",
     padding: "10px",
     borderRadius: "50%",
     marginBottom: "8px",
     boxShadow: "0 2px 5px rgba(0,0,0,0.05)",
   },
-  uploadTextMain: { fontSize: "13px", fontWeight: "700", color: "#1565C0" },
+  uploadTextMain: {
+    fontSize: "13px",
+    fontWeight: "700",
+    color: "var(--text-info)",
+  },
   fileSelected: {
     display: "flex",
     flexDirection: "column",
@@ -927,7 +1110,7 @@ const styles = {
   fileName: {
     fontSize: "13px",
     fontWeight: "600",
-    color: "#333",
+    color: "var(--text-primary)",
     marginTop: "5px",
   },
   topBar: {
@@ -945,13 +1128,13 @@ const styles = {
     display: "flex",
     alignItems: "center",
     gap: "8px",
-    color: "#546E7A",
+    color: "var(--text-secondary)",
     fontWeight: "600",
     fontSize: "15px",
   },
   pageTitle: {
     fontSize: "24px",
-    color: "#1565C0",
+    color: "var(--text-primary)",
     fontWeight: "800",
     margin: "0 0 4px 0",
   },
@@ -968,9 +1151,9 @@ const styles = {
     flexWrap: "wrap",
   },
   draftButton: {
-    backgroundColor: "white",
-    color: "#1565C0",
-    border: "1px solid #1565C0",
+    backgroundColor: "var(--bg-card)",
+    color: "var(--text-primary)",
+    border: "1px solid var(--border-color)",
     borderRadius: "8px",
     padding: "12px 24px",
     fontSize: "15px",
@@ -1001,8 +1184,8 @@ const styles = {
     top: "100%",
     left: 0,
     right: 0,
-    backgroundColor: "white",
-    border: "1px solid #CFD8DC",
+    backgroundColor: "var(--bg-card)",
+    border: "1px solid var(--border-color)",
     borderRadius: "8px",
     marginTop: "4px",
     zIndex: 10,
@@ -1012,18 +1195,11 @@ const styles = {
   },
   autocompleteItem: {
     padding: "12px 15px",
-    borderBottom: "1px solid #F0F0F0",
+    borderBottom: "1px solid var(--border-color)",
     cursor: "pointer",
     fontSize: "13px",
-    color: "#37474F",
+    color: "var(--text-primary)",
     transition: "background 0.2s",
-  },
-  interdisciplinaryBox: {
-    padding: "15px",
-    backgroundColor: "#F5F7F9",
-    borderRadius: "10px",
-    marginBottom: "20px",
-    border: "1px dashed #CFD8DC",
   },
 }
 

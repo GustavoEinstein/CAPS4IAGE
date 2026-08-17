@@ -18,9 +18,13 @@ import json
 import sys 
 import re 
 from random import randint
+
+# --- IMPORTS DO REST FRAMEWORK ---
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.permissions import IsAuthenticated, AllowAny, IsAdminUser
 from rest_framework.response import Response
+from rest_framework.views import APIView
+from rest_framework import status
 from django.utils import timezone
 
 from django.contrib.auth.tokens import default_token_generator
@@ -39,11 +43,14 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.throttling import ScopedRateThrottle 
 
-# Importação dos novos modelos de gamificação
-from .models import Profile, Producao, Avaliacao, Topico, Comentario, RegistroXP, Conquista, ConquistaUsuario
+# Importação dos modelos (Incluindo ConfiguracaoXP, Escola, Disciplina e Notificacao)
+from .models import (
+    Profile, Producao, Avaliacao, Topico, Comentario, RegistroXP, 
+    Conquista, ConquistaUsuario, DiarioOperacao, NotaDiario, ConfiguracaoXP, Escola, Disciplina, Notificacao
+)
 
 
-#lista de arquivos permitidas no servidor, fora esses não serão aceitos 
+# Lista de arquivos permitidos no servidor
 ALLOWED_EXTENSIONS = [
     '.pdf', '.doc', '.docx', '.txt', 
     '.ppt', '.pptx', '.xls', '.xlsx', 
@@ -51,17 +58,38 @@ ALLOWED_EXTENSIONS = [
 ]
 
 # ============================================================================
-# FUNÇÃO AUXILIAR DE GAMIFICAÇÃO
+# FUNÇÃO AUXILIAR DE GAMIFICAÇÃO (ATUALIZADA COM NOTIFICAÇÕES)
 # ============================================================================
 def adicionar_xp(perfil, quantidade, descricao):
-    """Adiciona XP ao perfil e gera um registro no histórico"""
+    """Adiciona XP ao perfil, gera histórico e dispara notificações"""
+    nivel_anterior = perfil.get_nivel()
+    
     perfil.pontos += quantidade
     perfil.save()
+    
     RegistroXP.objects.create(
         perfil=perfil,
         quantidade=quantidade,
         descricao=descricao
     )
+
+    # 1. Notifica o ganho de XP
+    Notificacao.objects.create(
+        user=perfil.user,
+        titulo=f"+{quantidade} XP",
+        mensagem=descricao,
+        tipo='XP'
+    )
+
+    # 2. Verifica se subiu de Nível e notifica!
+    nivel_atual = perfil.get_nivel()
+    if nivel_anterior != nivel_atual:
+        Notificacao.objects.create(
+            user=perfil.user,
+            titulo="🎉 Subiu de Nível!",
+            mensagem=f"Parabéns! Você alcançou o título de: {nivel_atual}",
+            tipo='NIVEL'
+        )
 
 # ----------------------------------------------------
 
@@ -121,6 +149,27 @@ class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
     throttle_classes = [ScopedRateThrottle]
     throttle_scope = 'login_attempts'
+
+
+# ============================================================================
+# NOVO: OPÇÕES PARA O FORMULÁRIO DE REGISTRO (PÚBLICO)
+# ============================================================================
+@api_view(['GET'])
+@authentication_classes([]) 
+@permission_classes([AllowAny])
+def api_get_register_options(request):
+    """Devolve as escolas e disciplinas do banco de dados para a página de Registro."""
+    escolas = list(Escola.objects.values_list('nome', flat=True).order_by('nome'))
+    disciplinas = list(Disciplina.objects.values_list('nome', flat=True).order_by('nome'))
+    
+    # Adicionamos "Outra" caso não tenha sido cadastrada, para o professor não ficar travado
+    if "Outra" not in disciplinas:
+        disciplinas.append("Outra")
+
+    return Response({
+        'escolas': escolas,
+        'disciplinas': disciplinas
+    })
 
 
 #views de autenticação e perfil 
@@ -264,7 +313,6 @@ def api_create_production(request):
         recursos_input = data.getlist('recursos') if hasattr(data, 'getlist') else data.get('recursos', '')
         recursos_str = ", ".join(recursos_input) if isinstance(recursos_input, list) else str(recursos_input)
 
-        #logica para conseguir aplicar o rascunho
         is_draft_val = data.get('is_draft')
         is_draft = str(is_draft_val).strip().lower() in ['true', '1', 't', 'y', 'yes']
         status_inicial = 'Rascunho' if is_draft else 'Em revisão'
@@ -387,9 +435,6 @@ def api_get_production_details(request, pk):
 
         total_aprovacoes = avaliacoes.filter(aprovado=True).count()
 
-        pode_ver_parecer = is_dono or is_admin or is_revisor_desta_pratica
-
-        # Lógica de filtragem: dono e admin veem tudo. Revisor vê só o dele.
         avaliacoes_filtradas = []
         if is_dono or is_admin:
             avaliacoes_filtradas = avaliacoes_detalhadas
@@ -427,7 +472,7 @@ def api_get_production_details(request, pk):
             'avaliacoes_detalhadas': avaliacoes_filtradas,
             'feedback_texto': feedback_texto if (is_dono or is_admin) else None, 
             'notas': notas,
-            'total_avaliacoes': avaliacoes.count(), # CORREÇÃO: Envia sempre o total real para o frontend
+            'total_avaliacoes': avaliacoes.count(), 
             'total_aprovacoes': total_aprovacoes,
 
             'is_aprovado': is_aprovado,
@@ -562,12 +607,14 @@ def api_submit_review(request, pk):
             nota_inovacao=int(data.get('nota_inovacao', 0))
         )
 
+        config_xp, _ = ConfiguracaoXP.objects.get_or_create(pk=1)
+
         perfil_revisor = request.user.profile
-        adicionar_xp(perfil_revisor, 15, f"Revisão da produção: {p.titulo}")
+        adicionar_xp(perfil_revisor, config_xp.xp_revisao, f"Revisão da produção: {p.titulo}")
 
         if not aprovado:
             p.status = 'Correção solicitada'
-            msg_response = 'Sua avaliação foi registrada. Você ganhou +15 XP! A produção foi devolvida ao autor para correção.'
+            msg_response = f'Sua avaliação foi registrada. Você ganhou +{config_xp.xp_revisao} XP! A produção foi devolvida ao autor para correção.'
             
             try:
                 autor_email = p.user.email
@@ -583,16 +630,16 @@ def api_submit_review(request, pk):
             
             if total_aprovacoes >= 2:
                 p.status = 'Aprovado'
-                msg_response = 'Revisão registrada! Você ganhou +15 XP. A produção alcançou 2 aprovações e foi publicada na comunidade.'
+                msg_response = f'Revisão registrada! Você ganhou +{config_xp.xp_revisao} XP. A produção alcançou 2 aprovações e foi publicada na comunidade.'
                 
                 perfil_autor = p.user.profile
-                adicionar_xp(perfil_autor, 50, f"Produção aprovada pela comunidade: {p.titulo}")
+                adicionar_xp(perfil_autor, config_xp.xp_aprovacao, f"Produção aprovada pela comunidade: {p.titulo}")
             else:
                 p.status = 'Em revisão'
-                msg_response = f'Revisão registrada! Você ganhou +15 XP. Esta produção agora possui {total_aprovacoes} aprovação(ões). Aguardando o segundo revisor.'
+                msg_response = f'Revisão registrada! Você ganhou +{config_xp.xp_revisao} XP. Esta produção agora possui {total_aprovacoes} aprovação(ões). Aguardando o segundo revisor.'
 
         p.save()
-        return Response({'mensagem': msg_response})
+        return Response({'mensagem': msg_response, 'xp_ganho': config_xp.xp_revisao})
         
     except Producao.DoesNotExist:
         return Response({'erro': 'Produção não encontrada'}, status=404)
@@ -664,22 +711,46 @@ def api_password_reset_request(request):
     try:
         user = User.objects.get(email=email)
     except User.DoesNotExist:
+        # Por segurança, sempre dizemos que foi enviado mesmo se não existir
         return Response({'mensagem': 'Se o e-mail existir, um link foi enviado.'})
 
+    # Gera o Token seguro do Django
     token = default_token_generator.make_token(user)
     uid = urlsafe_base64_encode(force_bytes(user.pk))
     reset_link = f"http://localhost:5173/reset-password/{uid}/{token}"
 
-    subject = "Redefinição de Senha - Comunidade IA"
+    subject = "Redefinição de Senha - T.E.I.A"
     from_email = settings.DEFAULT_FROM_EMAIL
     to = [email]
 
     try:
-        text_content = f"Clique no link para redefinir: {reset_link}"
-        send_mail(subject, text_content, from_email, to, fail_silently=False)
+        # Pega a URL base dinamicamente apontando para a pasta assets
+        logo_url = request.build_absolute_uri(settings.STATIC_URL + 'assets/unb.png')
+        
+        # 1. Prepara as variáveis para o seu template HTML
+        nome_usuario = user.first_name if user.first_name else user.username
+        context = {
+            'nome': nome_usuario.split()[0].title(), # Pega só o primeiro nome
+            'link': reset_link,
+            'logo_url': logo_url
+        }
+
+        # 2. Renderiza o HTML que você criou
+        html_content = render_to_string('emails/password_reset_email.html', context)
+        
+        # 3. Cria uma versão em texto puro caso o provedor de e-mail bloqueie HTML
+        text_content = strip_tags(html_content)
+
+        # 4. Monta a mensagem e envia
+        msg = EmailMultiAlternatives(subject, text_content, from_email, to)
+        msg.attach_alternative(html_content, "text/html")
+        msg.send(fail_silently=False)
+
         return Response({'mensagem': 'E-mail enviado com sucesso!'})
+        
     except Exception as e:
-        return Response({'erro': 'Erro ao enviar e-mail.'}, status=500)
+        print(f"ERRO AO ENVIAR E-MAIL: {e}") # Isso vai aparecer no seu terminal do backend para ajudar a debugar!
+        return Response({'erro': 'Erro ao enviar e-mail. Verifique o console.'}, status=500)
 
 @csrf_exempt
 @api_view(['POST'])
@@ -756,6 +827,8 @@ def api_forum_detalhe_comentarios(request, pk):
     except Topico.DoesNotExist:
         return Response({'erro': 'Tópico não encontrado'}, status=404)
 
+    config_xp, _ = ConfiguracaoXP.objects.get_or_create(pk=1)
+
     if request.method == 'GET':
         comentarios_db = topico.comentarios.all().order_by('data_criacao')
         lista_comentarios = []
@@ -769,6 +842,16 @@ def api_forum_detalhe_comentarios(request, pk):
             })
 
         arquivo_url = request.build_absolute_uri(topico.arquivo.url) if topico.arquivo else None
+        
+        # --- NOVA LÓGICA DE PRODUÇÃO BASE ---
+        dados_base = None
+        if topico.producao_base:
+            dados_base = {
+                'id': topico.producao_base.id,
+                'titulo': topico.producao_base.titulo,
+                'disciplina': topico.producao_base.disciplina,
+                'autor': topico.producao_base.user.first_name or topico.producao_base.user.username
+            }
 
         dados_topico = {
             'id': topico.id,
@@ -780,6 +863,7 @@ def api_forum_detalhe_comentarios(request, pk):
             'is_dono_topico': topico.autor == request.user,
             'data': timezone.localtime(topico.data_criacao).strftime('%d/%m/%Y %H:%M'),
             'arquivo': arquivo_url,
+            'producao_base': dados_base,  # <--- ADICIONADO AQUI
             'comentarios': lista_comentarios
         }
         return Response(dados_topico)
@@ -799,9 +883,12 @@ def api_forum_detalhe_comentarios(request, pk):
         )
 
         perfil_comentarista = request.user.profile
-        adicionar_xp(perfil_comentarista, 5, f"Comentário no tópico: {topico.titulo}")
+        adicionar_xp(perfil_comentarista, config_xp.xp_comentario, f"Comentário no tópico: {topico.titulo}")
 
-        return Response({'mensagem': 'Comentário adicionado com sucesso! Você ganhou +5 XP.'})
+        return Response({
+            'mensagem': f'Comentário adicionado com sucesso! Você ganhou +{config_xp.xp_comentario} XP.',
+            'xp_ganho': config_xp.xp_comentario
+        })
 
     elif request.method == 'PUT':
         if topico.autor != request.user:
@@ -845,24 +932,39 @@ def api_forum_topicos(request):
         titulo = request.data.get('titulo')
         conteudo = request.data.get('conteudo')
         categoria = request.data.get('categoria', 'Geral')
+        producao_base_id = request.data.get('producao_base_id') # <--- ADICIONADO AQUI
         
         arquivo_enviado = request.FILES.get('arquivo') 
 
         if not titulo or not conteudo:
             return Response({'erro': 'Título e conteúdo são obrigatórios.'}, status=400)
+            
+        # --- NOVA LÓGICA DE PRODUÇÃO BASE ---
+        producao_base = None
+        if producao_base_id:
+            try:
+                # Garante que só pode referenciar aprovadas
+                producao_base = Producao.objects.get(id=producao_base_id, status='Aprovado')
+            except Producao.DoesNotExist:
+                pass
 
         Topico.objects.create(
             titulo=titulo,
             conteudo=conteudo,
             categoria=categoria,
             autor=request.user,
-            arquivo=arquivo_enviado 
+            arquivo=arquivo_enviado,
+            producao_base=producao_base # <--- ADICIONADO AQUI
         )
 
+        config_xp, _ = ConfiguracaoXP.objects.get_or_create(pk=1)
         perfil_autor = request.user.profile
-        adicionar_xp(perfil_autor, 5, f"Novo tópico aberto: {titulo}")
+        adicionar_xp(perfil_autor, config_xp.xp_topico, f"Novo tópico aberto: {titulo}")
 
-        return Response({'mensagem': 'Tópico criado com sucesso! Você ganhou +5 XP.'}, status=201)
+        return Response({
+            'mensagem': f'Tópico criado com sucesso! Você ganhou +{config_xp.xp_topico} XP.',
+            'xp_ganho': config_xp.xp_topico
+        }, status=201)
 
 
 
@@ -985,8 +1087,9 @@ def api_ranking_gamificacao(request):
         'nivel': u.profile.get_nivel() if hasattr(u, 'profile') else ''
     } for u in revisores_qs if u.total_revisoes > 0]
 
+    # --- CORREÇÃO APLICADA AQUI: de 'comentarios' para 'comentarios_usuario' ---
     forum_qs = User.objects.annotate(
-        total_forum=Count('topicos_forum', distinct=True) + Count('comentarios', distinct=True)
+        total_forum=Count('topicos_forum', distinct=True) + Count('comentarios_usuario', distinct=True)
     ).order_by('-total_forum')[:10]
     
     top_forum = [{
@@ -1003,7 +1106,9 @@ def api_ranking_gamificacao(request):
         'top_forum': top_forum
     })
 
-# NOVA VIEW DE ADMIN DE GAMIFICAÇÃO (PARA RESOLVER O ERRO)
+# ============================================================================
+# GESTÃO DE GAMIFICAÇÃO (ADMIN)
+# ============================================================================
 @api_view(['GET', 'POST'])
 @permission_classes([IsAuthenticated])
 def api_admin_gamificacao(request):
@@ -1058,3 +1163,265 @@ def api_admin_delete_badge(request, pk):
     conquista = get_object_or_404(Conquista, id=pk)
     conquista.delete()
     return Response({'mensagem': 'Badge excluída com sucesso.'})
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def api_admin_atribuir_badge(request):
+    """Atribui manualmente uma medalha a um usuário e concede o XP"""
+    if not request.user.is_superuser:
+        return Response({'erro': 'Acesso negado'}, status=403)
+        
+    user_id = request.data.get('usuario_id')
+    conquista_id = request.data.get('conquista_id')
+    
+    try:
+        perfil = Profile.objects.get(user__id=user_id)
+        conquista = Conquista.objects.get(id=conquista_id)
+        
+        if ConquistaUsuario.objects.filter(perfil=perfil, conquista=conquista).exists():
+            return Response({'erro': 'O usuário já possui esta medalha.'}, status=400)
+            
+        ConquistaUsuario.objects.create(perfil=perfil, conquista=conquista)
+        adicionar_xp(perfil, conquista.xp_bonus, f"Medalha Atribuída: {conquista.nome}")
+        
+        return Response({'mensagem': 'Medalha atribuída com sucesso!'})
+    except Exception as e:
+        return Response({'erro': 'Erro ao atribuir medalha.'}, status=400)
+
+
+# ============================================================================
+# DIÁRIO DE OPERAÇÕES (CRM INTERNO)
+# ============================================================================
+class DiarioOperacaoView(APIView):
+    permission_classes = [IsAdminUser]
+
+    def get(self, request):
+        logs = DiarioOperacao.objects.all().select_related('docente')
+        dados = []
+        
+        for log in logs:
+            dados.append({
+                'id': log.id,
+                'titulo': log.titulo,
+                'tipo': log.tipo,
+                'status': log.status,
+                'contato': log.contato or (log.docente.first_name if log.docente else 'Não informado'),
+                'docente_id': log.docente.id if log.docente else None,
+                'data_evento': log.data_evento.strftime('%Y-%m-%d') if log.data_evento else None,
+                'descricao': log.descricao,
+                'proximos_passos': log.proximos_passos,
+                'tags': log.tags,
+                'participantes': log.participantes,
+                'foto': request.build_absolute_uri(log.foto.url) if log.foto else None,
+            })
+        return Response(dados)
+
+    def post(self, request):
+        titulo = request.data.get('titulo')
+        tipo = request.data.get('tipo')
+        status_registro = request.data.get('status', 'Resolvido')
+        docente_id = request.data.get('docente_id')
+        contato = request.data.get('contato')
+        data_evento = request.data.get('data_evento')
+        descricao = request.data.get('descricao')
+        proximos_passos = request.data.get('proximos_passos')
+        tags = request.data.get('tags')
+        participantes = request.data.get('participantes', 1)
+        
+        foto = request.FILES.get('foto')
+
+        if not all([titulo, tipo, data_evento, descricao]):
+            return Response({'erro': 'Campos obrigatórios faltando.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Buscar o usuário caso um ID tenha sido selecionado
+        docente = None
+        if docente_id:
+            try:
+                docente = User.objects.get(id=docente_id)
+            except User.DoesNotExist:
+                pass
+
+        novo_log = DiarioOperacao.objects.create(
+            titulo=titulo,
+            tipo=tipo,
+            status=status_registro,
+            docente=docente,
+            contato=contato,
+            data_evento=data_evento,
+            descricao=descricao,
+            proximos_passos=proximos_passos,
+            tags=tags,
+            participantes=participantes,
+            foto=foto
+        )
+
+        return Response({
+            'id': novo_log.id,
+            'titulo': novo_log.titulo,
+            'tipo': novo_log.tipo,
+            'status': novo_log.status,
+            'contato': novo_log.contato or (novo_log.docente.first_name if novo_log.docente else 'Não informado'),
+            'docente_id': novo_log.docente.id if novo_log.docente else None,
+            'data_evento': data_evento, 
+            'descricao': novo_log.descricao,
+            'proximos_passos': novo_log.proximos_passos,
+            'tags': novo_log.tags,
+            'participantes': novo_log.participantes,
+            'foto': request.build_absolute_uri(novo_log.foto.url) if novo_log.foto else None,
+        }, status=status.HTTP_201_CREATED)
+
+class DiarioOperacaoDeleteView(APIView):
+    permission_classes = [IsAdminUser]
+
+    def delete(self, request, pk):
+        try:
+            log = DiarioOperacao.objects.get(pk=pk)
+            log.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        except DiarioOperacao.DoesNotExist:
+            return Response({'erro': 'Registro não encontrado'}, status=status.HTTP_404_NOT_FOUND)
+
+class DiarioNotaView(APIView):
+    permission_classes = [IsAdminUser]
+
+    def get(self, request, pk):
+        try:
+            diario = DiarioOperacao.objects.get(pk=pk)
+        except DiarioOperacao.DoesNotExist:
+            return Response({'erro': 'Registro não encontrado'}, status=status.HTTP_404_NOT_FOUND)
+        
+        # Puxa todas as anotações feitas neste atendimento
+        notas = diario.notas.all()
+        lista_notas = [{
+            'id': n.id,
+            'autor': n.autor.first_name or n.autor.username if n.autor else 'Sistema',
+            'texto': n.texto,
+            'criado_em': timezone.localtime(n.criado_em).strftime('%d/%m/%Y %H:%M')
+        } for n in notas]
+
+        # Puxa os dados completos do chamado
+        dados_diario = {
+            'id': diario.id,
+            'titulo': diario.titulo,
+            'tipo': diario.tipo,
+            'status': diario.status,
+            'contato': diario.contato or (diario.docente.first_name if diario.docente else 'Não informado'),
+            'data_evento': diario.data_evento.strftime('%Y-%m-%d') if diario.data_evento else None,
+            'descricao': diario.descricao,
+            'proximos_passos': diario.proximos_passos,
+            'tags': diario.tags,
+            'participantes': diario.participantes,
+            'foto': request.build_absolute_uri(diario.foto.url) if diario.foto else None,
+        }
+        
+        return Response({'diario': dados_diario, 'notas': lista_notas})
+
+    def post(self, request, pk):
+        try:
+            diario = DiarioOperacao.objects.get(pk=pk)
+        except DiarioOperacao.DoesNotExist:
+            return Response({'erro': 'Registro não encontrado'}, status=status.HTTP_404_NOT_FOUND)
+        
+        texto = request.data.get('texto')
+        novo_status = request.data.get('status') 
+
+        # Atualiza o status do chamado se for alterado
+        if novo_status and novo_status != diario.status:
+            diario.status = novo_status
+            diario.save()
+
+        # Cria a nova anotação/comentário
+        if texto:
+            NotaDiario.objects.create(
+                diario=diario,
+                autor=request.user,
+                texto=texto
+            )
+        
+        return Response({'mensagem': 'Ticket atualizado com sucesso!'})
+
+# ============================================================================
+# CONFIGURAÇÕES GERAIS (XP, Escolas e Disciplinas)
+# ============================================================================
+class ConfiguracoesGeraisView(APIView):
+    permission_classes = [IsAdminUser]
+
+    def get(self, request):
+        config_xp, _ = ConfiguracaoXP.objects.get_or_create(pk=1)
+        escolas = Escola.objects.all().values('id', 'nome').order_by('nome')
+        disciplinas = Disciplina.objects.all().values('id', 'nome').order_by('nome')
+
+        return Response({
+            'xp': {
+                'xp_revisao': config_xp.xp_revisao,
+                'xp_aprovacao': config_xp.xp_aprovacao,
+                'xp_topico': config_xp.xp_topico,
+                'xp_comentario': config_xp.xp_comentario
+            },
+            'escolas': list(escolas),
+            'disciplinas': list(disciplinas)
+        })
+
+    def post(self, request):
+        acao = request.data.get('acao')
+
+        if acao == 'atualizar_xp':
+            config_xp, _ = ConfiguracaoXP.objects.get_or_create(pk=1)
+            config_xp.xp_revisao = request.data.get('xp_revisao', config_xp.xp_revisao)
+            config_xp.xp_aprovacao = request.data.get('xp_aprovacao', config_xp.xp_aprovacao)
+            config_xp.xp_topico = request.data.get('xp_topico', config_xp.xp_topico)
+            config_xp.xp_comentario = request.data.get('xp_comentario', config_xp.xp_comentario)
+            config_xp.save()
+            return Response({'mensagem': 'Economia de XP atualizada!'})
+
+        elif acao == 'adicionar_escola':
+            nome = request.data.get('nome')
+            if nome:
+                Escola.objects.get_or_create(nome=nome)
+                return Response({'mensagem': 'Escola adicionada com sucesso!'})
+            return Response({'erro': 'Nome inválido'}, status=400)
+
+        elif acao == 'remover_escola':
+            escola_id = request.data.get('id')
+            Escola.objects.filter(id=escola_id).delete()
+            return Response({'mensagem': 'Escola removida!'})
+
+        elif acao == 'adicionar_disciplina':
+            nome = request.data.get('nome')
+            if nome:
+                Disciplina.objects.get_or_create(nome=nome)
+                return Response({'mensagem': 'Disciplina adicionada com sucesso!'})
+            return Response({'erro': 'Nome inválido'}, status=400)
+
+        elif acao == 'remover_disciplina':
+            disciplina_id = request.data.get('id')
+            Disciplina.objects.filter(id=disciplina_id).delete()
+            return Response({'mensagem': 'Disciplina removida!'})
+
+        return Response({'erro': 'Ação desconhecida'}, status=400)
+
+# ============================================================================
+# SISTEMA DE NOTIFICAÇÕES (GET e POST)
+# ============================================================================
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def api_list_notifications(request):
+    """Retorna as 20 notificações mais recentes do usuário."""
+    notificacoes = request.user.notificacoes.all()[:20]
+    lista = [{
+        'id': n.id,
+        'titulo': n.titulo,
+        'mensagem': n.mensagem,
+        'tipo': n.tipo,
+        'lida': n.lida,
+        'data': timezone.localtime(n.data_criacao).strftime('%d/%m %H:%M')
+    } for n in notificacoes]
+    
+    return Response(lista)
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def api_mark_notifications_read(request):
+    """Marca todas as notificações não lidas como lidas."""
+    request.user.notificacoes.filter(lida=False).update(lida=True)
+    return Response({'mensagem': 'Notificações marcadas como lidas.'})

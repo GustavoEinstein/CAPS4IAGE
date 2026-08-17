@@ -17,12 +17,16 @@ urlpatterns = [
     path('api/register/', views.api_register_user, name='register_user'),
 
     # ============================================================================
-    # 2. PERFIL DO USUÁRIO E GAMIFICAÇÃO PESSOAL
+    # 2. PERFIL DO USUÁRIO, GAMIFICAÇÃO E NOTIFICAÇÕES
     # ============================================================================
     # Retorna dados pessoais, progresso de nível e lista de conquistas
     path('api/user/me/', views.api_user_profile, name='user_profile'),
     path('api/password_reset/', views.api_password_reset_request, name='password_reset_request'),
     path('api/password_reset_confirm/<uidb64>/<token>/', views.api_password_reset_confirm, name='password_reset_confirm'),
+    
+    # Sistema de Notificações (Sininho)
+    path('api/notificacoes/', views.api_list_notifications, name='list_notifications'),
+    path('api/notificacoes/ler/', views.api_mark_notifications_read, name='mark_notifications_read'),
 
     # ============================================================================
     # 3. PRODUÇÕES DIDÁTICAS (CRUD)
@@ -67,13 +71,22 @@ urlpatterns = [
     path('api/admin/forum/', views.api_admin_list_forum, name='api_admin_list_forum'),
     path('api/admin/forum/<int:pk>/delete/', views.api_admin_delete_forum, name='api_admin_delete_forum'),
 
-    # --- NOVO: Gestão de Gamificação e Hall da Fama ---
-    # Rota para o admin gerenciar badges e auditar o histórico de XP
+    # --- Gestão de Gamificação e Hall da Fama ---
     path('api/admin/gamificacao/', views.api_admin_gamificacao, name='admin_gamificacao'),
+    path('api/admin/gamificacao/<int:pk>/delete/', views.api_admin_delete_badge, name='admin_delete_badge'),
+    path('api/admin/gamificacao/atribuir/', views.api_admin_atribuir_badge, name='admin_atribuir_badge'),
+
+    # --- Diário de Operações (CRM Interno) ---
+    path('api/admin/diario/', views.DiarioOperacaoView.as_view(), name='diario-list-create'),
+    path('api/admin/diario/<int:pk>/delete/', views.DiarioOperacaoDeleteView.as_view(), name='diario-delete'),
+    path('api/admin/diario/<int:pk>/notas/', views.DiarioNotaView.as_view(), name='diario-notas'),
+    
+    # --- Configurações Gerais ---
+    path('api/admin/configuracoes/', views.ConfiguracoesGeraisView.as_view(), name='admin_configuracoes'),
+    path('api/register-options/', views.api_get_register_options, name='register_options'),
 
     # --- Legado ---
     path('api/ontology/cycles/', views.api_listar_ciclos, name='list_cycles'),
-    path('api/admin/gamificacao/<int:pk>/delete/', views.api_admin_delete_badge, name='admin_delete_badge'),
 ]
 
 # Configuração para servir arquivos de mídia (avatars, uploads) em ambiente de desenvolvimento

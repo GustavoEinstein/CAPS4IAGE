@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react"
-import api from "../services/api" // <--- USANDO API REAL
+import api from "../services/api"
 import { useOutletContext, useNavigate } from "react-router-dom"
 import { Search, Bot, CheckCircle2, BookOpen, Tag } from "lucide-react"
 
@@ -8,10 +8,8 @@ const MainContent = () => {
   const navigate = useNavigate()
 
   const [searchTerm, setSearchTerm] = useState("")
-  const [producoes, setProducoes] = useState([]) // Começa vazio, sem Mocks
+  const [producoes, setProducoes] = useState([])
   const [isLoading, setIsLoading] = useState(true)
-
-  // --- INFO DO USUÁRIO ---
   const [headerInfo, setHeaderInfo] = useState({
     firstName: "",
     disciplina: "",
@@ -32,11 +30,9 @@ const MainContent = () => {
     })
   }
 
-  // --- BUSCA DADOS REAIS ---
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Chama a rota pública de destaques
         const response = await api.get("api/public/feed/")
         setProducoes(response.data)
       } catch (error) {
@@ -45,7 +41,6 @@ const MainContent = () => {
         setIsLoading(false)
       }
     }
-
     fetchData()
     updateHeaderInfo()
   }, [])
@@ -58,7 +53,6 @@ const MainContent = () => {
 
   return (
     <div style={styles.container}>
-      {/* HERO SECTION */}
       <div
         style={{
           ...styles.heroSection,
@@ -107,7 +101,6 @@ const MainContent = () => {
         </div>
       </div>
 
-      {/* LISTA DE CARDS */}
       <div
         style={{
           ...styles.contentArea,
@@ -115,14 +108,11 @@ const MainContent = () => {
         }}
       >
         <div
-          style={{
-            ...styles.mainCard,
-            padding: isMobile ? "20px" : "30px",
-          }}
+          style={{ ...styles.mainCard, padding: isMobile ? "20px" : "30px" }}
         >
           <div style={styles.sectionHeader}>
             <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-              <BookOpen size={22} color="#1565C0" />
+              <BookOpen size={22} color="var(--text-info)" />
               <h2
                 style={{
                   ...styles.sectionTitle,
@@ -137,7 +127,11 @@ const MainContent = () => {
 
           {isLoading ? (
             <div
-              style={{ textAlign: "center", padding: "50px", color: "#90A4AE" }}
+              style={{
+                textAlign: "center",
+                padding: "50px",
+                color: "var(--text-muted)",
+              }}
             >
               Carregando materiais...
             </div>
@@ -164,7 +158,7 @@ const MainContent = () => {
                   style={{
                     gridColumn: "1/-1",
                     textAlign: "center",
-                    color: "#999",
+                    color: "var(--text-muted)",
                     padding: "20px",
                   }}
                 >
@@ -179,36 +173,9 @@ const MainContent = () => {
   )
 }
 
-// --- CARD COMPONENTE ---
 const Card = ({ data, isMobile, navigate }) => {
   const [isHovered, setIsHovered] = useState(false)
-
-  // NAVEGAÇÃO CORRETA PELO ID
-  const handleCardClick = () => {
-    navigate(`/dashboard/producao/${data.id}`)
-  }
-
-  const getTheme = (disciplina) => {
-    const themes = {
-      Matemática: { bg: "#FCE4EC", text: "#C2185B" },
-      História: { bg: "#F3E5F5", text: "#7B1FA2" },
-      Geografia: { bg: "#FFF3E0", text: "#E65100" },
-      Ciências: { bg: "#E8F5E9", text: "#2e677d" },
-      Química: { bg: "#E8F5E9", text: "#7d4b2e" },
-      Biologia: { bg: "#E8F5E9", text: "#2ca832" },
-      Pedagogia: { bg: "#E8F5E9", text: "#7d2e3f" },
-      Português: { bg: "#E3F2FD", text: "#1565C0" },
-      Filosofia: { bg: "#ECEFF1", text: "#455A64" },
-      Sociologia: { bg: "#F5F5F5", text: "#635e92" },
-      Física: { bg: "#F5F5F5", text: "#d82fa0" },
-      Outra: { bg: "#F5F5F5", text: "#616161" },
-      Default: { bg: "#F5F5F5", text: "#616161" },
-    }
-    const key =
-      Object.keys(themes).find((k) => disciplina?.includes(k)) || "Default"
-    return themes[key]
-  }
-  const theme = getTheme(data.disciplina)
+  const handleCardClick = () => navigate(`/dashboard/producao/${data.id}`)
 
   return (
     <div
@@ -222,23 +189,12 @@ const Card = ({ data, isMobile, navigate }) => {
       onMouseLeave={() => setIsHovered(false)}
     >
       <div style={styles.cardHeader}>
-        <span
-          style={{
-            ...styles.subjectBadge,
-            backgroundColor: theme.bg,
-            color: theme.text,
-          }}
-        >
-          {data.disciplina}
-        </span>
+        <span style={styles.subjectBadge}>{data.disciplina}</span>
         <div style={styles.aiBadge}>
-          <Bot size={14} style={{ marginRight: "4px" }} />
-          {data.modelo_ia}
+          <Bot size={14} style={{ marginRight: "4px" }} /> {data.modelo_ia}
         </div>
       </div>
-
       <div style={styles.cardBody}>
-        {/* Correção de Texto Longo */}
         <h3
           style={{
             ...styles.cardTitle,
@@ -250,21 +206,23 @@ const Card = ({ data, isMobile, navigate }) => {
         </h3>
         <p style={styles.cardSummary}>{data.resumo}</p>
       </div>
-
       <div style={styles.cardFooter}>
         <div style={styles.categoryInfo}>
-          <Tag size={16} color="#546E7A" style={{ marginRight: "6px" }} />
+          <Tag
+            size={16}
+            color="var(--text-muted)"
+            style={{ marginRight: "6px" }}
+          />
           <span style={styles.categoryName}>{data.categoria || "Geral"}</span>
         </div>
         <div style={styles.verifiedBadge}>
-          <CheckCircle2 size={18} color="#4CAF50" />
+          <CheckCircle2 size={18} color="var(--text-success)" />
         </div>
       </div>
     </div>
   )
 }
 
-// --- ESTILOS ---
 const styles = {
   container: {
     width: "100%",
@@ -291,12 +249,12 @@ const styles = {
   },
   searchInput: {
     width: "100%",
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "var(--bg-card)",
     borderRadius: "50px",
-    border: "none",
+    border: "1px solid var(--border-color)",
     boxShadow: "0 4px 15px rgba(0,0,0,0.1)",
     outline: "none",
-    color: "#333333",
+    color: "var(--input-text)",
     boxSizing: "border-box",
     fontWeight: "500",
   },
@@ -304,7 +262,7 @@ const styles = {
     position: "absolute",
     top: "50%",
     transform: "translateY(-50%)",
-    color: "#1565C0",
+    color: "var(--text-info)",
   },
   contentArea: {
     width: "100%",
@@ -315,12 +273,12 @@ const styles = {
   mainCard: {
     width: "100%",
     maxWidth: "1700px",
-    backgroundColor: "#ffffff",
+    backgroundColor: "var(--bg-card)",
     borderRadius: "16px",
     boxShadow: "0 8px 30px rgba(0,0,0,0.06)",
     display: "flex",
     flexDirection: "column",
-    border: "1px solid #E0E0E0",
+    border: "1px solid var(--border-color)",
     boxSizing: "border-box",
   },
   sectionHeader: {
@@ -328,13 +286,13 @@ const styles = {
     alignItems: "center",
     justifyContent: "space-between",
     marginBottom: "20px",
-    borderBottom: "1px solid #F0F2F5",
+    borderBottom: "1px solid var(--border-color)",
     paddingBottom: "15px",
   },
-  sectionTitle: { color: "#1565C0", margin: 0, fontWeight: "800" },
+  sectionTitle: { color: "var(--text-primary)", margin: 0, fontWeight: "800" },
   badgeCount: {
-    backgroundColor: "#E3F2FD",
-    color: "#1565C0",
+    backgroundColor: "var(--bg-info)",
+    color: "var(--text-info)",
     padding: "4px 12px",
     borderRadius: "20px",
     fontSize: "12px",
@@ -347,9 +305,9 @@ const styles = {
     backgroundColor: "transparent",
   },
   card: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "var(--bg-card)",
     borderRadius: "12px",
-    border: "1px solid #E0E0E0",
+    border: "1px solid var(--border-color)",
     boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
     display: "flex",
     flexDirection: "column",
@@ -361,7 +319,7 @@ const styles = {
   cardHover: {
     transform: "translateY(-5px)",
     boxShadow: "0 12px 20px rgba(0,0,0,0.1)",
-    border: "1px solid #42A5F5",
+    border: "1px solid var(--text-info)",
   },
   cardHeader: {
     display: "flex",
@@ -370,6 +328,8 @@ const styles = {
     alignItems: "center",
   },
   subjectBadge: {
+    backgroundColor: "var(--bg-alt)",
+    color: "var(--text-primary)",
     padding: "5px 10px",
     borderRadius: "6px",
     fontSize: "10px",
@@ -378,30 +338,27 @@ const styles = {
     letterSpacing: "0.5px",
   },
   aiBadge: {
-    backgroundColor: "#F5F7FA",
-    color: "#546E7A",
+    backgroundColor: "var(--bg-main)",
+    color: "var(--text-muted)",
     padding: "5px 8px",
     borderRadius: "6px",
     fontSize: "10px",
     fontWeight: "600",
     display: "flex",
     alignItems: "center",
-    border: "1px solid #ECEFF1",
+    border: "1px solid var(--border-color)",
   },
   cardBody: { flex: 1, marginBottom: "16px" },
-
-  // CORREÇÃO DE TEXTO LONGO NO DASHBOARD TAMBÉM
   cardTitle: {
-    color: "#101828",
+    color: "var(--text-primary)",
     margin: "0 0 6px 0",
     lineHeight: "1.4",
     fontWeight: "700",
     wordBreak: "break-word",
   },
-
   cardSummary: {
     fontSize: "13px",
-    color: "#667085",
+    color: "var(--text-secondary)",
     lineHeight: "1.6",
     margin: 0,
     display: "-webkit-box",
@@ -414,10 +371,18 @@ const styles = {
     justifyContent: "space-between",
     alignItems: "center",
     paddingTop: "14px",
-    borderTop: "1px solid #F2F4F7",
+    borderTop: "1px solid var(--border-color)",
   },
-  categoryInfo: { display: "flex", alignItems: "center", color: "#546E7A" },
-  categoryName: { fontSize: "12px", fontWeight: "600", color: "#344054" },
+  categoryInfo: {
+    display: "flex",
+    alignItems: "center",
+    color: "var(--text-secondary)",
+  },
+  categoryName: {
+    fontSize: "12px",
+    fontWeight: "600",
+    color: "var(--text-primary)",
+  },
   verifiedBadge: { display: "flex", alignItems: "center" },
 }
 

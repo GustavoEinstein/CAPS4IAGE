@@ -1,7 +1,7 @@
 import React, { useState } from "react"
 import api from "./services/api"
-import { Link } from "react-router-dom"
-import { Eye, EyeOff } from "lucide-react" // Ícones importados para o botão de senha
+import { Link, useNavigate } from "react-router-dom"
+import { ArrowLeft } from "lucide-react"
 
 const SpiderWebIcon = ({ size = 24, color = "currentColor" }) => (
   <svg
@@ -29,6 +29,7 @@ const Login = () => {
   const [error, setError] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [hover, setHover] = useState(false)
+  const navigate = useNavigate()
 
   // NOVO: Estado para controlar a visibilidade da senha
   const [showPassword, setShowPassword] = useState(false)
@@ -40,18 +41,12 @@ const Login = () => {
 
     try {
       const urlToken = "api/token/"
-
-      const response = await api.post(urlToken, {
-        username: username,
-        password: password,
-      })
-
+      const response = await api.post(urlToken, { username, password })
       const token = response.data.access
       localStorage.setItem("access_token", token)
       localStorage.setItem("refresh_token", response.data.refresh)
 
       const urlUser = "api/user/me/"
-
       const userResponse = await api.get(urlUser, {
         headers: { Authorization: `Bearer ${token}` },
       })
@@ -61,37 +56,25 @@ const Login = () => {
         "user_disciplina",
         userResponse.data.disciplina || "Geral",
       )
-
-      if (userResponse.data.avatar) {
+      if (userResponse.data.avatar)
         localStorage.setItem("user_avatar", userResponse.data.avatar)
-      }
-
-      if (userResponse.data.is_superuser) {
+      if (userResponse.data.is_superuser)
         localStorage.setItem("is_superuser", "true")
-      } else {
-        localStorage.removeItem("is_superuser")
-      }
+      else localStorage.removeItem("is_superuser")
 
       window.dispatchEvent(new Event("storage"))
       window.location.href = "/dashboard"
     } catch (err) {
-      console.error(err)
-      if (err.code === "ERR_NETWORK") {
+      if (err.code === "ERR_NETWORK")
         setError("Erro de conexão. Verifique se o servidor está rodando.")
-      } else if (err.response && err.response.status === 429) {
+      else if (err.response && err.response.status === 429)
         setError(
           "Muitas tentativas falhadas. Por favor, aguarde 1 minuto e tente novamente.",
         )
-      } else if (err.response && err.response.status === 401) {
+      else if (err.response && err.response.status === 401) {
         const detailMessage = err.response.data.detail
-        if (detailMessage) {
-          setError(detailMessage)
-        } else {
-          setError("Usuário ou senha incorretos.")
-        }
-      } else {
-        setError("Ocorreu um erro inesperado.")
-      }
+        setError(detailMessage || "Usuário ou senha incorretos.")
+      } else setError("Ocorreu um erro inesperado.")
     } finally {
       setIsLoading(false)
     }
@@ -100,6 +83,10 @@ const Login = () => {
   return (
     <div style={styles.pageBackground}>
       <div style={styles.card}>
+        <button onClick={() => navigate("/")} style={styles.backButton}>
+          <ArrowLeft size={16} /> Voltar ao Início
+        </button>
+
         <div style={styles.header}>
           <div style={styles.logoCircle}>
             <span>
@@ -126,7 +113,6 @@ const Login = () => {
               />
             </div>
           </div>
-
           <div style={styles.inputGroup}>
             <label style={styles.label}>Senha</label>
             <div style={styles.inputWrapper}>
@@ -206,18 +192,33 @@ const styles = {
     width: "100%",
     maxWidth: "400px",
     padding: "40px",
-    backgroundColor: "white",
+    backgroundColor: "var(--bg-card)",
     borderRadius: "12px",
     boxShadow: "0 8px 20px rgba(0,0,0,0.2)",
     display: "flex",
     flexDirection: "column",
-    boxSizing: "border-box", // Adicionado para garantir que o padding não quebre o layout
+    boxSizing: "border-box",
+    margin: "20px",
+  },
+  backButton: {
+    background: "none",
+    border: "none",
+    color: "var(--text-secondary)",
+    display: "flex",
+    alignItems: "center",
+    gap: "5px",
+    fontSize: "13px",
+    fontWeight: "600",
+    cursor: "pointer",
+    padding: 0,
+    marginBottom: "20px",
+    alignSelf: "flex-start",
   },
   header: { textAlign: "center", marginBottom: "25px" },
   logoCircle: {
     width: "60px",
     height: "60px",
-    backgroundColor: "#E3F2FD",
+    backgroundColor: "var(--bg-info)",
     borderRadius: "50%",
     display: "flex",
     justifyContent: "center",
@@ -225,28 +226,27 @@ const styles = {
     margin: "0 auto 15px auto",
   },
   title: {
-    color: "#1565C0",
+    color: "var(--text-primary)",
     fontSize: "24px",
     margin: "0 0 5px 0",
     fontWeight: "bold",
   },
-  subtitle: { color: "#546E7A", fontSize: "14px", margin: 0 },
+  subtitle: { color: "var(--text-muted)", fontSize: "14px", margin: 0 },
   form: { display: "flex", flexDirection: "column", gap: "15px" },
   inputGroup: { display: "flex", flexDirection: "column", gap: "5px" },
   inputWrapper: {
     display: "flex",
     alignItems: "center",
-    border: "1px solid #E2E8F0",
+    border: "1px solid var(--border-color)",
     borderRadius: "8px",
-    backgroundColor: "#F8FAFC",
-    overflow: "hidden", // Garante que elementos internos não vazem das bordas arredondadas
+    backgroundColor: "var(--input-bg)",
   },
   label: {
     display: "block",
     marginBottom: "8px",
     fontSize: "13px",
     fontWeight: "600",
-    color: "#334155",
+    color: "var(--text-secondary)",
   },
   input: {
     flex: 1, // Permite que o input ocupe todo o espaço disponível, empurrando o botão para a direita
@@ -254,21 +254,11 @@ const styles = {
     border: "none",
     background: "transparent",
     outline: "none",
-    color: "#334155",
-    width: "100%",
-  },
-  eyeButton: {
-    background: "none",
-    border: "none",
-    padding: "0 12px",
-    cursor: "pointer",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
+    color: "var(--input-text)",
   },
   forgotPasswordContainer: { textAlign: "right", marginTop: "-5px" },
   forgotPasswordLink: {
-    color: "#546E7A",
+    color: "var(--text-muted)",
     fontSize: "13px",
     textDecoration: "none",
     fontWeight: "500",
@@ -288,12 +278,13 @@ const styles = {
   buttonHover: { backgroundColor: "#0D47A1" },
   buttonDisabled: { backgroundColor: "#90CAF9", cursor: "not-allowed" },
   errorBox: {
-    backgroundColor: "#FFEBEE",
-    color: "#D32F2F",
+    backgroundColor: "var(--bg-danger)",
+    color: "var(--text-danger)",
     padding: "12px",
     borderRadius: "6px",
     fontSize: "14px",
     textAlign: "center",
+    border: "1px solid var(--border-danger)",
   },
   registerLinkContainer: { textAlign: "center", marginTop: "10px" },
   registerLink: {

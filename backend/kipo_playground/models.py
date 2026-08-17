@@ -138,13 +138,11 @@ class Producao(models.Model):
     resultados = models.TextField(blank=True, null=True) 
     arquivo = models.FileField(upload_to='producoes/', blank=True, null=True)
     
-    # [NOVO] CAMPO PARA SUPORTAR VÍDEOS E ARQUIVOS PESADOS
     link_material = models.URLField(max_length=500, null=True, blank=True, verbose_name="Link Externo do Material")
     
     data_criacao = models.DateTimeField(auto_now_add=True)
     status = models.CharField(max_length=50, default='Em revisão')
     
-    # [NOVO] CAMPO DE DERIVAÇÃO / REFERÊNCIA
     producao_base = models.ForeignKey(
         'self', 
         on_delete=models.SET_NULL, 
@@ -189,6 +187,17 @@ class Topico(models.Model):
     categoria = models.CharField(max_length=50, choices=CATEGORIAS_CHOICES, default='Geral')
     resolvido = models.BooleanField(default=False) 
     arquivo = models.FileField(upload_to='forum_anexos/', blank=True, null=True)
+    
+    # Campo adicionado para referenciar a produção base
+    producao_base = models.ForeignKey(
+        Producao, 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True, 
+        related_name='topicos_referencia',
+        help_text="Indica se este tópico se baseia em alguma produção aprovada da comunidade."
+    )
+    
     data_criacao = models.DateTimeField(auto_now_add=True)
 
 class Comentario(models.Model):
@@ -196,6 +205,104 @@ class Comentario(models.Model):
     autor = models.ForeignKey(User, on_delete=models.CASCADE, related_name='comentarios_usuario')
     conteudo = models.TextField()
     data_criacao = models.DateTimeField(auto_now_add=True)
+
+# ============================================================================
+# 7. DIÁRIO DE OPERAÇÕES (CRM INTERNO)
+# ============================================================================
+class DiarioOperacao(models.Model):
+    TIPO_CHOICES = [
+        ('Reunião', 'Reunião'),
+        ('Treinamento', 'Treinamento'),
+        ('Visita Escolar', 'Visita Escolar'),
+        ('Suporte', 'Suporte'),
+        ('Outros', 'Outros'),
+    ]
+    
+    STATUS_CHOICES = [
+        ('Pendente', 'Pendente'),
+        ('Em andamento', 'Em andamento'),
+        ('Resolvido', 'Resolvido'),
+    ]
+    
+    titulo = models.CharField(max_length=255)
+    tipo = models.CharField(max_length=50, choices=TIPO_CHOICES)
+    status = models.CharField(max_length=50, choices=STATUS_CHOICES, default='Resolvido')
+    
+    # Vinculo com o professor (opcional) ou nome livre
+    docente = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='interacoes_diario')
+    contato = models.CharField(max_length=255, blank=True, null=True) 
+    
+    data_evento = models.DateField()
+    descricao = models.TextField()
+    proximos_passos = models.TextField(blank=True, null=True)
+    tags = models.CharField(max_length=255, blank=True, null=True) 
+    participantes = models.IntegerField(default=1)
+    
+    foto = models.ImageField(upload_to='diario_fotos/', null=True, blank=True)
+    criado_em = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-data_evento', '-criado_em']
+
+    def __str__(self):
+        return f"{self.data_evento} - {self.titulo}"
+
+class NotaDiario(models.Model):
+    diario = models.ForeignKey(DiarioOperacao, on_delete=models.CASCADE, related_name='notas')
+    autor = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    texto = models.TextField()
+    criado_em = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['criado_em']
+
+    def __str__(self):
+        return f"Nota em {self.diario.titulo}"
+
+# ============================================================================
+# 8. CONFIGURAÇÕES GERAIS DO SISTEMA
+# ============================================================================
+class ConfiguracaoXP(models.Model):
+    xp_revisao = models.IntegerField(default=15)
+    xp_aprovacao = models.IntegerField(default=50)
+    xp_topico = models.IntegerField(default=5)
+    xp_comentario = models.IntegerField(default=5)
+
+    def save(self, *args, **kwargs):
+        self.pk = 1 
+        super(ConfiguracaoXP, self).save(*args, **kwargs)
+
+class Escola(models.Model):
+    nome = models.CharField(max_length=255, unique=True)
+    def __str__(self): return self.nome
+
+class Disciplina(models.Model):
+    nome = models.CharField(max_length=255, unique=True)
+    def __str__(self): return self.nome
+
+# ============================================================================
+# 9. SISTEMA DE NOTIFICAÇÕES
+# ============================================================================
+class Notificacao(models.Model):
+    TIPOS_CHOICES = (
+        ('XP', 'XP Ganho'),
+        ('NIVEL', 'Subiu de Nível'),
+        ('MEDALHA', 'Medalha Conquistada'),
+        ('AVALIACAO', 'Avaliação de Prática'),
+        ('SISTEMA', 'Sistema'),
+    )
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notificacoes')
+    titulo = models.CharField(max_length=255)
+    mensagem = models.TextField()
+    tipo = models.CharField(max_length=50, choices=TIPOS_CHOICES, default='SISTEMA')
+    lida = models.BooleanField(default=False)
+    data_criacao = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-data_criacao']
+
+    def __str__(self):
+        return f"{self.user.username} - {self.titulo}"
 
 # ============================================================================
 # SIGNALS
