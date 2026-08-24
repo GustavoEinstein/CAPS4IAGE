@@ -29,7 +29,7 @@ import bnccPort from "../../data/bncc_port.json"
 import bnccComp from "../../data/bncc_comp.json"
 
 // --- SEPARAÇÃO DAS BASES DE DADOS ---
-const BNCC_GERAL = [...bnccMat, ...bnccPort]
+const BNCC_GERAL = [...bnccMat, ...bnccPort, ...bnccComp]
 const BNCC_COMPUTACAO = [...bnccComp]
 
 const FormularioManual = () => {
