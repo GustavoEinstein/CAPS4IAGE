@@ -6,6 +6,7 @@ import {
   useLocation,
   useOutletContext,
 } from "react-router-dom"
+import Swal from "sweetalert2"
 import {
   ArrowLeft,
   Calendar,
@@ -13,7 +14,6 @@ import {
   Bot,
   BookOpen,
   CheckCircle2,
-  XCircle,
   AlertCircle,
   Wrench,
   Lightbulb,
@@ -21,7 +21,6 @@ import {
   Download,
   FileText,
   User,
-  Bookmark,
   ShieldCheck,
   Package,
   Cpu,
@@ -30,8 +29,9 @@ import {
   BarChart3,
   ThumbsUp,
   AlertTriangle,
-  Link,
   ExternalLink,
+  EyeOff,
+  Eye,
 } from "lucide-react"
 
 const DetalharProducao = () => {
@@ -43,6 +43,22 @@ const DetalharProducao = () => {
   const fromHistory = location.state?.fromHistory || false
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
+
+  const fetchDetails = async () => {
+    try {
+      const response = await api.get(`api/production/${id}/`)
+      setData(response.data)
+    } catch (error) {
+      alert("Erro ao carregar a produção.")
+      navigate("/dashboard")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    if (id) fetchDetails()
+  }, [id, navigate])
 
   const handleDownload = async () => {
     if (!data || !data.arquivo) return
@@ -65,20 +81,23 @@ const DetalharProducao = () => {
     }
   }
 
-  useEffect(() => {
-    const fetchDetails = async () => {
-      try {
-        const response = await api.get(`api/production/${id}/`)
-        setData(response.data)
-      } catch (error) {
-        alert("Erro ao carregar a produção.")
-        navigate("/dashboard")
-      } finally {
-        setLoading(false)
-      }
+  // NOVA FUNÇÃO: Alternar Visibilidade do Nome do Autor
+  const handleToggleAnonimato = async () => {
+    try {
+      const response = await api.put(`api/production/${data.id}/toggle-author/`)
+      Swal.fire({
+        icon: "success",
+        title: "Visibilidade Atualizada!",
+        text: response.data.mensagem,
+        confirmButtonColor: "#1565C0",
+        timer: 2000,
+      })
+      // Recarrega os dados para atualizar a tela
+      fetchDetails()
+    } catch (error) {
+      Swal.fire("Erro", "Não foi possível alterar a visibilidade.", "error")
     }
-    if (id) fetchDetails()
-  }, [id, navigate])
+  }
 
   if (loading)
     return (
@@ -106,6 +125,12 @@ const DetalharProducao = () => {
 
   return (
     <div style={styles.fullPageWrapper}>
+      <style>{`
+        .releitura-card:hover {
+            border-color: var(--text-info) !important;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+      `}</style>
       <div style={styles.container}>
         <button onClick={() => navigate(-1)} style={styles.backButton}>
           <ArrowLeft size={18} /> Voltar
@@ -129,6 +154,7 @@ const DetalharProducao = () => {
                 isApproved={isApproved}
                 isRejected={isRejected}
                 handleDownload={handleDownload}
+                handleToggleAnonimato={handleToggleAnonimato}
               />
             </div>
           )}
@@ -150,6 +176,18 @@ const DetalharProducao = () => {
                 </div>
                 <h1 style={styles.title}>{data.titulo}</h1>
                 <div style={styles.metaRow}>
+                  {/* EXIBIÇÃO DA AUTORIA COM TRATAMENTO DE ANONIMATO */}
+                  <span
+                    style={{
+                      ...styles.dateText,
+                      color: data.exibir_autor
+                        ? "var(--text-primary)"
+                        : "var(--text-warning)",
+                      fontWeight: "600",
+                    }}
+                  >
+                    <User size={14} /> {data.autor}
+                  </span>
                   <div style={styles.iaTag}>
                     <Bot size={14} /> {data.modelo_ia}
                   </div>
@@ -159,26 +197,28 @@ const DetalharProducao = () => {
                 </div>
               </div>
 
+              {/* --- NOVO CARD DE RELEITURA CLICÁVEL --- */}
               {data.producao_base && (
-                <div style={styles.derivationBanner}>
-                  <Bookmark size={20} color="var(--text-info)" />
-                  <span
-                    style={{
-                      fontSize: "14px",
-                      color: "var(--text-info)",
-                      lineHeight: "1.4",
-                    }}
-                  >
-                    Inspirada em: <br />
-                    <strong>
-                      <a
-                        href={`/dashboard/producao/${data.producao_base.id}`}
-                        style={{ color: "var(--text-info)" }}
-                      >
-                        {data.producao_base.titulo}
-                      </a>
-                    </strong>
-                  </span>
+                <div
+                  className="releitura-card"
+                  onClick={() =>
+                    navigate(`/dashboard/producao/${data.producao_base.id}`)
+                  }
+                  style={styles.releituraCard}
+                >
+                  <div style={styles.releituraHeader}>
+                    <span style={styles.releituraBadge}>
+                      Releitura de Prática
+                    </span>
+                    <ExternalLink size={14} color="var(--text-info)" />
+                  </div>
+                  <p style={styles.releituraTitle}>
+                    Inspirado na prática:{" "}
+                    <strong>{data.producao_base.titulo}</strong>
+                  </p>
+                  <p style={styles.releituraSubtitle}>
+                    Criada originalmente por: {data.producao_base.autor}
+                  </p>
                 </div>
               )}
 
@@ -244,22 +284,26 @@ const DetalharProducao = () => {
                 </div>
               </div>
 
-              <div style={styles.section}>
-                <h3 style={styles.sectionTitle}>
-                  <Cpu size={20} /> BNCC Computação
-                </h3>
-                <div
-                  style={{
-                    ...styles.bnccBox,
-                    backgroundColor: "var(--bg-info)",
-                    borderLeft: "4px solid var(--text-info)",
-                  }}
-                >
-                  <p style={{ ...styles.bnccText, color: "var(--text-info)" }}>
-                    {data.bncc_computacao || "Nenhuma habilidade registrada."}
-                  </p>
+              {data.bncc_computacao && (
+                <div style={styles.section}>
+                  <h3 style={styles.sectionTitle}>
+                    <Cpu size={20} /> BNCC Computação
+                  </h3>
+                  <div
+                    style={{
+                      ...styles.bnccBox,
+                      backgroundColor: "var(--bg-info)",
+                      borderLeft: "4px solid var(--text-info)",
+                    }}
+                  >
+                    <p
+                      style={{ ...styles.bnccText, color: "var(--text-info)" }}
+                    >
+                      {data.bncc_computacao}
+                    </p>
+                  </div>
                 </div>
-              </div>
+              )}
 
               <div style={styles.section}>
                 <h3 style={styles.sectionTitle}>
@@ -296,6 +340,7 @@ const DetalharProducao = () => {
                 isApproved={isApproved}
                 isRejected={isRejected}
                 handleDownload={handleDownload}
+                handleToggleAnonimato={handleToggleAnonimato}
               />
             </div>
           )}
@@ -305,7 +350,13 @@ const DetalharProducao = () => {
   )
 }
 
-const SidebarContent = ({ data, isApproved, isRejected, handleDownload }) => {
+const SidebarContent = ({
+  data,
+  isApproved,
+  isRejected,
+  handleDownload,
+  handleToggleAnonimato,
+}) => {
   return (
     <div style={styles.sidebarCard}>
       <h3 style={styles.sidebarTitle}>Status do Material</h3>
@@ -339,9 +390,20 @@ const SidebarContent = ({ data, isApproved, isRejected, handleDownload }) => {
       <h3 style={styles.sidebarTitle}>Arquivos e Links</h3>
 
       {data.arquivo && (
-        <button onClick={handleDownload} style={styles.downloadBtn}>
-          <Download size={18} /> Baixar Roteiro
-        </button>
+        <>
+          <div style={styles.filePreview}>
+            <div style={styles.fileIconBig}>
+              <FileText size={24} color="var(--text-info)" />
+            </div>
+            <div style={{ flex: 1, overflow: "hidden" }}>
+              <span style={styles.fileName}>Material Didático</span>
+              <span style={styles.fileMeta}>Baixar arquivo</span>
+            </div>
+          </div>
+          <button onClick={handleDownload} style={styles.downloadBtn}>
+            <Download size={18} /> Baixar Roteiro
+          </button>
+        </>
       )}
 
       {data.link_material && (
@@ -373,6 +435,39 @@ const SidebarContent = ({ data, isApproved, isRejected, handleDownload }) => {
         >
           Nenhum material anexado.
         </p>
+      )}
+
+      {/* --- NOVO CONTROLE DE ANONIMATO EXCLUSIVO DO DONO --- */}
+      {data.is_dono && (
+        <>
+          <div style={styles.divider}></div>
+          <h3 style={styles.sidebarTitle}>Privacidade</h3>
+          <div style={styles.privacyBox}>
+            <p style={styles.privacyText}>
+              Seu nome está atualmente{" "}
+              <strong>{data.exibir_autor ? "Visível" : "Oculto"}</strong> para
+              os outros professores.
+            </p>
+            <button
+              onClick={handleToggleAnonimato}
+              style={{
+                ...styles.toggleBtn,
+                backgroundColor: data.exibir_autor
+                  ? "var(--bg-main)"
+                  : "var(--bg-warning)",
+                color: data.exibir_autor
+                  ? "var(--text-secondary)"
+                  : "var(--text-warning)",
+                borderColor: data.exibir_autor
+                  ? "var(--border-color)"
+                  : "var(--border-warning)",
+              }}
+            >
+              {data.exibir_autor ? <EyeOff size={16} /> : <Eye size={16} />}
+              {data.exibir_autor ? "Ocultar meu nome" : "Exibir meu nome"}
+            </button>
+          </div>
+        </>
       )}
     </div>
   )
@@ -583,15 +678,40 @@ const styles = {
     fontSize: "12px",
     color: "var(--text-muted)",
   },
-  derivationBanner: {
-    backgroundColor: "var(--bg-info)",
-    borderLeft: "4px solid var(--text-info)",
-    padding: "12px 15px",
-    borderRadius: "6px",
+  releituraCard: {
+    backgroundColor: "var(--bg-main)",
+    border: "1px dashed var(--border-info)",
+    borderRadius: "10px",
+    padding: "15px",
     marginBottom: "25px",
+    cursor: "pointer",
+    transition: "all 0.2s ease",
+  },
+  releituraHeader: {
     display: "flex",
+    justifyContent: "space-between",
     alignItems: "center",
-    gap: "10px",
+    marginBottom: "8px",
+  },
+  releituraBadge: {
+    backgroundColor: "var(--bg-info)",
+    color: "var(--text-info)",
+    fontSize: "11px",
+    fontWeight: "bold",
+    padding: "4px 8px",
+    borderRadius: "20px",
+    textTransform: "uppercase",
+    letterSpacing: "0.5px",
+  },
+  releituraTitle: {
+    margin: "0 0 5px 0",
+    fontSize: "14px",
+    color: "var(--text-primary)",
+  },
+  releituraSubtitle: {
+    margin: 0,
+    fontSize: "12px",
+    color: "var(--text-muted)",
   },
   techSheet: {
     display: "grid",
@@ -633,7 +753,6 @@ const styles = {
     alignItems: "center",
     gap: "8px",
   },
-
   bnccBox: {
     backgroundColor: "var(--bg-warning)",
     borderLeft: "4px solid var(--border-warning)",
@@ -674,7 +793,6 @@ const styles = {
     fontStyle: "italic",
     whiteSpace: "pre-wrap",
   },
-
   sidebarCard: {
     backgroundColor: "var(--bg-card)",
     border: "1px solid var(--border-color)",
@@ -723,6 +841,31 @@ const styles = {
     backgroundColor: "var(--border-color)",
     margin: "20px 0",
   },
+  filePreview: {
+    display: "flex",
+    alignItems: "center",
+    gap: "10px",
+    padding: "12px",
+    backgroundColor: "var(--bg-info)",
+    borderRadius: "8px",
+    border: "1px solid var(--border-color)",
+    marginBottom: "15px",
+  },
+  fileIconBig: {
+    backgroundColor: "var(--bg-card)",
+    padding: "6px",
+    borderRadius: "6px",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  fileName: {
+    display: "block",
+    fontSize: "12px",
+    fontWeight: "700",
+    color: "var(--text-info)",
+  },
+  fileMeta: { fontSize: "10px", color: "var(--text-muted)" },
   downloadBtn: {
     width: "100%",
     padding: "12px",
@@ -737,7 +880,29 @@ const styles = {
     justifyContent: "center",
     gap: "8px",
   },
-
+  privacyBox: {
+    padding: "15px 0 0 0",
+  },
+  privacyText: {
+    fontSize: "12px",
+    color: "var(--text-secondary)",
+    lineHeight: "1.4",
+    marginBottom: "10px",
+  },
+  toggleBtn: {
+    width: "100%",
+    padding: "10px",
+    border: "1px solid",
+    borderRadius: "8px",
+    fontWeight: "600",
+    fontSize: "13px",
+    cursor: "pointer",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: "6px",
+    transition: "all 0.2s",
+  },
   ptContainer: {
     marginTop: "40px",
     borderTop: "1px solid var(--border-color)",

@@ -3,29 +3,21 @@ import api from "../services/api"
 import { useParams, useNavigate, useOutletContext } from "react-router-dom"
 import {
   ArrowLeft,
-  Calendar,
   Clock,
   Bot,
   BookOpen,
-  CheckCircle2,
-  XCircle,
   Wrench,
+  Package,
   Lightbulb,
   Target,
   Download,
   FileText,
   User,
-  Package,
-  Star,
-  MapPin,
-  File,
   ExternalLink,
-  Bookmark,
-  ShieldAlert,
-  BarChart3,
-  ThumbsUp,
-  AlertTriangle,
 } from "lucide-react"
+
+// Endereço base do seu backend Django
+const API_BASE_URL = "http://localhost:8000"
 
 const VisualizarMinhaProducao = () => {
   const { id } = useParams()
@@ -81,6 +73,7 @@ const VisualizarMinhaProducao = () => {
         <div
           style={{ ...styles.grid, flexDirection: isMobile ? "column" : "row" }}
         >
+          {/* ================= COLUNA PRINCIPAL DA ESQUERDA ================= */}
           <div style={styles.columnContent}>
             <div style={styles.materialCard}>
               <div style={styles.headerSection}>
@@ -177,7 +170,9 @@ const VisualizarMinhaProducao = () => {
             </div>
           </div>
 
+          {/* ================= COLUNA DA DIREITA (SIDEBAR) ================= */}
           <div style={styles.columnSidebar}>
+            {/* 1. Status da Avaliação */}
             <div style={styles.sidebarCard}>
               <h3 style={styles.sidebarTitle}>Status da Avaliação</h3>
               {isPending && (
@@ -209,6 +204,45 @@ const VisualizarMinhaProducao = () => {
                 </div>
               )}
             </div>
+
+            {/* 2. Botões de Material de Apoio (Abaixo da avaliação) */}
+            {(data.arquivo || data.link_material) && (
+              <div style={{ ...styles.sidebarCard, marginTop: "20px" }}>
+                <h3 style={styles.sidebarTitle}>
+                  <FileText
+                    size={16}
+                    style={{ marginRight: "6px", verticalAlign: "bottom" }}
+                  />
+                  Material de Apoio
+                </h3>
+                <div style={styles.buttonsSidebarContainer}>
+                  {data.arquivo && (
+                    <a
+                      href={
+                        data.arquivo.startsWith("http")
+                          ? data.arquivo
+                          : `${API_BASE_URL}${data.arquivo}`
+                      }
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={styles.btnDownloadSidebar}
+                    >
+                      <Download size={18} /> Baixar Arquivo Anexo
+                    </a>
+                  )}
+                  {data.link_material && (
+                    <a
+                      href={data.link_material}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={styles.btnExternalSidebar}
+                    >
+                      <ExternalLink size={18} /> Acessar Link Externo
+                    </a>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -241,7 +275,6 @@ const styles = {
     fontWeight: "700",
     marginBottom: "15px",
   },
-
   grid: { display: "flex", gap: "20px", alignItems: "flex-start" },
   columnContent: { flex: 1, minWidth: "0" },
   columnSidebar: {
@@ -258,7 +291,6 @@ const styles = {
     boxShadow: "0 2px 5px rgba(0,0,0,0.05)",
     border: "1px solid var(--border-color)",
   },
-
   headerSection: { marginBottom: "25px" },
   badgesRow: { display: "flex", gap: "8px", marginBottom: "8px" },
   badge: {
@@ -442,6 +474,45 @@ const styles = {
     color: "var(--text-secondary)",
     margin: "5px 0 0 0",
     lineHeight: "1.4",
+  },
+
+  /* ESTILOS NOVOS PARA OS BOTÕES DA SIDEBAR */
+  buttonsSidebarContainer: {
+    display: "flex",
+    flexDirection: "column",
+    gap: "10px",
+  },
+  btnDownloadSidebar: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: "8px",
+    backgroundColor: "#1565C0",
+    color: "#ffffff",
+    padding: "12px",
+    borderRadius: "8px",
+    textDecoration: "none",
+    fontWeight: "bold",
+    fontSize: "14px",
+    transition: "background 0.2s",
+    width: "100%",
+    boxSizing: "border-box",
+  },
+  btnExternalSidebar: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: "8px",
+    backgroundColor: "var(--bg-main)",
+    color: "var(--text-primary)",
+    border: "1px solid var(--border-color)",
+    padding: "12px",
+    borderRadius: "8px",
+    textDecoration: "none",
+    fontWeight: "bold",
+    fontSize: "14px",
+    width: "100%",
+    boxSizing: "border-box",
   },
 }
 

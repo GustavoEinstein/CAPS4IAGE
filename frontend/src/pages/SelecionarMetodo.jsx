@@ -56,10 +56,10 @@ const SelecionarMetodo = () => {
               <Bookmark size={32} color="var(--text-success)" />
             </div>
             <h3 style={{ ...styles.cardTitle, color: "var(--text-success)" }}>
-              Basear em Colega
+              Fazer uma Releitura
             </h3>
             <p style={{ ...styles.cardDesc, color: "var(--text-success)" }}>
-              Use uma prática validada como ponto de partida.
+              Construa uma nova experiência herdando dados de um colega.
             </p>
             <span style={{ ...styles.fakeLink, color: "var(--text-success)" }}>
               Buscar práticas &rarr;

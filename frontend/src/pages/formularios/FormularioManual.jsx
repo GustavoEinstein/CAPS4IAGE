@@ -17,11 +17,12 @@ import {
   CheckCircle2,
   Layers,
   X,
-  Bookmark,
   Send,
   Check,
   Link,
   Cpu,
+  EyeOff,
+  ExternalLink,
 } from "lucide-react"
 
 import bnccMat from "../../data/bncc_mat.json"
@@ -45,12 +46,13 @@ const FormularioManual = () => {
       const base = location.state.baseData
       return {
         ...base,
-        titulo: `Derivação: ${base.titulo}`,
+        titulo: `Releitura: ${base.titulo}`,
         disciplina:
           base.disciplina && base.disciplina !== "Outra"
             ? base.disciplina
             : storedDisc,
-        producao_base: base.id,
+        producao_base: base.id, // Guarda o ID da prática original
+        base_titulo: base.titulo, // Guarda o Título para mostrar na tela
         arquivo: null,
         recursos: Array.isArray(base.recursos)
           ? base.recursos
@@ -58,6 +60,7 @@ const FormularioManual = () => {
             ? base.recursos.split(",").map((r) => r.trim())
             : [],
         link_material: base.link_material || "",
+        exibir_autor: true, // Novo campo de anonimato
       }
     }
 
@@ -78,6 +81,7 @@ const FormularioManual = () => {
       arquivo: null,
       producao_base: "",
       link_material: "",
+      exibir_autor: true, // Novo campo de anonimato
     }
   })
 
@@ -130,13 +134,17 @@ const FormularioManual = () => {
     setMostrarOpcoesComp(false)
   }
 
-  // Função para alternar o checkbox de interdisciplinaridade
   const handleToggleComp = () => {
     const newValue = !mostrarCampoComp
     setMostrarCampoComp(newValue)
     if (!newValue) {
       setFormData((prev) => ({ ...prev, bncc_computacao: "" }))
     }
+  }
+
+  // Controle do Toggle de Anonimato
+  const handleToggleAnonimato = () => {
+    setFormData((prev) => ({ ...prev, exibir_autor: !prev.exibir_autor }))
   }
 
   // 2. RECUPERADOR DE RASCUNHO (Auto-Save)
@@ -173,7 +181,7 @@ const FormularioManual = () => {
 
   // 3. GATILHO DE SALVAMENTO AUTOMÁTICO LOCAL
   useEffect(() => {
-    const { arquivo, ...dataToSave } = formData
+    const { arquivo, base_titulo, ...dataToSave } = formData
     if (dataToSave.titulo || dataToSave.experiencia || dataToSave.bncc) {
       localStorage.setItem(
         "producao_autosave_draft",
@@ -244,9 +252,16 @@ const FormularioManual = () => {
     try {
       const url = "api/production/create/"
       const dataToSend = new FormData()
+
       dataToSend.append("is_draft", isDraft)
 
+      // Envia a preferência de anonimato pro backend
+      dataToSend.append("exibir_autor", formData.exibir_autor)
+
       Object.keys(formData).forEach((key) => {
+        // Ignora campos auxiliares que não vão para o backend
+        if (key === "exibir_autor" || key === "base_titulo") return
+
         if (key === "recursos") {
           const recArray = formData.recursos || []
           if (recArray.length > 0) {
@@ -268,6 +283,9 @@ const FormularioManual = () => {
       Swal.fire({
         icon: "success",
         title: isDraft ? "Rascunho Salvo!" : "Prática Enviada!",
+        text: isDraft
+          ? ""
+          : "Sua releitura entrará na fila de revisão cega da comunidade.",
         confirmButtonColor: "#1565C0",
       })
       navigate("/dashboard/minhas-producoes")
@@ -280,6 +298,13 @@ const FormularioManual = () => {
       )
     } finally {
       setIsSubmitting(false)
+    }
+  }
+
+  // Função auxiliar para abrir a prática base em outra aba (caso queira revisar o que o colega fez)
+  const openBasePractice = () => {
+    if (formData.producao_base) {
+      window.open(`/dashboard/comunidade`, "_blank") // Abre a comunidade para o usuário procurar (ou pode passar um ID se tivermos a rota direta montada depois)
     }
   }
 
@@ -298,6 +323,10 @@ const FormularioManual = () => {
         }
         .autocomplete-item:hover {
             background-color: var(--bg-main) !important;
+        }
+        .releitura-card:hover {
+            border-color: var(--text-info) !important;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
         }
       `}</style>
 
@@ -325,28 +354,32 @@ const FormularioManual = () => {
             <div
               style={{ ...styles.leftCol, width: isMobile ? "100%" : "35%" }}
             >
-              {formData.producao_base && (
-                <div
-                  style={{
-                    backgroundColor: "var(--bg-success)",
-                    border: "1px solid var(--border-success)",
-                    padding: "10px",
-                    borderRadius: "8px",
-                    marginBottom: "15px",
-                    fontSize: "12px",
-                    color: "var(--text-success)",
-                    fontWeight: "bold",
-                    display: "flex",
-                    alignItems: "center",
-                  }}
-                >
-                  <Bookmark size={14} style={{ marginRight: "5px" }} /> Herdando
-                  dados de prática existente
-                </div>
-              )}
               <h3 style={styles.sectionTitle}>
                 <FileText size={20} color="#1565C0" /> Ficha Técnica
               </h3>
+
+              {/* --- NOVO CARD DE RELEITURA CLICÁVEL --- */}
+              {formData.producao_base && (
+                <div
+                  className="releitura-card"
+                  onClick={openBasePractice}
+                  style={styles.releituraCard}
+                >
+                  <div style={styles.releituraHeader}>
+                    <span style={styles.releituraBadge}>Fazendo Releitura</span>
+                    <ExternalLink size={14} color="var(--text-info)" />
+                  </div>
+                  <p style={styles.releituraTitle}>
+                    Inspirado na prática:{" "}
+                    <strong>
+                      {formData.base_titulo || "Prática Original"}
+                    </strong>
+                  </p>
+                  <p style={styles.releituraSubtitle}>
+                    Clique para buscar a original na comunidade
+                  </p>
+                </div>
+              )}
 
               <div style={styles.inputGroup}>
                 <label style={styles.label}>Título</label>
@@ -807,6 +840,71 @@ const FormularioManual = () => {
                 />
               </div>
 
+              {/* --- NOVO: SEÇÃO DE CONTROLE DE AUTORIA / ANONIMATO --- */}
+              <div style={styles.anonimatoBox}>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "10px",
+                    marginBottom: "8px",
+                  }}
+                >
+                  <EyeOff size={16} color="var(--text-secondary)" />
+                  <h4
+                    style={{
+                      margin: 0,
+                      fontSize: "14px",
+                      color: "var(--text-primary)",
+                    }}
+                  >
+                    Visibilidade de Autoria
+                  </h4>
+                </div>
+                <p
+                  style={{
+                    margin: "0 0 12px 0",
+                    fontSize: "13px",
+                    color: "var(--text-muted)",
+                  }}
+                >
+                  Você quer que o seu nome apareça como autor dessa prática
+                  quando ela for publicada na comunidade?
+                </p>
+
+                <div
+                  className="toggle-box"
+                  onClick={handleToggleAnonimato}
+                  style={{
+                    ...styles.compToggleContainer,
+                    marginBottom: 0,
+                    padding: "12px",
+                  }}
+                >
+                  <input
+                    type="checkbox"
+                    checked={formData.exibir_autor}
+                    readOnly
+                    style={styles.compCheckbox}
+                  />
+                  <span style={{ ...styles.compToggleLabel, fontSize: "13px" }}>
+                    Sim, exibir meu nome como autor da prática.
+                  </span>
+                </div>
+                {!formData.exibir_autor && (
+                  <p
+                    style={{
+                      margin: "8px 0 0 0",
+                      fontSize: "12px",
+                      color: "var(--text-warning)",
+                      fontWeight: "bold",
+                    }}
+                  >
+                    Sua prática será publicada como "Professor(a) Anônimo(a)".
+                  </p>
+                )}
+              </div>
+
               <div style={styles.formFooter}>
                 <button
                   type="button"
@@ -873,6 +971,41 @@ const styles = {
     gap: "10px",
     textTransform: "uppercase",
     letterSpacing: "0.5px",
+  },
+  releituraCard: {
+    backgroundColor: "var(--bg-main)",
+    border: "1px dashed var(--border-info)",
+    borderRadius: "10px",
+    padding: "15px",
+    marginBottom: "25px",
+    cursor: "pointer",
+    transition: "all 0.2s ease",
+  },
+  releituraHeader: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: "8px",
+  },
+  releituraBadge: {
+    backgroundColor: "var(--bg-info)",
+    color: "var(--text-info)",
+    fontSize: "11px",
+    fontWeight: "bold",
+    padding: "4px 8px",
+    borderRadius: "20px",
+    textTransform: "uppercase",
+    letterSpacing: "0.5px",
+  },
+  releituraTitle: {
+    margin: "0 0 5px 0",
+    fontSize: "14px",
+    color: "var(--text-primary)",
+  },
+  releituraSubtitle: {
+    margin: 0,
+    fontSize: "12px",
+    color: "var(--text-muted)",
   },
   inputGroup: {
     marginBottom: "20px",
@@ -1079,6 +1212,13 @@ const styles = {
     display: "grid",
     gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))",
     gap: "20px",
+  },
+  anonimatoBox: {
+    backgroundColor: "var(--bg-alt)",
+    border: "1px solid var(--border-color)",
+    borderRadius: "12px",
+    padding: "20px",
+    marginTop: "10px",
   },
   formFooter: {
     marginTop: "40px",

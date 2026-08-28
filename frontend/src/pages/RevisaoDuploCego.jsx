@@ -9,6 +9,8 @@ import {
   BookOpen,
   Lock,
   AlertCircle,
+  Download,
+  ExternalLink,
 } from "lucide-react"
 
 const RevisaoDuploCego = () => {
@@ -145,6 +147,35 @@ const ReviewCard = ({ data, onClick, isMobile }) => {
           <div style={styles.footerItem}>
             <span style={styles.levelText}>{data.nivel || "Geral"}</span>
           </div>
+
+          {/* BOTÕES DE MATERIAL DIRETO NO CARD */}
+          {(data.arquivo || data.link_material) && (
+            <>
+              <span style={styles.separator}>|</span>
+              {data.arquivo && (
+                <a
+                  href={data.arquivo}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={(e) => e.stopPropagation()}
+                  style={styles.footerLink}
+                >
+                  <Download size={14} /> Anexo
+                </a>
+              )}
+              {data.link_material && (
+                <a
+                  href={data.link_material}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={(e) => e.stopPropagation()}
+                  style={styles.footerLink}
+                >
+                  <ExternalLink size={14} /> Link
+                </a>
+              )}
+            </>
+          )}
         </div>
       </div>
 
@@ -337,6 +368,7 @@ const styles = {
     alignItems: "center",
     marginTop: "auto",
     gap: "10px",
+    flexWrap: "wrap",
   },
   footerItem: {
     display: "flex",
@@ -354,6 +386,19 @@ const styles = {
     borderRadius: "4px",
     fontSize: "11px",
     fontWeight: "600",
+  },
+  footerLink: {
+    display: "flex",
+    alignItems: "center",
+    gap: "4px",
+    color: "var(--text-info)",
+    fontSize: "13px",
+    fontWeight: "600",
+    textDecoration: "none",
+    padding: "4px 8px",
+    borderRadius: "4px",
+    backgroundColor: "var(--bg-info)",
+    transition: "background 0.2s",
   },
   cardAction: {
     display: "flex",

@@ -15,7 +15,12 @@ import {
   User,
   Wrench,
   Edit3,
+  Download,
+  ExternalLink,
 } from "lucide-react"
+
+// Endereço base do seu backend Django
+const API_BASE_URL = "http://localhost:8000"
 
 const MinhasProducoes = () => {
   const navigate = useNavigate()
@@ -277,7 +282,7 @@ const CardProducao = ({ data, navigate, isMobile }) => {
             display: "flex",
             flexDirection: "column",
             gap: "6px",
-            width: isMobile ? "100%" : "auto",
+            width: "100%",
           }}
         >
           {isRejected && (
@@ -313,6 +318,46 @@ const CardProducao = ({ data, navigate, isMobile }) => {
             </button>
           )}
         </div>
+
+        {/* --- MOVIDO PARA A DIREITA: Botões de Material --- */}
+        {(data.arquivo || data.link_material) && (
+          <div style={styles.sidebarAttachments}>
+            <span
+              style={{
+                ...styles.sidebarAttachmentsLabel,
+                textAlign: isMobile ? "left" : "right",
+              }}
+            >
+              Material Anexo
+            </span>
+            {data.arquivo && (
+              <a
+                href={
+                  data.arquivo.startsWith("http")
+                    ? data.arquivo
+                    : `${API_BASE_URL}${data.arquivo}`
+                }
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
+                style={styles.attachmentButtonRight}
+              >
+                <Download size={14} /> Baixar Arquivo
+              </a>
+            )}
+            {data.link_material && (
+              <a
+                href={data.link_material}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
+                style={styles.attachmentButtonRight}
+              >
+                <ExternalLink size={14} /> Link Externo
+              </a>
+            )}
+          </div>
+        )}
       </div>
     </div>
   )
@@ -368,7 +413,7 @@ const CardHistorico = ({ data, navigate, isMobile }) => {
           paddingTop: isMobile ? "15px" : 0,
         }}
       >
-        <div style={{ textAlign: isMobile ? "left" : "right" }}>
+        <div style={{ textAlign: isMobile ? "left" : "right", width: "100%" }}>
           <span
             style={{
               fontSize: "10px",
@@ -384,6 +429,7 @@ const CardHistorico = ({ data, navigate, isMobile }) => {
               marginTop: "4px",
               display: "flex",
               alignItems: "center",
+              justifyContent: isMobile ? "flex-start" : "flex-end",
               gap: "6px",
               fontWeight: "800",
               fontSize: "13px",
@@ -394,7 +440,7 @@ const CardHistorico = ({ data, navigate, isMobile }) => {
             {aprovou ? "FAVORÁVEL" : "DESFAVORÁVEL"}
           </div>
         </div>
-        <div style={{ marginTop: "15px" }}>
+        <div style={{ marginTop: "15px", width: "100%" }}>
           <button
             style={styles.actionButtonSecondary}
             onClick={(e) => {
@@ -407,6 +453,46 @@ const CardHistorico = ({ data, navigate, isMobile }) => {
             <Eye size={14} /> Ver Detalhes
           </button>
         </div>
+
+        {/* --- MOVIDO PARA A DIREITA: Botões de Material --- */}
+        {(data.arquivo || data.link_material) && (
+          <div style={styles.sidebarAttachments}>
+            <span
+              style={{
+                ...styles.sidebarAttachmentsLabel,
+                textAlign: isMobile ? "left" : "right",
+              }}
+            >
+              Material Anexo
+            </span>
+            {data.arquivo && (
+              <a
+                href={
+                  data.arquivo.startsWith("http")
+                    ? data.arquivo
+                    : `${API_BASE_URL}${data.arquivo}`
+                }
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
+                style={styles.attachmentButtonRight}
+              >
+                <Download size={14} /> Baixar Arquivo
+              </a>
+            )}
+            {data.link_material && (
+              <a
+                href={data.link_material}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
+                style={styles.attachmentButtonRight}
+              >
+                <ExternalLink size={14} /> Link Externo
+              </a>
+            )}
+          </div>
+        )}
       </div>
     </div>
   )
@@ -537,6 +623,40 @@ const styles = {
     wordBreak: "break-word",
     color: "var(--text-primary)",
   },
+
+  /* ESTILOS NOVOS PARA OS BOTÕES NA DIREITA */
+  sidebarAttachments: {
+    marginTop: "20px",
+    display: "flex",
+    flexDirection: "column",
+    gap: "8px",
+    width: "100%",
+  },
+  sidebarAttachmentsLabel: {
+    fontSize: "10px",
+    color: "var(--text-muted)",
+    textTransform: "uppercase",
+    fontWeight: "800",
+  },
+  attachmentButtonRight: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: "6px",
+    padding: "8px 12px",
+    backgroundColor: "var(--bg-info)",
+    color: "var(--text-info)",
+    borderRadius: "6px",
+    fontSize: "12px",
+    fontWeight: "700",
+    textDecoration: "none",
+    border: "1px solid rgba(21, 101, 192, 0.2)",
+    transition: "opacity 0.2s",
+    width: "100%",
+    boxSizing: "border-box",
+  },
+  /* ---------------------------------------- */
+
   feedbackBox: {
     marginTop: "15px",
     backgroundColor: "var(--bg-danger)",
@@ -578,6 +698,7 @@ const styles = {
     fontSize: "12px",
     fontWeight: "700",
     border: "1px solid",
+    alignSelf: "flex-end",
   },
   actionButtonSecondary: {
     background: "var(--bg-card)",

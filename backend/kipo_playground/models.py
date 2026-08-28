@@ -124,6 +124,10 @@ class Producao(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='producoes')
     escola = models.CharField(max_length=149, null=True, blank=True)
     titulo = models.CharField(max_length=255)
+    
+    # --- NOVO CAMPO ADICIONADO AQUI ---
+    exibir_autor = models.BooleanField(default=True, help_text="Se marcado, exibe o nome do autor na comunidade.")
+    
     disciplina = models.CharField(max_length=100)
     nivel = models.CharField(max_length=100)
     modelo_ia = models.CharField(max_length=100)
@@ -136,7 +140,7 @@ class Producao(models.Model):
     recursos = models.TextField(blank=True, null=True)
     experiencia = models.TextField(blank=True, null=True)
     resultados = models.TextField(blank=True, null=True) 
-    arquivo = models.FileField(upload_to='producoes/', blank=True, null=True)
+    arquivo = models.FileField(upload_to='producoes/', null=True, blank=True)
     
     link_material = models.URLField(max_length=500, null=True, blank=True, verbose_name="Link Externo do Material")
     

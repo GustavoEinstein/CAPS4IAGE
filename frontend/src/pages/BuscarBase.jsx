@@ -32,11 +32,11 @@ const BuscarBase = () => {
 
   const handleSelect = (prod) => {
     Swal.fire({
-      title: "Usar como base?",
-      text: `Você vai criar uma nova prática baseada em "${prod.titulo}".`,
+      title: "Fazer Releitura?",
+      text: `Você vai construir uma nova experiência herdando os dados de "${prod.titulo}".`,
       icon: "question",
       showCancelButton: true,
-      confirmButtonText: "Sim, usar esta",
+      confirmButtonText: "Sim, fazer releitura",
       cancelButtonText: "Cancelar",
       confirmButtonColor: "#1565C0",
     }).then((result) => {
@@ -59,7 +59,7 @@ const BuscarBase = () => {
         </button>
 
         <div style={{ ...styles.headerCenter, marginBottom: "30px" }}>
-          <h2 style={styles.titleCenter}>Buscar Prática Base</h2>
+          <h2 style={styles.titleCenter}>Buscar Prática para Releitura</h2>
           <p style={styles.subtitleCenter}>
             Digite palavras-chave para encontrar a prática que servirá de
             inspiração.

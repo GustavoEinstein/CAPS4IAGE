@@ -21,7 +21,11 @@ import {
   Loader2,
   Send,
   Link as LinkIcon,
+  Download, // <- Ícone adicionado
 } from "lucide-react"
+
+// Endereço base do seu backend Django
+const API_BASE_URL = "http://localhost:8000"
 
 const EditarProducao = () => {
   const { id } = useParams()
@@ -375,6 +379,25 @@ const EditarProducao = () => {
                   <label style={styles.label}>
                     <UploadCloud size={16} /> Arquivo Anexado
                   </label>
+
+                  {/* --- BOTÃO PARA VER ARQUIVO ATUAL --- */}
+                  {existingFile && (
+                    <div style={{ marginBottom: "12px" }}>
+                      <a
+                        href={
+                          existingFile.startsWith("http")
+                            ? existingFile
+                            : `${API_BASE_URL}${existingFile}`
+                        }
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={styles.downloadLink}
+                      >
+                        <Download size={14} /> Baixar/Ver Arquivo Atual
+                      </a>
+                    </div>
+                  )}
+
                   <div style={styles.uploadContainer}>
                     <input
                       type="file"
@@ -816,6 +839,19 @@ const styles = {
     fontWeight: "600",
     color: "var(--text-primary)",
     marginTop: "5px",
+  },
+  downloadLink: {
+    display: "inline-flex",
+    alignItems: "center",
+    gap: "6px",
+    padding: "8px 12px",
+    backgroundColor: "var(--bg-info)",
+    color: "var(--text-info)",
+    borderRadius: "6px",
+    textDecoration: "none",
+    fontSize: "13px",
+    fontWeight: "bold",
+    border: "1px solid var(--border-info)",
   },
   topBar: {
     display: "flex",

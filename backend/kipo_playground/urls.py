@@ -35,6 +35,9 @@ urlpatterns = [
     path('api/production/list/', views.api_list_my_productions, name='list_my_productions'),
     path('api/production/<int:pk>/', views.api_get_production_details, name='get_production_details'),
     path('api/production/<int:pk>/update/', views.api_update_production, name='update_production'),
+    
+    # --- NOVA ROTA AQUI: Controle de visibilidade do autor ---
+    path('api/production/<int:pk>/toggle-author/', views.api_toggle_author_visibility, name='toggle_author'),
 
     # ============================================================================
     # 4. SISTEMA DE REVISÃO (DUPLO-CEGO E XP)
