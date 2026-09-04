@@ -699,57 +699,64 @@ def api_list_public_feed(request):
 
 
 #painel de recuperação de senha
+#painel de recuperação de senha
+#painel de recuperação de senha
 @csrf_exempt
 @api_view(['POST'])
 @authentication_classes([]) 
 @permission_classes([AllowAny])
 def api_password_reset_request(request):
-    email = request.data.get('email')
+    email = request.data.get('email', '').strip().lower()
     if not email:
         return Response({'erro': 'E-mail é obrigatório.'}, status=400)
 
     try:
         user = User.objects.get(email=email)
     except User.DoesNotExist:
-        # Por segurança, sempre dizemos que foi enviado mesmo se não existir
         return Response({'mensagem': 'Se o e-mail existir, um link foi enviado.'})
 
-    # Gera o Token seguro do Django
     token = default_token_generator.make_token(user)
     uid = urlsafe_base64_encode(force_bytes(user.pk))
+    
+    # DICA: Quando for colocar no servidor oficial, troque esse localhost pelo domínio final (ex: teia.cic.unb.br)
     reset_link = f"http://localhost:5173/reset-password/{uid}/{token}"
 
     subject = "Redefinição de Senha - T.E.I.A"
     from_email = settings.DEFAULT_FROM_EMAIL
     to = [email]
+    
+    nome_usuario = user.first_name.split()[0].title() if user.first_name else "Professor(a)"
+    texto_puro = (
+        f"Olá, {nome_usuario}.\n\n"
+        f"Recebemos um pedido para redefinir a senha da sua conta no Portal T.E.I.A.\n\n"
+        f"Copie e cole o link abaixo no seu navegador para cadastrar uma nova senha:\n"
+        f"{reset_link}\n\n"
+        f"Se você não fez essa solicitação, pode ignorar este e-mail."
+    )
 
     try:
-        # Pega a URL base dinamicamente apontando para a pasta assets
         logo_url = request.build_absolute_uri(settings.STATIC_URL + 'assets/unb.png')
-        
-        # 1. Prepara as variáveis para o seu template HTML
-        nome_usuario = user.first_name if user.first_name else user.username
         context = {
-            'nome': nome_usuario.split()[0].title(), # Pega só o primeiro nome
+            'nome': nome_usuario,
             'link': reset_link,
             'logo_url': logo_url
         }
-
-        # 2. Renderiza o HTML que você criou
         html_content = render_to_string('emails/password_reset_email.html', context)
         
-        # 3. Cria uma versão em texto puro caso o provedor de e-mail bloqueie HTML
-        text_content = strip_tags(html_content)
-
-        # 4. Monta a mensagem e envia
-        msg = EmailMultiAlternatives(subject, text_content, from_email, to)
-        msg.attach_alternative(html_content, "text/html")
+        msg = EmailMultiAlternatives(subject, texto_puro, from_email, to)
+        
+        # Adicionamos o @unb.br e outros domínios institucionais na lista de restrição
+        dominios_rigidos = ['@hotmail.', '@outlook.', '@live.', '@msn.', '@unb.br', '@aluno.unb.br']
+        
+        if not any(dominio in email for dominio in dominios_rigidos):
+            msg.attach_alternative(html_content, "text/html")
+            
         msg.send(fail_silently=False)
 
-        return Response({'mensagem': 'E-mail enviado com sucesso!'})
+        return Response({'mensagem': 'E-mail enviado! Se não achar, verifique a pasta Spam ou Quarentena.'})
         
     except Exception as e:
-        print(f"ERRO AO ENVIAR E-MAIL: {e}") # Isso vai aparecer no seu terminal do backend para ajudar a debugar!
+        print(f"ERRO AO ENVIAR E-MAIL: {e}") 
         return Response({'erro': 'Erro ao enviar e-mail. Verifique o console.'}, status=500)
 
 @csrf_exempt

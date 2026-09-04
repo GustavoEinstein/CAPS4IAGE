@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react"
 import api from "../../services/api"
 import { useNavigate, useOutletContext, useLocation } from "react-router-dom"
 import Swal from "sweetalert2"
+import { jsPDF } from "jspdf"
+import autoTable from "jspdf-autotable"
 import {
   ArrowLeft,
   Save,
@@ -28,7 +30,6 @@ import bnccMat from "../../data/bncc_mat.json"
 import bnccPort from "../../data/bncc_port.json"
 import bnccComp from "../../data/bncc_comp.json"
 
-// --- SEPARAÇÃO DAS BASES DE DADOS ---
 const BNCC_GERAL = [...bnccMat, ...bnccPort, ...bnccComp]
 const BNCC_COMPUTACAO = [...bnccComp]
 
@@ -38,8 +39,8 @@ const FormularioManual = () => {
   const { isMobile } = useOutletContext() || { isMobile: false }
 
   const storedDisc = localStorage.getItem("user_disciplina") || "Geral"
+  const storedEscola = localStorage.getItem("user_escola") || ""
 
-  // 1. INICIALIZAÇÃO INTELIGENTE DO STATE
   const [formData, setFormData] = useState(() => {
     if (location.state?.baseData) {
       const base = location.state.baseData
@@ -83,13 +84,12 @@ const FormularioManual = () => {
 
   const [customResource, setCustomResource] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [showPdfMenu, setShowPdfMenu] = useState(false)
 
-  // Controle para exibir o bloco de Computação
   const [mostrarCampoComp, setMostrarCampoComp] = useState(() => {
     return formData.bncc_computacao ? true : false
   })
 
-  // --- ESTADOS DO AUTOCOMPLETE BNCC GERAL ---
   const [bnccBuscaGeral, setBnccBuscaGeral] = useState("")
   const [mostrarOpcoesGeral, setMostrarOpcoesGeral] = useState(false)
 
@@ -107,7 +107,6 @@ const FormularioManual = () => {
     setMostrarOpcoesGeral(false)
   }
 
-  // --- ESTADOS DO AUTOCOMPLETE BNCC COMPUTAÇÃO ---
   const [bnccBuscaComp, setBnccBuscaComp] = useState("")
   const [mostrarOpcoesComp, setMostrarOpcoesComp] = useState(false)
 
@@ -156,11 +155,7 @@ const FormularioManual = () => {
           if (result.isConfirmed) {
             try {
               const draftData = JSON.parse(savedDraft)
-              setFormData((prev) => ({
-                ...prev,
-                ...draftData,
-                arquivo: null,
-              }))
+              setFormData((prev) => ({ ...prev, ...draftData, arquivo: null }))
               if (draftData.bncc_computacao) setMostrarCampoComp(true)
             } catch (e) {}
           } else {
@@ -171,7 +166,6 @@ const FormularioManual = () => {
     }
   }, [location.state])
 
-  // 3. GATILHO DE SALVAMENTO AUTOMÁTICO LOCAL
   useEffect(() => {
     const { arquivo, ...dataToSave } = formData
     if (dataToSave.titulo || dataToSave.experiencia || dataToSave.bncc) {
@@ -249,15 +243,15 @@ const FormularioManual = () => {
       Object.keys(formData).forEach((key) => {
         if (key === "recursos") {
           const recArray = formData.recursos || []
-          if (recArray.length > 0) {
+          if (recArray.length > 0)
             dataToSend.append("recursos", recArray.join(", "))
-          }
-        } else if (key === "arquivo" && formData.arquivo)
+        } else if (key === "arquivo" && formData.arquivo) {
           dataToSend.append("arquivo", formData.arquivo)
-        else if (key === "nivel")
+        } else if (key === "nivel") {
           dataToSend.append("nivel_ensino", formData.nivel)
-        else if (formData[key] !== null && formData[key] !== "")
+        } else if (formData[key] !== null && formData[key] !== "") {
           dataToSend.append(key, formData[key])
+        }
       })
 
       await api.post(url, dataToSend, {
@@ -321,7 +315,7 @@ const FormularioManual = () => {
               flexDirection: isMobile ? "column" : "row",
             }}
           >
-            {/* ESQUERDA */}
+            {/* ======================= ESQUERDA ======================= */}
             <div
               style={{ ...styles.leftCol, width: isMobile ? "100%" : "35%" }}
             >
@@ -465,6 +459,21 @@ const FormularioManual = () => {
                 />
               </div>
 
+              <div style={{ ...styles.inputGroup, marginTop: "15px" }}>
+                <label style={styles.label}>
+                  <Link size={14} /> Link Externo (Opcional)
+                </label>
+                <input
+                  type="url"
+                  name="link_material"
+                  value={formData.link_material}
+                  onChange={handleChange}
+                  style={styles.input}
+                  placeholder="Ex: https://youtu.be/..."
+                />
+              </div>
+
+              {/* UPLOAD REPOSICIONADO PARA FICAR NATURAL NO FLUXO (Sem margem top auto) */}
               <div style={styles.uploadSection}>
                 <label style={styles.label}>
                   <UploadCloud size={16} /> Anexar Material
@@ -497,35 +506,11 @@ const FormularioManual = () => {
                   </label>
                 </div>
               </div>
-
-              <div style={{ ...styles.inputGroup, marginTop: "15px" }}>
-                <label style={styles.label}>
-                  <Link size={14} /> Link Externo (Opcional)
-                </label>
-                <input
-                  type="url"
-                  name="link_material"
-                  value={formData.link_material}
-                  onChange={handleChange}
-                  style={styles.input}
-                  placeholder="Ex: https://youtu.be/..."
-                />
-                <span
-                  style={{
-                    fontSize: "11px",
-                    color: "var(--text-muted)",
-                    marginTop: "4px",
-                  }}
-                >
-                  Caso o material seja muito pesado (ex: vídeos {">"} 50MB),
-                  cole o link do YouTube ou Drive aqui.
-                </span>
-              </div>
             </div>
 
             {!isMobile && <div style={styles.verticalDivider}></div>}
 
-            {/* DIREITA */}
+            {/* ======================= DIREITA ======================= */}
             <div
               style={{ ...styles.rightCol, width: isMobile ? "100%" : "65%" }}
             >
@@ -533,7 +518,6 @@ const FormularioManual = () => {
                 <BookOpen size={20} color="#1565C0" /> Detalhamento Pedagógico
               </h3>
 
-              {/* BNCC GERAL (Matemática e Português) */}
               <div style={styles.inputGroup}>
                 <label style={styles.label}>BNCC / Objetivos</label>
                 <div style={{ position: "relative", marginBottom: "10px" }}>
@@ -592,7 +576,6 @@ const FormularioManual = () => {
                 />
               </div>
 
-              {/* --- TOGGLE INTERDISCIPLINAR DE COMPUTAÇÃO --- */}
               <div
                 className="toggle-box"
                 onClick={handleToggleComp}
@@ -686,7 +669,6 @@ const FormularioManual = () => {
                   />
                 </div>
               )}
-              {/* --- FIM DO BLOCO DE COMPUTAÇÃO --- */}
 
               <div style={styles.gridThree}>
                 <div style={styles.inputGroup}>
@@ -793,6 +775,7 @@ const FormularioManual = () => {
                   placeholder="Descreva como foi a aplicação em sala de aula, o engajamento dos alunos e os desafios encontrados..."
                 />
               </div>
+
               <div style={styles.inputGroup}>
                 <label style={styles.label}>
                   <Target size={14} /> Resultados
@@ -814,7 +797,7 @@ const FormularioManual = () => {
                   onClick={() => handleSubmit(true)}
                   style={styles.draftButton}
                 >
-                  <Save size={18} /> Salvar como Rascunho
+                  <Save size={18} /> Salvar Rascunho
                 </button>
                 <button
                   type="button"
@@ -823,10 +806,188 @@ const FormularioManual = () => {
                   style={styles.submitButton}
                 >
                   <Send size={18} />{" "}
-                  {isSubmitting ? "Enviando..." : "Enviar Prática"}
+                  {isSubmitting ? "Enviando..." : "Enviar para Comunidade"}
                 </button>
               </div>
             </div>
+          </div>
+
+          {/* ======================= SESSÃO DE PDF (FULL WIDTH BOTTOM) ======================= */}
+          <div style={styles.pdfDividerLine}></div>
+
+          <div style={styles.pdfSectionContainer}>
+            <div
+              className="pdf-trigger-btn"
+              onClick={() => setShowPdfMenu(!showPdfMenu)}
+              style={{
+                ...styles.pdfTriggerBtn,
+                borderBottom: showPdfMenu
+                  ? "none"
+                  : "1px solid var(--border-color)",
+                borderRadius: showPdfMenu ? "10px 10px 0 0" : "10px",
+              }}
+            >
+              <div
+                style={{ display: "flex", alignItems: "center", gap: "12px" }}
+              >
+                <div
+                  style={{
+                    backgroundColor: "#1E40AF",
+                    padding: "8px",
+                    borderRadius: "8px",
+                    display: "flex",
+                  }}
+                >
+                  <FileIcon size={20} color="white" />
+                </div>
+                <div>
+                  <h4
+                    style={{
+                      margin: 0,
+                      fontSize: "16px",
+                      color: "var(--text-primary)",
+                    }}
+                  >
+                    Essa produção é um Plano de Aula?
+                  </h4>
+                  <span
+                    style={{ fontSize: "13px", color: "var(--text-muted)" }}
+                  >
+                    Exporte um PDF oficial preenchendo apenas os campos
+                    restantes.
+                  </span>
+                </div>
+              </div>
+              {showPdfMenu ? (
+                <ChevronUp size={24} color="var(--text-secondary)" />
+              ) : (
+                <ChevronDown size={24} color="var(--text-secondary)" />
+              )}
+            </div>
+
+            {showPdfMenu && (
+              <div style={styles.pdfFormPanel}>
+                <p
+                  style={{
+                    margin: "0 0 25px 0",
+                    fontSize: "14px",
+                    color: "var(--text-secondary)",
+                    lineHeight: "1.6",
+                  }}
+                >
+                  Preencha os campos abaixo exigidos pelas coordenações
+                  pedagógicas. O sistema irá mesclar as informações preenchidas
+                  acima com estes campos para gerar o seu documento.{" "}
+                  <strong>
+                    Estes dados extras não serão enviados para a comunidade
+                    pública.
+                  </strong>
+                </p>
+
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
+                    gap: "20px",
+                  }}
+                >
+                  <div style={{ ...styles.inputGroup, marginBottom: 0 }}>
+                    <label style={styles.label}>
+                      Instituição / Identificação
+                    </label>
+                    <input
+                      type="text"
+                      name="instituicao"
+                      value={formData.instituicao}
+                      onChange={handleChange}
+                      style={styles.input}
+                      placeholder="Ex: Universidade de Brasília / Centro Educacional 01"
+                    />
+                  </div>
+
+                  <div style={{ ...styles.inputGroup, marginBottom: 0 }}>
+                    <label style={styles.label}>Objetivo Geral</label>
+                    <input
+                      type="text"
+                      name="objetivo_geral"
+                      value={formData.objetivo_geral}
+                      onChange={handleChange}
+                      style={styles.input}
+                      placeholder="Ex: Compreender as causas da Revolução Industrial."
+                    />
+                  </div>
+                </div>
+
+                <div style={{ ...styles.inputGroup, marginTop: "20px" }}>
+                  <label style={styles.label}>Objetivos Específicos</label>
+                  <textarea
+                    name="objetivos_especificos"
+                    value={formData.objetivos_especificos}
+                    onChange={handleChange}
+                    style={{ ...styles.textarea, minHeight: "60px" }}
+                    placeholder="Se vazio, o sistema usará os códigos da BNCC preenchidos lá em cima."
+                  />
+                </div>
+
+                <div style={styles.inputGroup}>
+                  <label style={styles.label}>Instrumentos de Avaliação</label>
+                  <textarea
+                    name="instrumentos_avaliacao"
+                    value={formData.instrumentos_avaliacao}
+                    onChange={handleChange}
+                    style={{ ...styles.textarea, minHeight: "60px" }}
+                    placeholder="Ex: Prova escrita, apresentação de seminário, rubrica..."
+                  />
+                </div>
+
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
+                    gap: "20px",
+                  }}
+                >
+                  <div style={styles.inputGroup}>
+                    <label style={styles.label}>Bibliografia Básica</label>
+                    <textarea
+                      name="bibliografia_basica"
+                      value={formData.bibliografia_basica}
+                      onChange={handleChange}
+                      style={styles.textarea}
+                      rows="2"
+                    />
+                  </div>
+                  <div style={styles.inputGroup}>
+                    <label style={styles.label}>
+                      Bibliografia Complementar
+                    </label>
+                    <textarea
+                      name="bibliografia_complementar"
+                      value={formData.bibliografia_complementar}
+                      onChange={handleChange}
+                      style={styles.textarea}
+                      rows="2"
+                    />
+                  </div>
+                </div>
+
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "flex-end",
+                    marginTop: "10px",
+                  }}
+                >
+                  <button
+                    onClick={gerarPDF}
+                    type="button"
+                    style={styles.downloadPdfButton}
+                  >
+                    <FileDown size={20} /> Gerar PDF Institucional
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -1008,7 +1169,7 @@ const styles = {
     alignItems: "center",
     color: "var(--text-warning)",
   },
-  uploadSection: { marginTop: "auto", paddingTop: "10px" },
+  uploadSection: { paddingTop: "10px", marginBottom: "20px" }, // Removido o marginTop: auto
   uploadContainer: {
     border: "2px dashed var(--border-info)",
     borderRadius: "12px",
@@ -1115,6 +1276,53 @@ const styles = {
     gap: "10px",
     boxShadow: "0 4px 12px rgba(21, 101, 192, 0.25)",
     transition: "transform 0.2s",
+  },
+
+  /* --- ESTILOS DO MENU PDF (FULL WIDTH) --- */
+  pdfDividerLine: {
+    height: "1px",
+    backgroundColor: "var(--border-color)",
+    margin: "50px 0 30px 0",
+    width: "100%",
+  },
+  pdfSectionContainer: {
+    width: "100%",
+    display: "flex",
+    flexDirection: "column",
+  },
+  pdfTriggerBtn: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: "20px 25px",
+    backgroundColor: "var(--bg-card)",
+    border: "1px solid var(--border-color)",
+    cursor: "pointer",
+    transition: "all 0.2s",
+  },
+  pdfFormPanel: {
+    width: "100%",
+    backgroundColor: "var(--bg-alt)",
+    border: "1px solid var(--border-color)",
+    borderTop: "none",
+    borderRadius: "0 0 10px 10px",
+    padding: "30px",
+    boxSizing: "border-box",
+  },
+  downloadPdfButton: {
+    backgroundColor: "#1E40AF",
+    color: "white",
+    border: "none",
+    borderRadius: "8px",
+    padding: "14px 28px",
+    fontSize: "15px",
+    fontWeight: "bold",
+    cursor: "pointer",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: "10px",
+    transition: "filter 0.2s",
   },
   autocompleteDropdown: {
     position: "absolute",

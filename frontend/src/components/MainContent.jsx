@@ -1,7 +1,15 @@
 import React, { useState, useEffect } from "react"
 import api from "../services/api"
 import { useOutletContext, useNavigate } from "react-router-dom"
-import { Search, Bot, CheckCircle2, BookOpen, Tag } from "lucide-react"
+import {
+  Search,
+  Bot,
+  CheckCircle2,
+  BookOpen,
+  Tag,
+  User,
+  Link as LinkIcon,
+} from "lucide-react"
 
 const MainContent = () => {
   const { isMobile } = useOutletContext() || { isMobile: false }
@@ -119,7 +127,7 @@ const MainContent = () => {
                   fontSize: isMobile ? "18px" : "22px",
                 }}
               >
-                Central da Comunidade
+                Acervo da Comunidade
               </h2>
             </div>
             <span style={styles.badgeCount}>{filteredProducoes.length}</span>
@@ -177,6 +185,9 @@ const Card = ({ data, isMobile, navigate }) => {
   const [isHovered, setIsHovered] = useState(false)
   const handleCardClick = () => navigate(`/dashboard/producao/${data.id}`)
 
+  // Verifica se a prática atual foi marcada como anônima ou não
+  const isAnonymous = data.autor === "Professor(a) Anônimo(a)"
+
   return (
     <div
       onClick={handleCardClick}
@@ -194,6 +205,7 @@ const Card = ({ data, isMobile, navigate }) => {
           <Bot size={14} style={{ marginRight: "4px" }} /> {data.modelo_ia}
         </div>
       </div>
+
       <div style={styles.cardBody}>
         <h3
           style={{
@@ -204,6 +216,28 @@ const Card = ({ data, isMobile, navigate }) => {
         >
           {data.titulo}
         </h3>
+
+        {/* --- NOVO: EXIBIÇÃO DE AUTOR --- */}
+        <div
+          style={{
+            ...styles.authorText,
+            color: isAnonymous
+              ? "var(--text-warning)"
+              : "var(--text-secondary)",
+          }}
+        >
+          <User size={12} style={{ marginRight: "4px" }} />
+          {data.autor}
+        </div>
+
+        {/* --- NOVO: TAG DE RELEITURA DE COLEGA --- */}
+        {data.producao_base && (
+          <div style={styles.releituraTag}>
+            <LinkIcon size={12} style={{ marginRight: "4px" }} />
+            Releitura
+          </div>
+        )}
+
         <p style={styles.cardSummary}>{data.resumo}</p>
       </div>
       <div style={styles.cardFooter}>
@@ -231,12 +265,12 @@ const styles = {
     overflowX: "hidden",
   },
   heroSection: {
-    background: "linear-gradient(135deg, #1565C0 0%, #1976D2 100%)",
+    background: "linear-gradient(135deg, #0F172A 0%, #1E3A8A 100%)", // Atualizado para os tons institucionais
     color: "white",
     display: "flex",
     flexDirection: "column",
     justifyContent: "center",
-    boxShadow: "0 4px 20px rgba(21, 101, 192, 0.15)",
+    boxShadow: "0 4px 20px rgba(15, 23, 42, 0.15)",
   },
   heroContent: { maxWidth: "700px", width: "100%", margin: "0 auto" },
   heroTitle: { fontWeight: "800", letterSpacing: "-0.5px", margin: 0 },
@@ -354,7 +388,25 @@ const styles = {
     margin: "0 0 6px 0",
     lineHeight: "1.4",
     fontWeight: "700",
-    wordBreak: "break-word",
+  },
+  authorText: {
+    fontSize: "12px",
+    fontWeight: "600",
+    display: "flex",
+    alignItems: "center",
+    marginBottom: "10px",
+  },
+  releituraTag: {
+    display: "inline-flex",
+    alignItems: "center",
+    backgroundColor: "var(--bg-info)",
+    color: "var(--text-info)",
+    padding: "3px 8px",
+    borderRadius: "4px",
+    fontSize: "11px",
+    fontWeight: "bold",
+    marginBottom: "12px",
+    border: "1px dashed var(--text-info)",
   },
   cardSummary: {
     fontSize: "13px",
